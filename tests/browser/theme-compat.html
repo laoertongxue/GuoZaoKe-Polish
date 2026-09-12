@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN" data-gzk-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>原站样式兼容验收</title>
+  <link rel="stylesheet" href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://static.guozaoke.com//static/css/main1003v3.css">
+  <link rel="stylesheet" href="/src/styles/content.css">
+  <script type="module" src="./theme-compat.ts"></script>
+</head>
+<body>
+  <nav class="navbar navbar-default top-navbar"><div class="container-fluid container"><div><a class="navbar-brand" href="#"><span style="display:block;width:150px;height:28px;font-size:24px">过早客</span></a><div class="divider-vertical"></div><a href="#notifications" class="notification-indicator tooltipped downwards" title="暂时没有未读提醒"><span class="mail-status"></span></a><div class="divider-vertical"></div></div><div id="navbar5"><ul class="nav navbar-nav navbar-left hidden-xs"><li><a href="#">首页</a></li><li><a href="#">节点</a></li><li><a href="#">成员</a></li><li><a href="#">广告投放</a></li></ul><div class="nav navbar-left form navbar-form hidden-sm hidden-xs"><div class="form-group"><form class="J_search"><input class="form-control" placeholder="Search" aria-label="搜索测试"></form></div></div><ul class="nav navbar-nav navbar-right"><li><a class="avatar" href="#"><img width="22" height="22" src="./preview-fixture.svg" alt="测试账号"></a></li><li><a href="#">设置</a></li><li><a href="#">退出</a></li></ul></div></div></nav>
+  <div class="container">
+    <p>原站公开 CSS + 生产主题 CSS；本页内容均为测试数据。</p>
+    <p><button type="button" data-theme="light">浅色</button> <button type="button" data-theme="dark">深色</button> <button type="button" data-theme="dawn">晨曦</button> <button type="button" id="compact-toggle" aria-pressed="false">紧凑模式</button> <button type="button" data-page="home">首页</button> <button type="button" data-page="topic">主题页</button> <button type="button" data-page="profile">个人页</button> <button type="button" data-page="notifications">消息页</button> <button type="button" data-page="members">成员页</button> <button type="button" id="extension-toggle">停用增强</button> <button type="button" id="align-toggle">楼中楼靠左</button> <button type="button" id="horizontal-toggle">横向布局</button></p>
+    <div class="row">
+      <div class="sidebar-left col-md-9" data-fixture-page="home">
+        <div class="row"><div class="col-sm-9"><ul class="nav nav-pills"><li class="active"><a href="#">默认排序</a></li><li><a href="#">最新话题</a></li><li><a href="#">精华主题</a></li><li><a href="#">兴趣节点</a></li><li><a href="#">关注的人</a></li></ul></div><div class="col-sm-3 hidden-xs tr"><button type="button" class="btn btn-primary">发布新主题</button></div></div>
+        <div class="topics container-box mt10">
+          <div class="hotlink"><a href="#">你问我答</a></div>
+          <div class="topic-item">
+            <a href="#"><img class="avatar" src="./preview-fixture.svg" alt="测试头像"></a>
+            <div class="main"><h3 class="title"><a href="#first">测试主题：深色模式下应清晰可读</a></h3><div class="meta"><span class="node"><a href="#">IT技术</a></span> · <span class="username"><a href="#">demo_author</a></span> · 刚刚 · <span class="last-reply-username"><a href="#"><strong>demo_reply</strong></a></span></div><div class="gzk-topic-actions"><button class="gzk-button">◉ 预览</button><button class="gzk-button">＋ 稍后阅读</button></div></div>
+            <div class="count"><a href="#first">82</a></div>
+          </div>
+          <div class="topic-item"><a href="#"><img class="avatar" src="./preview-fixture.svg" alt="测试头像"></a><div class="main"><h3 class="title"><a href="#second">第二个主题：行分隔与悬停背景跟随主题</a></h3><div class="meta"><span class="node"><a href="#">摄影</a></span> · <span class="username"><a href="#">demo_author</a></span></div></div><div class="count"><a href="#second">9</a></div></div>
+        </div>
+        <ul class="pagination"><li class="active"><a href="#">1</a></li><li><a href="#">2</a></li></ul>
+        <div class="nodes-cloud container-box"><div class="title">节点导航</div><ul><li><label>科学技术</label><span class="nodes"><a href="#">IT技术</a></span></li></ul></div>
+      </div>
+      <div class="sidebar-left col-md-9" data-fixture-page="topic" hidden>
+        <div class="topic-detail container-box">
+          <div class="ui-header"><a href="#"><img class="avatar" src="./preview-fixture.svg" alt="测试楼主"></a><div class="main"><h3 class="title">主题与楼中楼排版检查：保留清晰的阅读层次</h3><div class="meta mt10"><span class="node"><a href="#">IT技术</a></span> · <a href="#">demo_author</a> · 发表于今天</div></div></div>
+          <div class="ui-content"><p>这一页使用原站相同的结构，检查头像、正文、楼层和回复编辑区是否对齐。</p><p>较长的链接也应在正文内换行：<a href="#">https://example.com/a/very/long/link/that/should/wrap/inside/the/topic/content/without/overflow</a></p></div>
+          <div class="ui-footer"><a href="#">收藏</a><a href="#">回复</a><a href="#">分享</a></div>
+        </div>
+        <div class="topic-reply container-box mt10"><div class="ui-header"><span class="title">6 条回复</span><div class="gzk-reply-tabs"><button class="gzk-button active">全部回复</button><button class="gzk-button">热门回复</button><select aria-label="楼中楼样式"><option>逐层缩进</option></select></div></div><div class="ui-content" id="fixture-replies"></div></div>
+        <div class="topic-reply-create container-box mt10"><div class="ui-header"><span class="title">创建新的回复<div class="fr"><a href="#">↑ 回到顶部</a></div></span></div><div class="ui-content"><form class="mt10"><div class="gzk-editor-toolbar"><button class="gzk-button" type="button">☺ 表情</button><button class="gzk-button" type="button">预览</button><button class="gzk-button" type="button">上传图片</button><button class="gzk-button" type="button">转 Base64</button><button class="gzk-button" type="button">解码</button></div><textarea class="content mt5 form-control" placeholder="回复内容"></textarea><div class="mt10"><button class="btn btn-primary" type="button">立即回复</button></div></form></div></div>
+      </div>
+      <div class="sidebar-left col-md-9" data-fixture-page="profile" hidden><div class="user-page">
+        <div class="profile container-box"><div class="ui-header"><a href="/u/demo_user_with_a_long_name"><img class="avatar" src="./preview-fixture.svg" alt="个人页测试头像"></a><div class="username">demo_user_with_a_long_name</div><span class="label label-success"><a href="#">关注</a></span><div class="user-number"><div class="number">第 12345 号会员</div><div class="since">加入于 2020-01-01</div></div><button class="gzk-button" type="button">设置用户标签</button></div><div class="ui-content"><dl><dt>ID</dt><dd>demo_user_with_a_long_name</dd></dl><dl><dt>签名</dt><dd>这是测试签名，较长内容应换行并保持自然阅读。</dd></dl><dl><dt>网站</dt><dd><a href="#">https://example.com/a-very-long-personal-address-that-should-wrap-without-overflow</a></dd></dl><dl><dt>简介</dt><dd>本页使用公开个人页结构，内容为虚构。</dd></dl></div></div>
+        <div class="topic-lists container-box mt10"><div class="ui-header"><span class="title">demo_user 创建的主题</span></div><div class="ui-content topics"><div class="topic-item"><img class="avatar" src="./preview-fixture.svg" alt="隐藏的原站头像"><div class="main"><h3 class="title"><a href="#">个人页主题列表也应保持统一排版</a></h3><div class="meta"><span class="node"><a href="#">IT技术</a></span> · 刚刚</div></div><div class="count"><a href="#">3</a></div></div></div><div class="ui-footer"><a href="#">更多主题</a></div></div>
+        <div class="replies-lists container-box mt10"><div class="ui-header"><span class="title">demo_user 最近回复</span></div><div class="ui-content topics"><div class="reply-item"><div class="main"><span class="title"><a href="#">回复了一个测试主题</a></span><div class="content"><p>个人页最近回复没有头像，左侧不应保留主题页的头像空位。</p></div></div></div><div class="reply-item"><div class="main"><span class="title"><a href="#">回复了第二个测试主题</a></span><div class="content"><p>不同主题中的正文、链接和分隔线应跟随当前主题。</p></div></div></div></div></div>
+        <div class="container-box mt10"><div class="ui-content no-favorites">暂无收藏</div></div>
+      </div></div>
+      <div class="sidebar-left col-md-9" data-fixture-page="notifications" hidden><div class="container-box"><div class="ui-header"><span class="title">消息提醒</span></div><div class="ui-content"><div class="notification-item"><a href="#"><img class="avatar" src="./preview-fixture.svg" alt="通知测试头像"></a><div class="main"><span class="title"><a href="#">有人回复了你的测试主题</a></span><div class="meta"><a class="username" href="#">demo_reply</a><span class="time">今天 10:00</span></div><div class="content"><p>这是一条虚构消息，用于检查深色标题与正文对比度。</p></div></div></div><div class="notification-item"><a href="#"><img class="avatar" src="./preview-fixture.svg" alt="通知测试头像"></a><div class="main"><span class="title"><a href="#">有人提到了你</a></span><div class="meta"><a class="username" href="#">demo_member</a><span class="time">今天 09:00</span></div><div class="content"><p>长链接应在卡片内换行：<a href="#">https://example.com/notification/a-long-link-for-responsive-layout-verification</a></p></div></div></div></div></div></div>
+      <div class="sidebar-left col-md-9" data-fixture-page="members" hidden><div class="member-lists container-box"><div class="ui-header"><span class="title">社区成员</span></div><div class="ui-content" id="fixture-members"></div></div></div>
+      <div class="sidebar-right col-md-3 mt10"><div class="usercard container-box"><div class="ui-header"><img class="avatar" src="./preview-fixture.svg" alt="测试用户"><span class="username">demo_user</span></div><div class="ui-content"><div class="status status-topic"><strong><a href="/u/demo_user_with_a_long_name/topics">27</a></strong>主题</div><div class="status status-reply"><strong><a href="/u/demo_user_with_a_long_name/replies">82</a></strong>回复</div><div class="status status-favorite"><strong><a href="/u/demo_user_with_a_long_name/favorites">0</a></strong>收藏</div><div class="status status-reputation"><strong>100</strong>信用</div></div></div>
+        <div class="gzk-toolbox container-box"><div class="gzk-brand">GuoZaoKe Polish</div><button class="gzk-button">☾ 切换主题</button><button class="gzk-button">⚙ 控制选项</button><button class="gzk-button">▤ 稍后阅读</button><button class="gzk-button">⇧ 回到顶部</button><button class="gzk-button">◇ 更多功能</button></div>
+        <div class="sidebox container-box mt10" id="fixture-empty-card"><div class="ui-content ad" style="display:none"><a href="#"><img src="./preview-fixture.svg" alt="被隐藏的测试素材"></a></div></div>
+        <div class="sidebox container-box mt10 hot-topics"><div class="box"><div class="ui-header"><span class="title">今日热议</span></div><div class="cell"><table class="ui-content" width="100%"><tbody><tr><td width="24"><a href="#"><img class="avatar" style="max-width:24px;max-height:24px" src="./preview-fixture.svg" alt="测试头像"></a></td><td width="10"></td><td><a href="#">侧栏标题应保持自然行距，头像与文本垂直居中</a></td></tr></tbody></table></div><div class="cell"><table class="ui-content" width="100%"><tbody><tr><td width="24"><a href="#"><img class="avatar" style="max-width:24px;max-height:24px" src="./preview-fixture.svg" alt="测试头像"></a></td><td width="10"></td><td><a href="#">第二条相关主题</a></td></tr></tbody></table></div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer mt15"><div class="container"><div class="footer-bg"><p align="center" class="links"><span>过早客微信公众号：guozaoke</span><span class="gzk-footer-separator"> • </span><span>过早客新浪微博：<a href="https://weibo.com/guozaoke">@过早客</a></span><span class="gzk-footer-separator"> • </span><span>广告投放合作微信：fullygroup50</span><span><a href="https://beian.miit.gov.cn">鄂ICP备2021016276号-2</a></span><span class="gzk-footer-separator"> • </span><span><a href="http://www.beian.gov.cn/portal/registerSystemInfo">鄂公网安备42018502001446号</a></span></p><p class="fade-color">
+  </p></div></div></div>
+</body>
+</html>

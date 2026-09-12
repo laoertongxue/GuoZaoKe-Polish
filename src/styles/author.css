@@ -1,0 +1,9 @@
+.gzk-author{display:flex;align-items:center;gap:18px;color:var(--gzk-text);min-width:0}
+.gzk-author-avatar{display:block;width:72px;height:72px;flex:0 0 auto;object-fit:cover;object-position:center;border-radius:50%}
+.gzk-author-copy{min-width:0;line-height:1.5}
+.gzk-author-heading{font-size:20px;font-weight:600}
+.gzk-author-name{color:var(--gzk-text)!important;text-decoration:none}
+.gzk-author-name:hover{text-decoration:underline!important;text-underline-offset:3px}
+.gzk-author-signature{margin:5px 0!important;color:var(--gzk-muted);font-size:13px!important;line-height:1.5!important}
+.gzk-author-blog{font-size:12px;color:var(--gzk-accent);overflow-wrap:anywhere}
+@media(max-width:480px){.gzk-author{gap:12px}.gzk-author .gzk-author-avatar{width:56px;height:56px}.gzk-author-heading{font-size:18px}}

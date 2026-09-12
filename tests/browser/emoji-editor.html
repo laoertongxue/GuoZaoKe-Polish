@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>表情编辑器 · 原生表单验收</title></head>
+<body><main>
+  <h1>表情编辑器 · 原生表单验收</h1>
+  <p>使用本地公开测试数据和生产表情组件，不调用扩展 API，也不向过早客发帖。提交仅导航到本机 GET 接收页；实际站点 POST 仍需扩展加载后验收。</p>
+  <label><input id="enabled" type="checkbox" checked>启用表情增强</label>
+  <form action="emoji-result.html" method="get">
+    <input type="hidden" name="_xsrf" value="local-fixture-token">
+    <input type="hidden" name="topic_id" value="local-fixture-topic">
+    <label for="inputor">回复草稿</label>
+    <div class="tools"><button id="emoji" type="button">选择表情</button><button id="preview" type="button">预览</button></div>
+    <textarea id="inputor" class="J_replyContent" name="content" rows="7">开头[doge] **[哇R]** `[doge]` [未知表情]</textarea>
+    <p>支持原生提交按钮及 Ctrl+Enter（模拟已观察到的原站快捷键）。</p>
+    <button type="submit" name="submitter" value="original-button">原生提交到本机接收页</button>
+  </form>
+  <section id="preview-content" aria-label="回复预览" hidden></section>
+</main><script type="module" src="./emoji-editor.ts"></script></body></html>

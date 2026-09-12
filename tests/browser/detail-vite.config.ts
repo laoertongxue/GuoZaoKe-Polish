@@ -1,0 +1,2 @@
+import { defineConfig } from 'vite';
+export default defineConfig({server:{host:'127.0.0.1',port:5180,strictPort:true},plugins:[{name:'local-detail-routes',configureServer(server){server.middlewares.use((req,_res,next)=>{if(req.url&&/^\/(?:\?|$|u\/demo(?:\/|\?|$)|node\/IT|t\/create\/IT)/.test(req.url))req.url='/tests/browser/detail-audit.html';if(req.url?.startsWith('/fixture-options.html'))req.url='/tests/browser/fixture-options.html';next();});}}]});

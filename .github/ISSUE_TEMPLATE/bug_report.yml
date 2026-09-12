@@ -1,0 +1,29 @@
+name: 问题反馈 / Bug report
+description: 报告界面、交互或兼容性问题 / Report a UI, interaction, or compatibility problem.
+title: "[Bug] "
+body:
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 复现步骤 / Steps to reproduce
+      description: 请注明页面类型，不要提供私人信息。 / Include the page type without private information.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期与实际表现 / Expected and actual behavior
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 扩展与 Chrome 版本 / Extension and Chrome versions
+      placeholder: "0.3.11 / Chrome version"
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: 截图与补充信息 / Screenshots and context
+      description: 可附主题、窗口尺寸等，请遮盖私人内容。 / Include theme and viewport; redact private content.

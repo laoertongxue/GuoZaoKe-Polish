@@ -1,0 +1,24 @@
+node_modules/
+.wxt/
+.output/
+research/
+artifacts/
+release/
+.DS_Store
+tests/browser/generated/
+
+# Local research, acceptance history, secrets and editor state
+docs/acceptance.md
+docs/ui-audit-*.md
+docs/superpowers/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.log
+.idea/
+.vscode/
+.codex/
+.agents/
+.codegraph/

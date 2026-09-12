@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>图片缩放 · 本地组件验收</title>
+<style>body{font:16px/1.8 system-ui;margin:0;background:#f1f5f9;color:#334155}main{max-width:1000px;margin:40px auto;padding:32px;background:white}img{width:300px;cursor:zoom-in}label{display:block;margin:20px 0}.spacer{height:1600px;background:linear-gradient(white,#cbd5e1)}</style></head>
+<body><main><h1>图片缩放 · 本地组件验收</h1><p>生产图片预览组件与本地 1200 × 900 测试图。检查缩放、Esc、遮罩关闭和背景滚动；不调用扩展 API。</p>
+<label><input type="checkbox" id="enabled" checked>启用图片预览</label>
+<div class="topic-detail"><div class="ui-content"><a href="#original-image"><img src="./preview-fixture.svg" alt="蓝绿网格测试图"></a></div></div>
+<p id="original-image">原站链接位置</p><div class="spacer"></div><p>页面底部</p></main><script type="module" src="./image-preview.ts"></script></body></html>

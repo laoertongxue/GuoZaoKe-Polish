@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>首尾响应式验收</title><style>body{margin:20px;font:14px system-ui;background:#e2e8f0}iframe{display:block;height:800px;border:0;background:white;margin-top:16px}button{padding:8px 16px}</style></head>
+<body>
+<p>独立内嵌测试页，不改变 Chrome 窗口或其他标签的视口。</p>
+<button data-width="390">390px</button> <button data-width="768">768px</button> <button data-width="1024">1024px</button>
+<iframe title="响应式样式测试" src="./theme-compat.html" width="390"></iframe>
+<script type="module">document.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>document.querySelector('iframe').width=button.dataset.width));</script>
+</body></html>
