@@ -11,10 +11,10 @@ export function createSiteFooter(actions: { reading: () => unknown; options: () 
   links.append(button('稍后阅读', actions.reading), button('选项设置', actions.options), button('回到顶部', actions.top));
   const brand = el('div', '', 'gzk-footer-brand');
   const reference = el('a', '', 'gzk-footer-reference');
-  reference.href = 'https://github.com/coolpace/V2EX_Polish';
+  reference.href = 'https://github.com/laoertongxue/GuoZaoKe-Polish';
   reference.target = '_blank';
   reference.rel = 'noopener noreferrer';
-  reference.title = '参考项目 V2EX Polish · GitHub';
+  reference.title = 'GuoZaoKe Polish · GitHub';
   reference.setAttribute('aria-label', reference.title);
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('viewBox', '0 0 24 24');

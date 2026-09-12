@@ -492,7 +492,7 @@ function buildAbout(): HTMLElement {
   }
   const links = el('div', 'action-row');
   links.style.marginTop = '24px';
-  links.append(link('访问过早客', ORIGIN, 'button small'), link('V2EX Polish 参考项目', 'https://github.com/coolpace/V2EX_Polish', 'button small'));
+  links.append(link('GitHub 项目', 'https://github.com/laoertongxue/GuoZaoKe-Polish', 'button small'), link('访问过早客', ORIGIN, 'button small'), link('V2EX Polish 参考项目', 'https://github.com/coolpace/V2EX_Polish', 'button small'));
   const authorPanel=el('section','about-author');
   authorPanel.setAttribute('aria-label','关于作者');authorPanel.append(authorCard());
   content.append(brand, authorPanel, list, links);

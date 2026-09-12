@@ -1,16 +1,17 @@
 # Chrome 应用商店填写材料
 
-适用版本：0.3.11。整理日期：2026-09-13。
+适用版本：0.3.12。整理日期：2026-09-13。
 
 这是供开发者控制台粘贴的材料，不是提交成功回执。控制台当前字段未能读取：浏览器工具返回 `The extensions gallery cannot be scripted.`。下面的分类与字段名称需按实际界面匹配。
 
 ## 安装包与图片
 
-- 上传 `release/GuoZaoKe-Polish-0.3.11-chrome.zip`，不要上传 GitHub 的 Source code ZIP。
-- ZIP 内 `manifest.json` 位于根目录，版本 0.3.11。
-- SHA-256：`64000953bf6d79de685dabfc7e4e3a7857051ed49d1b4143e8f8b8267c81c347`。
+- 上传 `release/GuoZaoKe-Polish-0.3.12-chrome.zip`，不要上传 GitHub 的 Source code ZIP。
+- ZIP 内 `manifest.json` 位于根目录，版本 0.3.12。
+- SHA-256：`2ffb22c7f027a29004396bdb8ed00ad42a3afc931f642cb202e614373aa93579`。
 - 商店图标：`public/icon/128.png`。
-- 仍需准备：至少 1 张真实功能截图（推荐 1280 × 800）和 440 × 280 小型宣传图。最多 5 张截图；1400 × 560 大型宣传图为可选项。不要使用带反馈红框的截图，也不要把个人通知、草稿或他人的敏感信息放进公开素材。
+- 已准备 4 张真实功能截图：本地 `release/chrome-web-store/screenshots/`，均为 1280 × 800 JPEG。截图来自 0.3.11；0.3.12 调整的是项目链接，这 4 张截图展示的页面外观不变。
+- 仍需准备 440 × 280 小型宣传图；1400 × 560 大型宣传图为可选项。
 
 ## 商店详情
 
@@ -19,7 +20,8 @@
 | 名称 | GuoZaoKe Polish |
 | 主要语言 | 简体中文 |
 | 分类建议 | 社交媒体与社交网络 / Social Media & Networking（以实际菜单为准） |
-| 官方网址 / 首页 | https://github.com/laoertongxue/GuoZaoKe-Polish |
+| 官方网址 | 未验证网站所有权时保留“无”；仅可选择 Search Console 中已验证的网站 |
+| 首页网址 | https://github.com/laoertongxue/GuoZaoKe-Polish |
 | 支持网址 | https://github.com/laoertongxue/GuoZaoKe-Polish/issues |
 | 隐私政策网址 | https://github.com/laoertongxue/GuoZaoKe-Polish/blob/main/docs/privacy.md |
 | 作者博客（如有对应字段） | https://www.shierhuasheng.cn |

@@ -3,14 +3,14 @@
   <h1>GuoZaoKe Polish</h1>
   <p>A more comfortable way to browse and read Guozaoke.</p>
   <p><a href="README.md">简体中文</a> · <strong>English</strong></p>
-  <p><a href="https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.3.11">Download</a> · <a href="https://github.com/laoertongxue/GuoZaoKe-Polish/issues">Report an issue</a> · <a href="docs/privacy.en.md">Privacy</a></p>
+  <p><a href="https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.3.12">Download</a> · <a href="https://github.com/laoertongxue/GuoZaoKe-Polish/issues">Report an issue</a> · <a href="docs/privacy.en.md">Privacy</a></p>
 </div>
 
 ---
 
 A Chrome extension for [Guozaoke](https://www.guozaoke.com/), inspired by the reading experience of [V2EX Polish](https://github.com/coolpace/V2EX_Polish). Built independently with **WXT, TypeScript, and native DOM/CSS**, it improves the site's layout, themes, and interactions while preserving its content and native controls.
 
-**0.3.11 is a prerelease**, not yet listed in the Chrome Web Store. Automated tests and local browser component checks are available; comprehensive live-site compatibility and reference parity remain work in progress. See the [verification scope](docs/verification.md).
+**0.3.12 is a prerelease**, not yet listed in the Chrome Web Store. Automated tests and local browser component checks are available; comprehensive live-site compatibility and reference parity remain work in progress. See the [verification scope](docs/verification.md).
 
 ## Features
 
@@ -29,7 +29,7 @@ Defaults use the light theme, same-tab navigation, vertical layout, and disabled
 
 ## Installation and updates
 
-1. Open the [v0.3.11 release](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.3.11), download `GuoZaoKe-Polish-0.3.11-chrome.zip`, and extract it.
+1. Open the [v0.3.12 release](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.3.12), download `GuoZaoKe-Polish-0.3.12-chrome.zip`, and extract it.
 2. Enter `chrome://extensions/` in Chrome and enable **Developer mode**.
 3. Select **Load unpacked** and choose the extracted folder that directly contains `manifest.json`.
 4. Open a new [Guozaoke](https://www.guozaoke.com/) page. Use the popup's settings entry to customize preferences.
@@ -47,7 +47,7 @@ npm ci
 npm run build
 ```
 
-Load `.output/chrome-mv3` in Chrome. `npm run zip` creates `.output/guozaoke-polish-0.3.11-chrome.zip`.
+Load `.output/chrome-mv3` in Chrome. `npm run zip` creates `.output/guozaoke-polish-0.3.12-chrome.zip`.
 
 ## Uploads and share images
 
