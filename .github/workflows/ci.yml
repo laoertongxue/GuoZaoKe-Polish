@@ -31,5 +31,6 @@ jobs:
         with:
           name: chrome-mv3
           path: .output/*-chrome.zip
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
