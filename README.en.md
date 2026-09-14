@@ -3,21 +3,21 @@
   <h1>GuoZaoKe Polish</h1>
   <p>A more comfortable way to browse and read Guozaoke.</p>
   <p><a href="README.md">简体中文</a> · <strong>English</strong></p>
-  <p><a href="https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.3.13">Download</a> · <a href="https://github.com/laoertongxue/GuoZaoKe-Polish/issues">Report an issue</a> · <a href="docs/privacy.en.md">Privacy</a></p>
+  <p><a href="https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.3.14">Download</a> · <a href="https://github.com/laoertongxue/GuoZaoKe-Polish/issues">Report an issue</a> · <a href="docs/privacy.en.md">Privacy</a></p>
 </div>
 
 ---
 
 A Chrome extension for [Guozaoke](https://www.guozaoke.com/), inspired by the reading experience of [V2EX Polish](https://github.com/coolpace/V2EX_Polish). Built independently with **WXT, TypeScript, and native DOM/CSS**, it improves the site's layout, themes, and interactions while preserving its content and native controls.
 
-**0.3.13 is a prerelease**, not yet listed in the Chrome Web Store. Automated tests and local browser component checks are available; comprehensive live-site compatibility and reference parity remain work in progress. See the [verification scope](docs/verification.md).
+**0.3.14 is a prerelease**, not yet listed in the Chrome Web Store. Automated tests and local browser component checks are available; comprehensive live-site compatibility and reference parity remain work in progress. See the [verification scope](docs/verification.md).
 
 ## Features
 
 | Area | Capabilities |
 | --- | --- |
 | Reading interface | Light, dark, and dawn themes; system preference; compact spacing and horizontal reading; consistent navigation, cards, pagination, and footer. |
-| Ad hiding | Hides recognized Google ad units and containers on Guozaoke by default, including side rails and bottom anchors. Reversible in settings; cosmetic filtering only, without blocking network requests. |
+| Ad hiding | Hides native sidebar promotions and recognized Google ad units on Guozaoke by default, including floating controls and ad spacing. Reversible in settings; cosmetic filtering only, without blocking network requests. |
 | Topics | Topic previews, read-later list, and read status; hot/latest topics and notifications in the extension popup. |
 | Replies | Indented threads, aligned threads, and original order; popular replies, long-reply folding, and floor navigation. |
 | Pagination | Optionally load up to two subsequent reply pages from the first topic page, deduplicate replies, and mark merged pages; retain native URLs. |
@@ -30,7 +30,7 @@ Defaults use the light theme, same-tab navigation, vertical layout, and disabled
 
 ## Installation and updates
 
-1. Open the [v0.3.13 release](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.3.13), download `GuoZaoKe-Polish-0.3.13-chrome.zip`, and extract it.
+1. Open the [v0.3.14 release](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.3.14), download `GuoZaoKe-Polish-0.3.14-chrome.zip`, and extract it.
 2. Enter `chrome://extensions/` in Chrome and enable **Developer mode**.
 3. Select **Load unpacked** and choose the extracted folder that directly contains `manifest.json`.
 4. Open a new [Guozaoke](https://www.guozaoke.com/) page. Use the popup's settings entry to customize preferences.
@@ -48,7 +48,7 @@ npm ci
 npm run build
 ```
 
-Load `.output/chrome-mv3` in Chrome. `npm run zip` creates `.output/guozaoke-polish-0.3.13-chrome.zip`.
+Load `.output/chrome-mv3` in Chrome. `npm run zip` creates `.output/guozaoke-polish-0.3.14-chrome.zip`.
 
 ## Uploads and share images
 

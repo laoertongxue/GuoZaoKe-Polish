@@ -5,6 +5,7 @@ html.gzk-hide-ads :is(
   ins.adsbygoogle,
   .google-auto-placed,
   .google-side-rail,
+  .grippy-host,
   div[id^="aswift_"][id$="_host"],
   iframe[id^="aswift_"],
   iframe[id^="google_ads_iframe_"],
@@ -12,4 +13,17 @@ html.gzk-hide-ads :is(
   iframe[src^="https://tpc.googlesyndication.com/"]
 ) {
   display: none !important;
+}
+
+/* These are Guozaoke's own /ad/ promotion cards. Collapse the whole card,
+   including its margin; preserve every other sidebar card and post image. */
+html.gzk-hide-ads .sidebar-right > .sidebox:has(> .ui-content.ad:only-child) {
+  display: none !important;
+}
+
+/* AdSense adds inline body padding separately from its floating slot. Keep
+   those live inline values intact for restoration when filtering is disabled. */
+html.gzk-hide-ads[data-gzk-ad-anchor] body {
+  padding-top: var(--gzk-ad-padding-top, 0px) !important;
+  padding-bottom: var(--gzk-ad-padding-bottom, 0px) !important;
 }

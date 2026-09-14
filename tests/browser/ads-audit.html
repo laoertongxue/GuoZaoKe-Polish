@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>广告残留回归验收</title>
+<link rel="stylesheet" href="/src/styles/content.css">
+<style>
+  body{margin:0;padding:0}header{padding:20px;display:flex;gap:18px;flex-wrap:wrap;background:var(--gzk-panel,#fff)}
+  .columns{max-width:1100px;margin:24px auto;display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:24px;padding:0 20px}
+  main{padding:24px;background:var(--gzk-panel,#fff);border-radius:10px}article{min-height:260px}.sidebar-right{width:auto!important;padding:0!important}
+  .usercard,.hot-topics{padding:20px}.promo{height:180px;background:#d7ead7;display:grid;place-items:center}.footer{padding:30px;background:var(--gzk-panel,#fff)}
+  iframe[title]{width:90%;height:60px;border:1px solid #ddd}.ad-simulation{background:#fbd9d9;border:1px dashed #c44;padding:20px}
+  @media(max-width:650px){.columns{grid-template-columns:1fr}}
+</style>
+<header><strong>广告残留回归验收</strong><label><input id="enabled" type="checkbox" checked>启用增强</label><label><input id="hideAds" type="checkbox" checked>隐藏站点广告</label><button id="insert">模拟浮动广告加载</button><button id="refresh-ad">模拟广告刷新</button><button id="dark">切换深色</button></header>
+<div class="columns"><main><article class="topic-detail"><h1>正文和正常图片保留</h1><p>以下广告外壳结构依据过早客实站 DOM 和 Google 浮动广告模块构建，不发起广告请求。</p><p class="ad">这段正文包含 ad 类名，不能误删。</p><a href="/ad/3">正文里提及推广的普通链接</a></article><div class="google-auto-placed" data-ad-test><ins class="adsbygoogle ad-simulation">行内广告占位</ins></div><section class="topic-reply">回复内容保留</section><iframe title="正常嵌入" srcdoc="正常 iframe 保留"></iframe></main>
+<aside class="sidebar-right"><div class="usercard container-box">账户卡片</div><div class="gzk-toolbox container-box">GuoZaoKe Polish 工具箱</div>
+<!-- Exact native promotion-card structure observed on guozaoke.com. -->
+<div class="sidebox container-box mt10" data-ad-test><div class="ui-content ad"><a href="/ad/3"><div class="promo">侧栏推广 /ad/3</div></a></div></div>
+<div class="sidebox container-box mt10" data-ad-test><div class="ui-content ad"><a href="/ad/4"><div class="promo">侧栏推广 /ad/4</div></a></div></div>
+<div class="sidebox container-box mt10 hot-topics">今日热议</div></aside></div>
+<div class="footer">Made by 拾贰画生 · 页脚下方不应留广告空白</div>
+<script type="module">
+import { installAdFilter } from '/src/features/ads.ts';
+import { applyPageAppearance } from '/src/features/page-bootstrap.ts';
+import { validateSettings } from '/src/shared/settings.ts';
+const filter = installAdFilter();
+const settings = validateSettings({});
+const update = () => applyPageAppearance(document.documentElement, settings, false);
+for (const key of ['enabled','hideAds']) document.getElementById(key).onchange = e => { settings[key] = e.target.checked; update(); };
+document.getElementById('dark').onclick = () => { settings.theme = settings.theme === 'dark' ? 'light' : 'dark'; update(); };
+document.getElementById('insert').onclick = () => {
+  if(document.getElementById('anchor'))return;
+  const anchor = document.createElement('ins');
+  anchor.id = 'anchor';anchor.className = 'adsbygoogle adsbygoogle-noablate';anchor.dataset.anchorStatus = 'displayed';anchor.dataset.adTest = '';
+  anchor.style.cssText = 'display:block!important;position:fixed;bottom:0;left:25%;width:50%;height:100px;background:#fbd9d9;z-index:100';
+  const grip = document.createElement('div');grip.className = 'grippy-host';
+  grip.attachShadow({mode:'closed'}).innerHTML = '<div style="position:absolute;top:-27px;left:45%;padding:3px 16px;background:white;border:1px solid #ddd;border-radius:5px">⌃</div>';
+  anchor.append(grip,document.createTextNode('底部广告 · 内联 display:block!important'));
+  document.body.append(anchor);
+  const rail = document.createElement('ins');rail.id = 'rail';rail.className = 'adsbygoogle';rail.dataset.adTest = '';rail.dataset.sideRailStatus = 'displayed';
+  rail.style.cssText = 'display:block!important;position:fixed;right:10px;top:35%;width:120px;height:160px;background:#fbd9d9;z-index:100';
+  const railGrip = document.createElement('div');railGrip.className = 'grippy-host';
+  railGrip.attachShadow({mode:'closed'}).innerHTML = '<div style="background:white;text-align:center">⌃</div>';
+  rail.append(railGrip,document.createTextNode('侧边浮动广告'));document.body.append(rail);
+  document.body.style.paddingBottom = '130px';
+};
+document.getElementById('refresh-ad').onclick = () => {
+  for(const id of ['anchor','rail']) document.getElementById(id)?.style.setProperty('display','block','important');
+  if(document.getElementById('anchor'))document.body.style.paddingBottom = '180px';
+};
+addEventListener('pagehide', () => filter.destroy());
+update();
+</script></html>

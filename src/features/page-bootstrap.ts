@@ -1,5 +1,6 @@
 import type { AppState } from '../shared/state';
 import type { Settings } from '../shared/settings';
+import { installAdFilter } from './ads';
 
 export function applyPageAppearance(html: HTMLElement, settings: Settings, systemDark: boolean) {
   html.classList.toggle('gzk-disabled', !settings.enabled);
@@ -13,6 +14,7 @@ export function applyPageAppearance(html: HTMLElement, settings: Settings, syste
 // Runs at document_start. Do not display the native DOM while waiting for saved
 // preferences and the initial DOM adaptation. A failed extension must fail open.
 export function bootstrapPage(load: () => Promise<AppState>, mount: (state: AppState) => Promise<void>) {
+  const ads = installAdFilter();
   let released = false, disposed = false;
   const guard = () => { if (!released) document.documentElement?.setAttribute('data-gzk-booting', ''); };
   guard();
@@ -32,7 +34,8 @@ export function bootstrapPage(load: () => Promise<AppState>, mount: (state: AppS
       if (!state.settings.enabled) release();
       await dom;
       if (!disposed) await mount(state);
-    } finally { clearTimeout(timeout); release(); }
+    } catch (error) { ads.destroy(); throw error; }
+    finally { clearTimeout(timeout); release(); }
   })();
-  return { ready, destroy() { disposed = true; clearTimeout(timeout); release(); document.removeEventListener('DOMContentLoaded', domReady); domReady(); } };
+  return { ready, destroy() { disposed = true; ads.destroy(); clearTimeout(timeout); release(); document.removeEventListener('DOMContentLoaded', domReady); domReady(); } };
 }
