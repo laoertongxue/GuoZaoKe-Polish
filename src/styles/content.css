@@ -1,5 +1,6 @@
 @import "./theme-tokens.css";
 @import "./author.css";
+@import "./ads.css";
 html[data-gzk-booting]{background:var(--gzk-bg,#f2f3f5)}html[data-gzk-booting] body{visibility:hidden!important}
 html[data-gzk-theme]{color-scheme:light}
 html[data-gzk-theme=dark]{color-scheme:dark}

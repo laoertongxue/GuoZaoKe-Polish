@@ -131,6 +131,7 @@ function buildControls(): HTMLElement {
   node.append(
     card('基础设置',
       toggle('enabled', '启用 GuoZaoKe Polish', '在过早客页面启用浏览和阅读增强。'),
+      toggle('hideAds', '隐藏站点广告', '隐藏过早客的 Google 广告及广告占位，包括侧边和底部浮动广告；仅影响页面显示，不拦截网络请求。'),
       toggle('openInNewTab', '新标签页打开主题', '从过早客主题列表打开主题时，保留当前列表。'),
       toggle('topicPreview', '主题列表内容预览', '在列表中直接预览主题内容，再决定是否打开。'),
       availability,

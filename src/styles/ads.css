@@ -1,0 +1,15 @@
+/* Guozaoke's AdSense units, including delayed auto ads and floating anchors.
+   Keep the original nodes intact so disabling the setting restores the page.
+   Do not match generic "ad" text, normal embeds, or the whole sidebar. */
+html.gzk-hide-ads :is(
+  ins.adsbygoogle,
+  .google-auto-placed,
+  .google-side-rail,
+  div[id^="aswift_"][id$="_host"],
+  iframe[id^="aswift_"],
+  iframe[id^="google_ads_iframe_"],
+  iframe[src^="https://googleads.g.doubleclick.net/pagead/"],
+  iframe[src^="https://tpc.googlesyndication.com/"]
+) {
+  display: none !important;
+}

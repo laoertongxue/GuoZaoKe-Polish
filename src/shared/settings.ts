@@ -1,5 +1,6 @@
 export const defaults = {
   enabled: true,
+  hideAds: true,
   openInNewTab: false,
   theme: 'light' as 'light' | 'dark' | 'dawn',
   autoTheme: false,

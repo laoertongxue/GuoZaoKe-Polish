@@ -1,5 +1,14 @@
 # 验证范围 / Verification scope
 
+## 0.3.13 广告隐藏 / Ad hiding
+
+- 27 个测试文件、160 项用例，以及类型检查和生产打包通过。
+- Chrome 本地合成广告容器验证：默认隐藏、侧边与底部容器高度归零、延迟插入广告、深色模式、关闭过滤及总开关后的恢复；正文、回复、相关主题和普通 iframe 保留。
+- 在过早客公开主题的原始 HTML 中确认存在 Google AdSense 脚本。本次查看用户现有标签页时广告未再次展示，因此本地容器验证不等于新安装包的实站广告投放验收。
+- 功能仅隐藏已识别的广告元素，不拦截网络请求；权限范围未增加。用户需重新加载扩展后生效。
+
+160 tests across 27 files, type checks, and production packaging passed. Local Chrome fixtures verified cosmetic hiding, collapsed ad containers, delayed insertion, dark mode, and restoration when disabled, while preserving normal content. The site's original public HTML includes AdSense, but ads were no longer present in the inspected live tab. Live ad delivery with the updated installed extension remains to be verified. No permissions were added; network requests are not blocked.
+
 ## 0.3.11 发布准备
 
 - Node.js 26：26 个测试文件、158 项用例通过；发布前执行类型检查、Chrome MV3 构建和 ZIP 校验。

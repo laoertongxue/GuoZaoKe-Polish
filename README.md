@@ -4,20 +4,21 @@
   <p>让过早客的浏览与阅读更从容。</p>
   <p>A more comfortable way to browse and read Guozaoke.</p>
   <p><strong>简体中文</strong> · <a href="README.en.md">English</a></p>
-  <p><a href="https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.3.12">下载安装包</a> · <a href="https://github.com/laoertongxue/GuoZaoKe-Polish/issues">反馈问题</a> · <a href="docs/privacy.md">隐私说明</a></p>
+  <p><a href="https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.3.13">下载安装包</a> · <a href="https://github.com/laoertongxue/GuoZaoKe-Polish/issues">反馈问题</a> · <a href="docs/privacy.md">隐私说明</a></p>
 </div>
 
 ---
 
 为 [过早客](https://www.guozaoke.com/) 开发的 Chrome 扩展，以 [V2EX Polish](https://github.com/coolpace/V2EX_Polish) 的阅读体验为参考，使用 **WXT、TypeScript 和原生 DOM/CSS 独立实现**。改善原有社区页面的排版、主题和交互，保留原站内容与操作入口。
 
-当前版本为 **0.3.12 预发布版**，尚未上架 Chrome 应用商店。自动测试和本地浏览器组件检查已经开展，完整的实站兼容性与参考体验对齐仍在完善，详见 [验证范围](docs/verification.md)。
+当前版本为 **0.3.13 预发布版**，尚未上架 Chrome 应用商店。自动测试和本地浏览器组件检查已经开展，完整的实站兼容性与参考体验对齐仍在完善，详见 [验证范围](docs/verification.md)。
 
 ## 功能
 
 | 方向 | 已实现的能力 |
 | --- | --- |
 | 阅读界面 | 浅色、深色、晨曦主题；跟随系统；紧凑间距与横向阅读；统一导航、卡片、分页和页脚。 |
+| 广告隐藏 | 默认隐藏过早客的 Google 广告与广告容器，包括侧边和底部浮动广告；可在控制选项关闭。仅隐藏页面元素，不拦截广告网络请求。 |
 | 主题浏览 | 主题预览、稍后阅读、已读状态；扩展面板中的最热、最新主题与消息。 |
 | 回复阅读 | 楼中楼缩进、靠左对齐、原始楼层；热门回复、长回复折叠和楼层跳转。 |
 | 分页增强 | 在主题第一页按设置合并后续最多两页回复，去重并标识已合并页码；保留原站分页链接。 |
@@ -30,7 +31,7 @@
 
 ## 安装与更新
 
-1. 打开 [v0.3.12 Releases](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.3.12)，下载 `GuoZaoKe-Polish-0.3.12-chrome.zip` 并解压。
+1. 打开 [v0.3.13 Releases](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.3.13)，下载 `GuoZaoKe-Polish-0.3.13-chrome.zip` 并解压。
 2. 在 Chrome 地址栏输入 `chrome://extensions/`，打开「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择解压后**直接包含 `manifest.json`** 的目录。
 4. 新开一个 [过早客](https://www.guozaoke.com/) 页面。点击扩展图标打开面板，通过「控制选项」调整设置。
@@ -48,7 +49,7 @@ npm ci
 npm run build
 ```
 
-在 Chrome 加载 `.output/chrome-mv3`。`npm run zip` 生成 `.output/guozaoke-polish-0.3.12-chrome.zip`。
+在 Chrome 加载 `.output/chrome-mv3`。`npm run zip` 生成 `.output/guozaoke-polish-0.3.13-chrome.zip`。
 
 ## 图片上传与分享
 

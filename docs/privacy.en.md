@@ -2,7 +2,7 @@
 
 [简体中文](privacy.md) · **English**
 
-Product: GuoZaoKe Polish. Updated: September 13, 2026.
+Product: GuoZaoKe Polish. Updated: September 14, 2026.
 
 ## Data handled and its purposes
 
@@ -20,6 +20,7 @@ Page content supports previews, reply layouts, member cards, and share images. U
 - Image emoji connect to public image origins such as `i.imgur.com`, without a page Referrer. Emoji codes become image links when the user submits; the extension does not automatically publish posts.
 - Files are sent to Imgur only after the user clicks upload. Returned image URLs are public.
 - No analytics SDK, advertising SDK, or project-operated telemetry server is included.
+- Ad hiding uses page styles to hide recognized Google ad units and containers on Guozaoke. It adds no permissions or data transmission and does not block the site's ad scripts or network requests. It is enabled by default and can be disabled in settings.
 
 ## Permissions
 

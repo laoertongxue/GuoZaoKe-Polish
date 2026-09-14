@@ -5,7 +5,7 @@ export function applyPageAppearance(html: HTMLElement, settings: Settings, syste
   html.classList.toggle('gzk-disabled', !settings.enabled);
   if (settings.enabled) html.dataset.gzkTheme = settings.autoTheme ? (systemDark ? 'dark' : 'light') : settings.theme;
   else delete html.dataset.gzkTheme;
-  for (const [name, on] of Object.entries({compact: settings.compact, 'hide-time': settings.hideReplyTime, 'hide-mention': settings.hideRefName, 'hide-account': settings.hideAccount, 'image-preview': settings.imagePreview})) {
+  for (const [name, on] of Object.entries({compact: settings.compact, 'hide-ads': settings.hideAds, 'hide-time': settings.hideReplyTime, 'hide-mention': settings.hideRefName, 'hide-account': settings.hideAccount, 'image-preview': settings.imagePreview})) {
     html.classList.toggle(`gzk-${name}`, settings.enabled && on);
   }
 }
