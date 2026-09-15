@@ -22,3 +22,5 @@ docs/superpowers/
 .codex/
 .agents/
 .codegraph/
+
+.worktrees/
