@@ -354,3 +354,7 @@ html[data-gzk-theme] .gzk-author-popover .gzk-author-avatar{width:56px;height:56
 html[data-gzk-theme] .gzk-author-popover .gzk-author-heading{font-size:16px}
 html[data-gzk-theme] .gzk-author-popover .gzk-author-signature{font-size:12px!important}
 @media(max-width:767px){html[data-gzk-theme] .gzk-site-footer>.gzk-footer-author{grid-row:2}}
+
+/* Extension-origin iframe keeps analysis contents out of the forum DOM. */
+.gzk-analysis-panel{position:fixed;z-index:10010;right:0;top:0;bottom:0;width:min(520px,100vw);display:flex;flex-direction:column;background:var(--gzk-card,#fff);box-shadow:-8px 0 30px #0002;border-left:1px solid var(--gzk-border,#dce5ea)}
+.gzk-analysis-panel-top{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;flex:none}.gzk-analysis-panel iframe{border:0;flex:1;width:100%;min-height:0}

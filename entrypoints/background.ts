@@ -4,8 +4,17 @@ import { applyAction } from '../src/shared/state';
 import { readableUrl, topicUrl, ORIGIN } from '../src/site/urls';
 import { readStoredState } from '../src/shared/storage';
 import { readShareImage } from '../src/site/share-images';
+import { uploadImage } from '../src/site/image-upload';
+import { createAnalysisHandler } from '../src/analysis/background';
+import { fetchEvidenceBytes, searchTavily } from '../src/analysis/evidence';
 
 export default defineBackground(() => {
+  const analysis = createAnalysisHandler(browser, {
+    search: (query, key, signal) => searchTavily(query, key, { signal }),
+    readSource: (url, signal,maxBytes) => fetchEvidenceBytes(url, { signal,maxBytes }),
+  });
+  // Keep sensitive storage inaccessible to content scripts, with no persistent fallback.
+  void browser.storage.session?.setAccessLevel?.({ accessLevel: 'TRUSTED_CONTEXTS' });
   let queue=Promise.resolve();
   const serial=<T>(run:()=>Promise<T>):Promise<T>=>{
     const result=queue.then(run); queue=result.then(()=>undefined,()=>undefined); return result;
@@ -44,24 +53,18 @@ export default defineBackground(() => {
   browser.runtime.onMessage.addListener((message,sender,sendResponse)=>{
     if (sender.id!==browser.runtime.id) return;
     const run=async()=>{
+      if (typeof message?.type === 'string' && message.type.startsWith('analysis:')) return analysis(message, sender);
       if (message?.type==='state:get') return serial(read);
       if (message?.type==='state:mutate') return serial(()=>write(message.action,message.payload));
       if (message?.type==='site:get') return getPage(message.url);
       if (message?.type==='share:open') { const id=topicUrl(message.url).split('/').pop()!; await browser.tabs.create({url:`${browser.runtime.getURL('/share.html')}?topic=${id}`});return true; }
       if (message?.type==='share:image') return readShareImage(message.url,origin=>browser.permissions.contains({origins:[origin]}));
       if (message?.type==='image:upload') {
-        if(typeof message.base64!=='string'||message.base64.length>14_000_000||!/^[A-Za-z0-9+/]+=*$/.test(message.base64)||!['image/png','image/jpeg','image/gif','image/webp'].includes(message.mime))throw new Error('图片格式或大小不支持');
-        if(!await browser.permissions.contains({origins:['https://api.imgur.com/*']}))throw new Error('请先在控制选项中授权 Imgur');
-        const stored=await browser.storage.local.get('gzk:imgur-client');const client=stored['gzk:imgur-client'];
-        if(typeof client!=='string'||!client.trim())throw new Error('请先配置 Imgur Client ID');
-        const body=new FormData();body.append('image',message.base64);body.append('type','base64');
-        const res=await fetch('https://api.imgur.com/3/image',{method:'POST',headers:{Authorization:`Client-ID ${client.trim()}`},body,credentials:'omit',redirect:'error',signal:AbortSignal.timeout(60000)});
-        const json=await res.json();if(!res.ok||!json.success||typeof json.data?.link!=='string')throw new Error(`Imgur 上传失败（${res.status}），请检查 Client ID、网络或额度`);
-        const link=new URL(json.data.link);if(link.protocol!=='https:'||link.hostname!=='i.imgur.com')throw new Error('图床返回了意外地址');
-        return link.href;
+        return uploadImage(message,sender);
       }
       if (message?.type==='options:open') {
         if(message.page==='tags') await browser.tabs.create({url:`${browser.runtime.getURL('/options.html')}#tags`});
+        else if(message.page==='images') await browser.tabs.create({url:`${browser.runtime.getURL('/options.html')}#image-hosting`});
         else await browser.runtime.openOptionsPage();
         return true;
       }

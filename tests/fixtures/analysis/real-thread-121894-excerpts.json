@@ -1,0 +1,685 @@
+{
+  "purpose": "必要原帖片段，用户名元信息已省略；正文原文（包括提及）不修改，以保留 Unicode 坐标。不是独立留出。",
+  "referenceFiles": {
+    "snapshot.json": "25f908e77b45acc6f688be2978f8f940c3cabbfd567670353adee7b3c08b2aeb",
+    "analysis.json": "4532ef0a885611376326dfaf83c87ee809421bd1bc928288fa6b41e93e0c1464"
+  },
+  "snapshot": {
+    "snapshot_id": "GZK-121894-minimal-development-excerpts",
+    "url": "https://www.guozaoke.com/t/121894",
+    "title": "美团优选什么情况？为什么倒闭了 买菜用不了",
+    "freeze_recorded_at": "2026-09-15T05:15:43Z",
+    "original_post_date": null,
+    "date_limitation": "页面只显示相对日期“1年前”；未取得绝对发帖时间。2025年6月仅为按话题内容推测的事件背景，不能当作发帖日期，也不能断言某资料在发帖前或后已公开。",
+    "op": {
+      "participant_id": "OP",
+      "text": "今天刷微博发现美团优选倒闭了 什么情况阿  平常买菜用的最多的软件了 毫无征兆阿  大家平常都用哪些社交团购软件"
+    },
+    "replies": [
+      {
+        "id": "1398480",
+        "floor_at_snapshot": 1,
+        "participant_id": "P01",
+        "text": "昨天才买了啊",
+        "sha256": "bb47ea9a48180fbdc7a178ec00176db5afde38ccbe9f040177a18a78518759de"
+      },
+      {
+        "id": "1398500",
+        "floor_at_snapshot": 3,
+        "participant_id": "P03",
+        "text": "美团不是有小象超市(原美团买菜)吗",
+        "sha256": "be285c0667cfc7098b97fbc1caa2b73e29cd44238904d958824b99114719136f"
+      },
+      {
+        "id": "1398638",
+        "floor_at_snapshot": 21,
+        "participant_id": "P10",
+        "text": "@tianqiliangle\n7.64 复制打开抖音，看看【晋江小哥宇熙的作品】外卖发工资啦，最开心的就是今天了，一个月的辛勤付出... https://v.douyin.com/4xuaDfcMeWg/ IIV:/ b@A.tr 11/03\n平均每单单手7元，站长要赚钱，所以说每单配送成本10元左右很夸张？",
+        "sha256": "8d00cbb615f28e82b8335af223e5039c444daafc8c568da88c61d300134c46eb"
+      }
+    ],
+    "current_reply_count": 25,
+    "completeness": "开发测试用必要片段：主楼及原帖第1、3、21楼，不是整帖采集。",
+    "external_links_in_replies": [
+      {
+        "reply_id": "1398638",
+        "url": "https://v.douyin.com/4xuaDfcMeWg/",
+        "access": "未取得视频画面、音频、字幕、原发布者或日期"
+      }
+    ],
+    "content_sha256": "7486ade4411aa6aafd29a2195afe039d5b4f5c41c261b9dc0451af663af15b07"
+  },
+  "analysis": {
+    "id": "GZK-121894-minimal-development-excerpts",
+    "rules_version": "0.2.1",
+    "snapshot_id": "GZK-121894-minimal-development-excerpts",
+    "snapshot_sha256": "7486ade4411aa6aafd29a2195afe039d5b4f5c41c261b9dc0451af663af15b07",
+    "purpose": "开发回归片段，沿用旧样板分析条目，不是独立留出集或事实认证。",
+    "questions": {
+      "Q1": {
+        "question": "优选、买菜、小象是不是同一业务？",
+        "target": "更名主体、业务实体和服务模式",
+        "required": "公司品牌沿革原件；相同日期并列业务披露",
+        "search": "美团 官网 美团买菜 小象 更名；年报 Meituan Select Xiaoxiang",
+        "stop": "原件明确更名主体后停止重复检索；不由名称推断价格或质量。",
+        "display": "业务关系表；合并同义主张但保留归属。"
+      },
+      "Q2": {
+        "question": "退出哪些地区，是否全国关闭？",
+        "target": "事件时点、地区覆盖、关闭与继续经营的边界",
+        "required": "分地区公告或名单；特定地区小程序通知的时间与适用地",
+        "search": "美团优选 2025 6月 调整 官方；美团 2025 中期业绩 Select",
+        "stop": "取得公司对部分区域退出的回顾；缺省市名单、精确帖日期时弃判具体覆盖，不用报道篇数补齐。",
+        "display": "全国论断与地区经历并列；不可把暂不可用变成企业破产。"
+      },
+      "Q3": {
+        "question": "配送费、骑手收入、平台成本能否比较？",
+        "target": "付款方、收款方、统计人群、配送模式、期间与分母",
+        "required": "原统计表或工资与完成单量同口径记录；费用定义；必要时样本权重",
+        "search": "美团 骑手 真实收入 2024；美团 配送 真实佣金；年报 delivery services logistics expenses",
+        "stop": "定义可以澄清；各数值缺原始分母或视频不可读取则留空，不从其他平均数推回。",
+        "display": "争议数值保留“作者声称”；核验值为null，禁止排行、取中间值或混除。"
+      },
+      "Q5": {
+        "question": "替代平台、价格、质量、赔付如何？",
+        "target": "用户所在地区与时点；同品同规格同优惠购物篮；订单及售后记录",
+        "required": "具体地址服务查询、同期对比订单、售后凭据、定义明确的质量指标",
+        "search": "优先检查本帖是否提供可读订单或售后原件；当前未提供",
+        "stop": "缺地址、日期、订单即停止全局排名；本轮不索要网友私人订单，不伪造跨城市价格。",
+        "display": "有限个人体验单列；外部真实性不强制判定，不能外推全民。"
+      }
+    },
+    "claims": [
+      {
+        "id": "C01",
+        "reply_id": "OP",
+        "floor": "主楼",
+        "participant": "OP",
+        "type": "混合：疑问前提",
+        "question": "Q2",
+        "claim": "优选不可用是否意味着倒闭？",
+        "status": "前提需拆开",
+        "evidence_ids": [],
+        "reason": "使用中断、区域退出、公司破产不是同一命题；主楼未提供城市或停用通知。",
+        "source_span": "OP · 依据字符[0,56)；关键词[11,14)",
+        "span_start": 11,
+        "span_end": 14,
+        "span_sha256": "ca27f851634eb55d88bef2d0204e757b1cbaa14d71a43c03af11c91e376df530",
+        "scope": {
+          "subject": {
+            "state": "textual_scope",
+            "value": "美团优选",
+            "source_ref": "OP:[0,56)"
+          },
+          "time": {
+            "state": "textual_scope",
+            "value": "今天（相对）",
+            "source_ref": "OP:[0,56)",
+            "absolute_post_date": null
+          },
+          "region": {
+            "state": "not_stated",
+            "value": null
+          },
+          "metric": {
+            "state": "textual_scope",
+            "value": "能否使用／倒闭前提",
+            "source_ref": "OP:[0,56)"
+          },
+          "unit": {
+            "state": "not_stated",
+            "value": null
+          },
+          "quantifier": {
+            "state": "not_stated",
+            "value": null
+          },
+          "conditions": {
+            "state": "not_stated",
+            "value": null
+          },
+          "polarity": {
+            "state": "textual_scope",
+            "value": "疑问/质疑",
+            "note": "保留语气；不代表核查结论"
+          }
+        },
+        "modality": "question",
+        "check_plan": "分地区公告或名单；特定地区小程序通知的时间与适用地",
+        "truth_at_post_time": "unknown",
+        "system_evidence_credit_to_author": false,
+        "anchor_span": {
+          "start": 11,
+          "end": 14,
+          "sha256": "ca27f851634eb55d88bef2d0204e757b1cbaa14d71a43c03af11c91e376df530"
+        },
+        "supporting_spans": [
+          {
+            "reply_id": "OP",
+            "start": 0,
+            "end": 56,
+            "sha256": "074f30273d08759da172de47e6c05870eee3f15fb71a1486f970e28f5a30dccc",
+            "indexing": "Unicode code points; zero-based; end-exclusive"
+          }
+        ],
+        "evidence_scope_policy": "外部查得日期/地区不得回填为发言者原本声明的范围。"
+      },
+      {
+        "id": "C02",
+        "reply_id": "OP",
+        "floor": "主楼",
+        "participant": "OP",
+        "type": "个人经历",
+        "question": "Q5",
+        "claim": "主楼常用该服务且感到突然",
+        "status": "有限自述",
+        "evidence_ids": [],
+        "reason": "不要求用户为自己的感受提供统计证明，也不能由此认定全国没有预警。",
+        "source_span": "OP · 依据字符[0,56)；关键词[22,26)",
+        "span_start": 22,
+        "span_end": 26,
+        "span_sha256": "4ca81e8d2a54a4f70d20f682dc62db31614d3d0314104a537954453b9350d9f2",
+        "scope": {
+          "subject": {
+            "state": "textual_scope",
+            "value": "主楼作者",
+            "source_ref": "OP:[0,56)"
+          },
+          "time": {
+            "state": "textual_scope",
+            "value": "平常",
+            "source_ref": "OP:[0,56)",
+            "absolute_post_date": null
+          },
+          "region": {
+            "state": "not_stated",
+            "value": null
+          },
+          "metric": {
+            "state": "textual_scope",
+            "value": "使用频率和突然感",
+            "source_ref": "OP:[0,56)"
+          },
+          "unit": {
+            "state": "not_stated",
+            "value": null
+          },
+          "quantifier": {
+            "state": "textual_scope",
+            "value": "本人",
+            "source_ref": "OP:[0,56)"
+          },
+          "conditions": {
+            "state": "not_stated",
+            "value": null
+          },
+          "polarity": {
+            "state": "textual_scope",
+            "value": "肯定或估计",
+            "note": "保留语气；不代表核查结论"
+          }
+        },
+        "modality": "asserted",
+        "check_plan": "具体地址服务查询、同期对比订单、售后凭据、定义明确的质量指标",
+        "truth_at_post_time": "unknown",
+        "system_evidence_credit_to_author": false,
+        "anchor_span": {
+          "start": 22,
+          "end": 26,
+          "sha256": "4ca81e8d2a54a4f70d20f682dc62db31614d3d0314104a537954453b9350d9f2"
+        },
+        "supporting_spans": [
+          {
+            "reply_id": "OP",
+            "start": 0,
+            "end": 56,
+            "sha256": "074f30273d08759da172de47e6c05870eee3f15fb71a1486f970e28f5a30dccc",
+            "indexing": "Unicode code points; zero-based; end-exclusive"
+          }
+        ],
+        "evidence_scope_policy": "外部查得日期/地区不得回填为发言者原本声明的范围。"
+      },
+      {
+        "id": "C03",
+        "reply_id": "OP",
+        "floor": "主楼",
+        "participant": "OP",
+        "type": "提问",
+        "question": "Q5",
+        "claim": "寻找社区团购替代品",
+        "status": "不作真伪评价",
+        "evidence_ids": [],
+        "reason": "地区不明，不能给出当地可用清单。",
+        "source_span": "OP · 依据字符[0,56)；关键词[42,46)",
+        "span_start": 42,
+        "span_end": 46,
+        "span_sha256": "93a02876f50588bfecaf76bddc85ffdb17182a2489839649a8352eac7b847ffb",
+        "scope": {
+          "subject": {
+            "state": "textual_scope",
+            "value": "社区团购候选",
+            "source_ref": "OP:[0,56)"
+          },
+          "time": {
+            "state": "not_stated",
+            "value": null,
+            "absolute_post_date": null
+          },
+          "region": {
+            "state": "not_stated",
+            "value": null
+          },
+          "metric": {
+            "state": "textual_scope",
+            "value": "可选服务",
+            "source_ref": "OP:[0,56)"
+          },
+          "unit": {
+            "state": "not_stated",
+            "value": null
+          },
+          "quantifier": {
+            "state": "not_stated",
+            "value": null
+          },
+          "conditions": {
+            "state": "textual_scope",
+            "value": "提问",
+            "source_ref": "OP:[0,56)"
+          },
+          "polarity": {
+            "state": "textual_scope",
+            "value": "疑问/质疑",
+            "note": "保留语气；不代表核查结论"
+          }
+        },
+        "modality": "question",
+        "check_plan": "具体地址服务查询、同期对比订单、售后凭据、定义明确的质量指标",
+        "truth_at_post_time": "unknown",
+        "system_evidence_credit_to_author": false,
+        "anchor_span": {
+          "start": 42,
+          "end": 46,
+          "sha256": "93a02876f50588bfecaf76bddc85ffdb17182a2489839649a8352eac7b847ffb"
+        },
+        "supporting_spans": [
+          {
+            "reply_id": "OP",
+            "start": 0,
+            "end": 56,
+            "sha256": "074f30273d08759da172de47e6c05870eee3f15fb71a1486f970e28f5a30dccc",
+            "indexing": "Unicode code points; zero-based; end-exclusive"
+          }
+        ],
+        "evidence_scope_policy": "外部查得日期/地区不得回填为发言者原本声明的范围。"
+      },
+      {
+        "id": "C04",
+        "reply_id": "1398480",
+        "floor": 1,
+        "participant": "P01",
+        "type": "个人经历",
+        "question": "Q2",
+        "claim": "近日仍有购买经历",
+        "status": "有限自述",
+        "evidence_ids": [],
+        "reason": "未附订单；本人一次可用既不证明全国可用，也不反驳不同地区停用。",
+        "source_span": "1398480 · 依据字符[0,6)；关键词[0,6)",
+        "span_start": 0,
+        "span_end": 6,
+        "span_sha256": "bb47ea9a48180fbdc7a178ec00176db5afde38ccbe9f040177a18a78518759de",
+        "scope": {
+          "subject": {
+            "state": "textual_scope",
+            "value": "回帖者",
+            "source_ref": "1398480:[0,6)"
+          },
+          "time": {
+            "state": "textual_scope",
+            "value": "昨天（相对）",
+            "source_ref": "1398480:[0,6)",
+            "absolute_post_date": null
+          },
+          "region": {
+            "state": "not_stated",
+            "value": null
+          },
+          "metric": {
+            "state": "textual_scope",
+            "value": "购买经历",
+            "source_ref": "1398480:[0,6)"
+          },
+          "unit": {
+            "state": "not_stated",
+            "value": null
+          },
+          "quantifier": {
+            "state": "textual_scope",
+            "value": "本人",
+            "source_ref": "1398480:[0,6)"
+          },
+          "conditions": {
+            "state": "not_stated",
+            "value": null
+          },
+          "polarity": {
+            "state": "textual_scope",
+            "value": "肯定或估计",
+            "note": "保留语气；不代表核查结论"
+          }
+        },
+        "modality": "asserted",
+        "check_plan": "分地区公告或名单；特定地区小程序通知的时间与适用地",
+        "truth_at_post_time": "unknown",
+        "system_evidence_credit_to_author": false,
+        "anchor_span": {
+          "start": 0,
+          "end": 6,
+          "sha256": "bb47ea9a48180fbdc7a178ec00176db5afde38ccbe9f040177a18a78518759de"
+        },
+        "supporting_spans": [
+          {
+            "reply_id": "1398480",
+            "start": 0,
+            "end": 6,
+            "sha256": "bb47ea9a48180fbdc7a178ec00176db5afde38ccbe9f040177a18a78518759de",
+            "indexing": "Unicode code points; zero-based; end-exclusive"
+          }
+        ],
+        "evidence_scope_policy": "外部查得日期/地区不得回填为发言者原本声明的范围。"
+      },
+      {
+        "id": "C07",
+        "reply_id": "1398500",
+        "floor": 3,
+        "participant": "P03",
+        "type": "实体事实",
+        "question": "Q1",
+        "claim": "小象的前身为美团买菜",
+        "status": "有直接依据",
+        "evidence_ids": [
+          "S01"
+        ],
+        "reason": "品牌更名公告直接说明。",
+        "source_span": "1398500 · 依据字符[0,17)；关键词[10,15)",
+        "span_start": 10,
+        "span_end": 15,
+        "span_sha256": "b727abc46206b205a300b0e1d407138e6b3c98e89b34d846ddae1e7ac4973260",
+        "scope": {
+          "subject": {
+            "state": "textual_scope",
+            "value": "小象／美团买菜",
+            "source_ref": "1398500:[0,17)"
+          },
+          "time": {
+            "state": "not_stated",
+            "value": null,
+            "absolute_post_date": null
+          },
+          "region": {
+            "state": "not_stated",
+            "value": null
+          },
+          "metric": {
+            "state": "textual_scope",
+            "value": "品牌前身",
+            "source_ref": "1398500:[0,17)"
+          },
+          "unit": {
+            "state": "not_stated",
+            "value": null
+          },
+          "quantifier": {
+            "state": "not_stated",
+            "value": null
+          },
+          "conditions": {
+            "state": "not_stated",
+            "value": null
+          },
+          "polarity": {
+            "state": "textual_scope",
+            "value": "肯定或估计",
+            "note": "保留语气；不代表核查结论"
+          }
+        },
+        "modality": "asserted",
+        "check_plan": "公司品牌沿革原件；相同日期并列业务披露",
+        "truth_at_post_time": "unknown",
+        "system_evidence_credit_to_author": false,
+        "anchor_span": {
+          "start": 10,
+          "end": 15,
+          "sha256": "b727abc46206b205a300b0e1d407138e6b3c98e89b34d846ddae1e7ac4973260"
+        },
+        "supporting_spans": [
+          {
+            "reply_id": "1398500",
+            "start": 0,
+            "end": 17,
+            "sha256": "be285c0667cfc7098b97fbc1caa2b73e29cd44238904d958824b99114719136f",
+            "indexing": "Unicode code points; zero-based; end-exclusive"
+          }
+        ],
+        "evidence_scope_policy": "外部查得日期/地区不得回填为发言者原本声明的范围。"
+      },
+      {
+        "id": "C53",
+        "reply_id": "1398638",
+        "floor": 21,
+        "participant": "P10",
+        "type": "个案数值",
+        "question": "Q3",
+        "claim": "视频个案骑手单均约7元",
+        "status": "原件不可核验",
+        "evidence_ids": [
+          "S09"
+        ],
+        "reason": "未读到视频，样本、期间及分母未知。",
+        "source_span": "1398638 · 依据字符[122,155)；关键词[126,130)",
+        "span_start": 126,
+        "span_end": 130,
+        "span_sha256": "05c7714cd522373577fe6e4b5f413a691e9f07aeba231d6787b9c36c9818e9aa",
+        "scope": {
+          "subject": {
+            "state": "textual_scope",
+            "value": "所链接视频中的骑手",
+            "source_ref": "1398638:[122,155)"
+          },
+          "time": {
+            "state": "not_stated",
+            "value": null,
+            "absolute_post_date": null
+          },
+          "region": {
+            "state": "not_stated",
+            "value": null
+          },
+          "metric": {
+            "state": "textual_scope",
+            "value": "单均到手收入",
+            "source_ref": "1398638:[122,155)"
+          },
+          "unit": {
+            "state": "textual_scope",
+            "value": "元/单",
+            "source_ref": "1398638:[122,155)"
+          },
+          "quantifier": {
+            "state": "textual_scope",
+            "value": "7",
+            "source_ref": "1398638:[122,155)"
+          },
+          "conditions": {
+            "state": "textual_scope",
+            "value": "视频未读；不可推广总体",
+            "source_ref": "1398638:[122,155)"
+          },
+          "polarity": {
+            "state": "textual_scope",
+            "value": "肯定或估计",
+            "note": "保留语气；不代表核查结论"
+          }
+        },
+        "modality": "estimate_or_reported_value",
+        "check_plan": "原统计表或工资与完成单量同口径记录；费用定义；必要时样本权重",
+        "truth_at_post_time": "unknown",
+        "system_evidence_credit_to_author": false,
+        "anchor_span": {
+          "start": 126,
+          "end": 130,
+          "sha256": "05c7714cd522373577fe6e4b5f413a691e9f07aeba231d6787b9c36c9818e9aa"
+        },
+        "supporting_spans": [
+          {
+            "reply_id": "1398638",
+            "start": 122,
+            "end": 155,
+            "sha256": "6fc27bd35fdea9b144dafb19896d617ff0da5d904809e87a37aba962bed01add",
+            "indexing": "Unicode code points; zero-based; end-exclusive"
+          }
+        ],
+        "evidence_scope_policy": "外部查得日期/地区不得回填为发言者原本声明的范围。"
+      },
+      {
+        "id": "C54",
+        "reply_id": "1398638",
+        "floor": 21,
+        "participant": "P10",
+        "type": "推论数值",
+        "question": "Q3",
+        "claim": "骑手7元加站点盈利意味着总成本约10元",
+        "status": "推论不充分",
+        "evidence_ids": [
+          "S09"
+        ],
+        "reason": "没有补充成本清单；对象从骑手到账变为总配送成本，不能把它当成原10元平均的证据。",
+        "source_span": "1398638 · 依据字符[122,155)；关键词[144,149)",
+        "span_start": 144,
+        "span_end": 149,
+        "span_sha256": "12866ba2b5ce8dfb8de75dbf2311ead79049b802e410a50743887e4dbd6f67cd",
+        "scope": {
+          "subject": {
+            "state": "textual_scope",
+            "value": "配送总成本",
+            "source_ref": "1398638:[122,155)"
+          },
+          "time": {
+            "state": "not_stated",
+            "value": null,
+            "absolute_post_date": null
+          },
+          "region": {
+            "state": "not_stated",
+            "value": null
+          },
+          "metric": {
+            "state": "textual_scope",
+            "value": "骑手收入＋站点部分",
+            "source_ref": "1398638:[122,155)"
+          },
+          "unit": {
+            "state": "textual_scope",
+            "value": "元/单",
+            "source_ref": "1398638:[122,155)"
+          },
+          "quantifier": {
+            "state": "textual_scope",
+            "value": "10左右",
+            "source_ref": "1398638:[122,155)"
+          },
+          "conditions": {
+            "state": "textual_scope",
+            "value": "站长要赚钱；具体加项未列",
+            "source_ref": "1398638:[122,155)"
+          },
+          "polarity": {
+            "state": "textual_scope",
+            "value": "肯定或估计",
+            "note": "保留语气；不代表核查结论"
+          }
+        },
+        "modality": "estimate_or_reported_value",
+        "check_plan": "原统计表或工资与完成单量同口径记录；费用定义；必要时样本权重",
+        "truth_at_post_time": "unknown",
+        "system_evidence_credit_to_author": false,
+        "anchor_span": {
+          "start": 144,
+          "end": 149,
+          "sha256": "12866ba2b5ce8dfb8de75dbf2311ead79049b802e410a50743887e4dbd6f67cd"
+        },
+        "supporting_spans": [
+          {
+            "reply_id": "1398638",
+            "start": 122,
+            "end": 155,
+            "sha256": "6fc27bd35fdea9b144dafb19896d617ff0da5d904809e87a37aba962bed01add",
+            "indexing": "Unicode code points; zero-based; end-exclusive"
+          }
+        ],
+        "evidence_scope_policy": "外部查得日期/地区不得回填为发言者原本声明的范围。"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "S01",
+        "title": "美团买菜升级为“小象超市”",
+        "date": "2023-12-01",
+        "url": "https://www.meituan.com/news/NN231201067004457",
+        "source_type": "公司品牌公告",
+        "access": "原网页正文已读",
+        "supports": "更名主体为美团买菜；小象采用自营即时零售模式。",
+        "limits": "适合核对自身品牌沿革；不独立证明质量、价格或实际配送时长。",
+        "locator": "首段与第二段",
+        "independence_group": "美团",
+        "methods": "主体自己的业务声明；不将广告性品质措辞作为测量数据。"
+      },
+      {
+        "id": "S09",
+        "title": "回复所附抖音工资视频",
+        "date": null,
+        "url": "https://v.douyin.com/4xuaDfcMeWg/",
+        "source_type": "作者提供的外部线索",
+        "access": "未取得视频内容",
+        "supports": "仅能确认当前回复给出了短链。",
+        "limits": "未取得声音、字幕、工资及单量记录，7元不可核验。",
+        "locator": "回复1398638 / 本快照#21",
+        "independence_group": "unknown",
+        "methods": "短链访问失败；分享字符串不作数据与日期。"
+      },
+      {
+        "id": "S03",
+        "title": "美团2023年报",
+        "date": "2024-04-29",
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2024/0429/2024042900115.pdf",
+        "source_type": "发行人年报 / 港交所披露",
+        "access": "PDF表格文本及表头已读",
+        "supports": "新业务分部2022、2023经营亏损；2023优选亏损仅定性披露。",
+        "limits": "未列优选单项金额；不能把分部亏损相加后归给优选。",
+        "locator": "印刷页32；页14；附注5.1",
+        "independence_group": "美团",
+        "methods": "2022 28,379,210及2023 20,166,484人民币千元；合计为本报告计算。"
+      }
+    ],
+    "facts": [
+      {
+        "id": "F01",
+        "metric": "新业务分部经营亏损金额",
+        "period": "2022",
+        "value": 283.7921,
+        "unit": "亿元",
+        "scope": "新业务分部合计；非优选单项",
+        "source_id": "S03",
+        "locator": "p32",
+        "original_value": 28379210,
+        "original_unit": "人民币千元",
+        "formula": "原数÷100000",
+        "basis": "披露亏损以负数列示；本表以正数表示亏损大小"
+      }
+    ],
+    "remaining_gaps": [
+      "只包含必要原帖片段",
+      "未保存外部原件正文，来源只能作为线索"
+    ]
+  }
+}

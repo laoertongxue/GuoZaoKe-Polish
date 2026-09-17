@@ -41,7 +41,7 @@ export function lockPageScroll() {
   };
 }
 const openModals=new Set<HTMLDialogElement>();
-export function modal(title:string, options:{compact?:boolean}={}) {
+export function modal(title:string, options:{compact?:boolean;canClose?:()=>boolean}={}) {
   let active=document.activeElement;
   while(active?.shadowRoot?.activeElement)active=active.shadowRoot.activeElement;
   const invoker=active instanceof HTMLElement?active:undefined;
@@ -54,7 +54,7 @@ export function modal(title:string, options:{compact?:boolean}={}) {
     openModals.delete(dialog);host.remove();unlock();
     if(wasTop&&invoker?.isConnected)invoker.focus({preventScroll:true});
   };
-  const close=()=>{if(closed)return;dialog.close();cleanup();};
+  const close=()=>{if(closed||options.canClose?.()===false)return;dialog.close();cleanup();};
   const dismiss=button('×',close);dismiss.setAttribute('aria-label','关闭'); header.append(heading,dismiss);
   const body=el('section','','body'),footer=el('footer','','dialog-footer');dialog.append(header,body,footer);root.append(dialog);
   const onBackdrop=(event:PointerEvent)=>{

@@ -1,0 +1,11 @@
+import { mountWorkspace, renderReport } from '../../src/analysis/workspace';
+import { AnalysisRepository } from '../../src/analysis/repository';
+import { examplePackage } from '../fixtures/analysis/package';
+import '../../src/styles/analysis.css';
+const root=document.querySelector<HTMLElement>('#app')!;
+const values:Record<string,unknown>={};
+const repo=new AnalysisRepository({get:async key=>({[key]:values[key]}),set:async data=>{Object.assign(values,data);},remove:async key=>{delete values[key];}});
+await repo.savePackage(examplePackage());
+await mountWorkspace(root,{repo,request:async message=>message.type==='analysis:config:get'?{configs:[],hasSearchKey:false}:false,loadTopic:async()=>{throw new Error('夹具不读取真实帖子');},permissions:{contains:async()=>false,request:async()=>false}});
+document.querySelector<HTMLButtonElement>('#theme')!.onclick=()=>{document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';};
+document.querySelector<HTMLButtonElement>('#sample')!.onclick=()=>renderReport(root,examplePackage(),'evidence');

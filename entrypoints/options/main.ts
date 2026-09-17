@@ -5,6 +5,7 @@ import { getState, mutate, saveSettings, setTags, watchState, type AppState } fr
 import type { Settings } from '../../src/shared/settings';
 import { applyTheme, button, el, emptyState, errorMessage, icon, iconButton, link, watchSystemTheme } from '../../src/shared/app-ui';
 import { ORIGIN } from '../../src/site/urls';
+import { BILIBILI_UPLOAD_PERMISSIONS } from '../../src/site/image-upload';
 
 type Page = 'controls' | 'tags' | 'backup' | 'about';
 type BooleanSetting = { [K in keyof Settings]: Settings[K] extends boolean ? K : never }[keyof Settings];
@@ -172,7 +173,34 @@ function buildControls(): HTMLElement {
 
 function buildImageHosting(): HTMLElement {
   const card = el('section', 'panel-card');
+  card.id='image-hosting';card.tabIndex=-1;
   const content = el('div', 'panel-content');
+  const biliStatus=el('p','status','正在读取 B 站授权状态…');biliStatus.setAttribute('role','status');
+  const enableBili=button('启用 B 站上传','button primary small',async()=>{
+    enableBili.disabled=disableBili.disabled=true;
+    try{
+      const allowed=await browser.permissions.request(BILIBILI_UPLOAD_PERMISSIONS);
+      if(!allowed){status(biliStatus,'未获得授权，B 站上传未启用。','error');return;}
+      await browser.storage.local.set({'gzk:image-provider':'bilibili'});
+      status(biliStatus,'已启用 B 站上传。请确认本浏览器已登录 B 站，再回到编辑器上传。','success');
+    }catch{status(biliStatus,'启用失败，请重试。','error');}
+    finally{enableBili.disabled=disableBili.disabled=false;}
+  });
+  const disableBili=button('停用 B 站上传','button small',async()=>{
+    enableBili.disabled=disableBili.disabled=true;
+    try{
+      const removed=await browser.permissions.remove(BILIBILI_UPLOAD_PERMISSIONS);
+      if(!removed)throw new Error();
+      await browser.storage.local.set({'gzk:image-provider':'imgur'});
+      status(biliStatus,'已撤销 B 站上传权限，已有 Imgur 配置已保留。','success');
+    }catch{status(biliStatus,'停用未完成，请在 Chrome 扩展管理中检查权限。','error');}
+    finally{enableBili.disabled=disableBili.disabled=false;}
+  });
+  const biliActions=el('div','action-row');biliActions.append(enableBili,disableBili,link('打开 B 站登录','https://www.bilibili.com/','button small'));
+  content.append(el('h3','','图床配置'),el('p','','上传前可选择 B 站或 Imgur，也可以直接插入已有图片链接。只上传你愿意公开的图片。'),el('h4','','B 站（试用）'),el('p','setting-description','无需填写 Key 或复制 Cookie。首次启用会申请 Cookie 与 api.bilibili.com 的访问权限，仅在主动上传时读取 B 站防伪标记并使用浏览器登录状态。扩展不保存登录凭证，不代发 B 站动态。图片外链可能受 B 站限制。'),biliActions,biliStatus,el('hr'));
+  void browser.permissions.contains(BILIBILI_UPLOAD_PERMISSIONS).then(allowed=>{
+    status(biliStatus,allowed?'已获得 B 站上传权限；登录状态将在上传时检查。':'尚未启用 B 站上传。');
+  }).catch(()=>status(biliStatus,'无法读取授权状态，请重新启用。','error'));
   const label = el('label', 'form-label', 'Imgur Client ID');
   label.htmlFor = 'imgur-client-id';
   const input = el('input', 'field-input');
@@ -196,7 +224,7 @@ function buildImageHosting(): HTMLElement {
     try {
       const allowed = await browser.permissions.request({ origins: ['https://api.imgur.com/*'] });
       if (!allowed) { status(feedback, '未获得 Imgur 访问权限，配置未保存。', 'error'); return; }
-      await browser.storage.local.set({ 'gzk:imgur-client': clientId });
+      await browser.storage.local.set({ 'gzk:imgur-client': clientId, 'gzk:image-provider':'imgur' });
       input.value = clientId;
       status(feedback, 'Imgur Client ID 已保存到本机。', 'success');
     } catch (error) { status(feedback, `配置保存失败：${errorMessage(error)}`, 'error'); }
@@ -219,13 +247,13 @@ function buildImageHosting(): HTMLElement {
   const links = el('div', 'action-row');
   links.style.marginTop = '14px';
   links.append(link('注册 Imgur 应用', 'https://api.imgur.com/oauth2/addclient', 'small-text'), link('过早客图片上传帮助', `${ORIGIN}/image_upload`, 'small-text'));
-  content.append(el('h3', '', '图床配置'), el('p', '', '配置后，编辑器中的图片上传会将图片发送至 Imgur 并生成公开链接。请只上传你愿意公开的图片。保存时会向浏览器申请访问 Imgur 的权限。'), label, detail, actions, links, feedback);
+  content.append(el('h4', '', 'Imgur'), el('p', '', '保存时会申请 Imgur 访问权限，并将 Imgur 设为默认上传图床。'), label, detail, actions, links, feedback);
   card.append(content);
   void (async () => {
     try {
       const stored = await browser.storage.local.get('gzk:imgur-client');
       input.value = typeof stored['gzk:imgur-client'] === 'string' ? stored['gzk:imgur-client'] : '';
-      status(feedback, input.value ? '已配置本机 Imgur Client ID' : '尚未配置图床');
+      status(feedback, input.value ? '已配置本机 Imgur Client ID' : '尚未配置 Imgur');
     } catch (error) { status(feedback, `读取配置失败：${errorMessage(error)}`, 'error'); }
     finally { save.disabled = input.disabled = clear.disabled = false; }
   })();
@@ -510,6 +538,7 @@ function showPage(): void {
     if (key === page) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
   });
   document.title = `${navigation.get(page)?.textContent} · GuoZaoKe Polish`;
+  if(location.hash==='#image-hosting'){const card=document.getElementById('image-hosting');card?.scrollIntoView?.({block:'start'});card?.focus({preventScroll:true});}
 }
 
 async function initialize(): Promise<void> {
@@ -552,6 +581,11 @@ async function initialize(): Promise<void> {
       panels.set(page.key, panel);
       content.append(panel);
     }
+    const analysisLink = el('a', 'nav-link');
+    analysisLink.href = browser.runtime.getURL('/analysis.html') + '#settings';
+    analysisLink.target = '_blank'; analysisLink.rel = 'noopener';
+    analysisLink.append(icon('book'), el('span', '', '讨论分析与模型'));
+    nav.append(analysisLink);
     sidebar.append(brand, nav, el('p', 'sidebar-note', '设置自动保存。用户标签和稍后阅读保存在当前浏览器，可随时在「数据备份」中导出。'), el('p', 'sidebar-footer', `GuoZaoKe Polish ${browser.runtime.getManifest().version}`));
     root.append(sidebar, content);
     syncControls();

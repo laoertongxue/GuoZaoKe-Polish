@@ -3,14 +3,16 @@
   <h1>GuoZaoKe Polish</h1>
   <p>A more comfortable way to browse and read Guozaoke.</p>
   <p><a href="README.md">简体中文</a> · <strong>English</strong></p>
-  <p><a href="https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.3.14">Download</a> · <a href="https://github.com/laoertongxue/GuoZaoKe-Polish/issues">Report an issue</a> · <a href="docs/privacy.en.md">Privacy</a></p>
+  <p><a href="https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.4.2">Download</a> · <a href="https://github.com/laoertongxue/GuoZaoKe-Polish/issues">Report an issue</a> · <a href="docs/privacy.en.md">Privacy</a></p>
 </div>
 
 ---
 
 A Chrome extension for [Guozaoke](https://www.guozaoke.com/), inspired by the reading experience of [V2EX Polish](https://github.com/coolpace/V2EX_Polish). Built independently with **WXT, TypeScript, and native DOM/CSS**, it improves the site's layout, themes, and interactions while preserving its content and native controls.
 
-**0.3.14 is a prerelease**, not yet listed in the Chrome Web Store. Automated tests and local browser component checks are available; comprehensive live-site compatibility and reference parity remain work in progress. See the [verification scope](docs/verification.md).
+**0.4.2 is a GitHub prerelease** with a discussion-analysis side panel and experimental Bilibili uploads. Download and update instructions are below. GitHub and Chrome Web Store releases are separate; consult the store page for its current version. See the [verification scope](docs/verification.md) for compatibility and reference-parity limits.
+
+Discussion analysis adds user-supplied APIs, controlled capture and source reading, traceable data, per-thread reply observations, local history, and frozen-input replays. Passing trial conditions is not fact certification; real multi-model qualification is still pending. See the [usage guide](docs/analysis.md) and [validation record](docs/analysis-validation.md).
 
 ## Features
 
@@ -23,6 +25,8 @@ A Chrome extension for [Guozaoke](https://www.guozaoke.com/), inspired by the re
 | Pagination | Optionally load up to two subsequent reply pages from the first topic page, deduplicate replies, and mark merged pages; retain native URLs. |
 | Members | Profile cards, personal tags, and persistent profile/topics/replies/favorites navigation. |
 | Editor | 31 popular image emoji, Unicode emoji, kaomoji, Markdown preview, Base64 tools, and image selection/paste/drop. |
+| Discussion analysis (trial) | User-supplied AI APIs, thread capture, claims and evidence tables, thread-scoped reply observations, side panel, history recovery, and frozen-input replays. Real-model qualification remains pending. |
+| Uploads (experimental) | Bilibili browser-session uploads, existing Imgur configuration, and image URLs; explicit authorization and upload, retained failure queues, and no automatic provider fallback. |
 | Images and sharing | Full-screen image preview and zoom; local rich-text share images, QR codes, and multi-image output for long posts. |
 | Data | Settings sync, tag management, JSON backup/import, and context-menu shortcuts. |
 
@@ -30,7 +34,7 @@ Defaults use the light theme, same-tab navigation, vertical layout, and disabled
 
 ## Installation and updates
 
-1. Open the [v0.3.14 release](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.3.14), download `GuoZaoKe-Polish-0.3.14-chrome.zip`, and extract it.
+1. Open the [v0.4.2 release](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.4.2), download `GuoZaoKe-Polish-0.4.2-chrome.zip`, and extract it.
 2. Enter `chrome://extensions/` in Chrome and enable **Developer mode**.
 3. Select **Load unpacked** and choose the extracted folder that directly contains `manifest.json`.
 4. Open a new [Guozaoke](https://www.guozaoke.com/) page. Use the popup's settings entry to customize preferences.
@@ -48,21 +52,24 @@ npm ci
 npm run build
 ```
 
-Load `.output/chrome-mv3` in Chrome. `npm run zip` creates `.output/guozaoke-polish-0.3.14-chrome.zip`.
+Load `.output/chrome-mv3` in Chrome. The build creates `.output/guozaoke-polish-0.4.2-chrome.zip` with `npm run zip`, for trial validation only.
 
 ## Uploads and share images
 
 Editor actions change drafts only; the extension does not automatically publish posts or replies. Existing image URLs can be inserted without an upload provider.
 
-For uploads, configure your own [Imgur Client ID](https://api.imgur.com/oauth2/addclient), explicitly grant access, and confirm the upload in the image dialog. PNG, JPEG, GIF, and WebP are supported up to 10 MB per file. Uploaded images receive public URLs. The Client ID stays local and is excluded from sync and JSON backups.
+Bilibili uploads are experimental. Enable them in image-hosting settings, grant the optional Cookie and `https://api.bilibili.com/*` permissions, and sign in to Bilibili in the same regular browser. The background reads only the CSRF cookie temporarily; the browser attaches its existing session. No manual SESSDATA entry, credential storage/export, or dynamic-post publishing is provided. Imgur and existing image URLs remain supported.
 
-Share images and QR codes are generated locally. Public content images are fetched without cookies. When an image origin needs access, that specific origin is shown before the user requests permission. Fetch and decoding failures are reported. End-to-end uploads with a real Imgur account have not yet been verified.
+For Imgur uploads, configure your own [Imgur Client ID](https://api.imgur.com/oauth2/addclient), explicitly grant access, and confirm the upload in the image dialog. PNG, JPEG, GIF, and WebP are supported up to 10 MB per file. Uploaded images receive public URLs. The Client ID stays local and is excluded from sync and JSON backups.
+
+Share images and QR codes are generated locally. Public content images are fetched without cookies. When an image origin needs access, that specific origin is shown before the user requests permission. Fetch and decoding failures are reported. End-to-end uploads with real Bilibili or Imgur accounts have not yet been verified. The old Bilibili endpoint returned HTTP 404 during a credential-free check. The replacement and external image display still require live browser acceptance; see [integration notes](docs/bilibili-upload.md).
 
 ## Privacy and permissions
 
 - No analytics SDK, advertising SDK, or project-operated telemetry server.
-- Required permissions: `storage`, `contextMenus`, and access to Guozaoke.
-- Uploads and external images use optional permissions requested for the operation.
+- Required permissions: `storage`, `contextMenus`, `sidePanel`, and access to Guozaoke. Bilibili uploads additionally require explicit optional `cookies` authorization.
+- Uploads, share images, model APIs, search, and source reading request optional access to specific origins for each operation.
+- Analysis starts only on explicit user action and sends selected material to the configured provider. API keys stay in trusted extension session storage, excluded from sync and exports.
 - Settings and tags use Chrome sync storage; read-later entries and upload configuration stay local.
 
 See [Privacy details](docs/privacy.en.md) / [中文隐私说明](docs/privacy.md) for data flows, permission boundaries, and deletion behavior.
@@ -77,9 +84,9 @@ npm run build      # Chrome MV3 production build
 npm run zip        # Build and package
 ```
 
-Publication preparation passed **158 tests across 26 files**. GitHub Actions runs installation, type checking, tests, and packaging on pushes and pull requests. Test doubles do not substitute for full extension, live-site write-operation, or real-upload verification.
+See the [verification scope](docs/verification.md) for 0.4.2 checks and the [changelog](CHANGELOG.md) for release notes. GitHub Actions runs installation, type checking, tests, and packaging on pushes and pull requests. Test doubles do not substitute for full extension, live-site write-operation, or real-upload verification.
 
-`entrypoints/` contains extension entries, `src/features/` page enhancements, `src/site/` site adapters, `src/shared/` settings and components, `src/styles/` styles, and `tests/` regression and browser fixtures. See [CONTRIBUTING.md](CONTRIBUTING.md).
+`entrypoints/` contains extension entries, `src/features/` page enhancements, `src/site/` site adapters, `src/analysis/` analysis and calibration, `src/shared/` settings and components, `src/styles/` styles, and `tests/` regression and browser fixtures. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Author
 

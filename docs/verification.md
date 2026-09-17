@@ -1,5 +1,18 @@
 # 验证范围 / Verification scope
 
+## 0.4.2 讨论分析与 B 站图床预发布 / Analysis and upload prerelease
+
+- 2026-09-17 最终运行 `npm test -- --maxWorkers=4`：47 个文件、590 项测试通过；`npm run typecheck`、`npm run zip`、`git diff --check` 通过。完整本地冻结样板有 1 项条件测试，公开仓库未附整帖原件时会跳过；其余回归使用随仓库提供的夹具。
+- 讨论分析包括原文采集与定位、固定主张结构、检索与原件读取、关系判断、R/E/L/B 回复观察、预算、取消恢复、历史、固定输入对比与试验准入。侧栏展示具体结论，并复用受信工作区。API Key 只放会话存储，网页不能取得 Key。
+- 新增 B 站浏览器登录态上传（试用），保留 Imgur 和已有图片链接；Cookie 权限为可选。上传中关闭会保留弹窗，成功后正常关闭，失败显示错误并保留剩余文件。该问题先由新增回归复现失败，修复后通过独立复审。
+- 本地浏览器夹具验证了分析窄屏/深色布局、恢复/取消、结果展示与图床设置的授权拒绝提示。夹具不等于已安装 Chrome 扩展或真实模型、检索、上传服务的全链路验收。
+- 最终 ZIP 为 0.4.2、811084 字节、31 个条目；根目录 manifest、原生侧栏权限、PDF worker 与许可证、可选 Cookie 权限及归档完整性通过。包内未包含测试、研究记录、source map、Git 或环境配置文件；常见凭据形态扫描无匹配。
+- SHA-256：`2e85a9235e95b7858113fc35f2dcd648255828f4700cac029c18fcc140bfff18`。下载包与校验文件见 [v0.4.2 Releases](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.4.2)。
+- 真实 DeepSeek/API 调用、真实多模型准入、B 站与 Imgur 账号上传、外链访客可见性仍待验收，因此此版标为预发布；Chrome 应用商店需要单独提交。详细记录见 [讨论分析](analysis-validation.md) 与 [B 站上传](bilibili-upload.md)。
+
+The final local run passed 590 tests across 47 files, type checking, production packaging, and diff checks. One test requires a complete local frozen reference and is skipped when those unpublished originals are absent. The ZIP contains 31 entries and passes integrity, manifest, permission, PDF-license, and credential-pattern checks. Analysis side-panel behavior and upload recovery were tested locally; actual provider calls, installed-extension flows, live uploads, and external image display remain pending. This is a GitHub prerelease, separate from Chrome Web Store submission.
+
+
 ## 0.3.14 广告残留修复 / Ad remnants
 
 - 根据实站 DOM 确认原生推广使用 `.sidebar-right > .sidebox > .ui-content.ad`，卡片链接为 `/ad/3`、`/ad/4`。仅隐藏内部图片会留下整张卡片的空间。

@@ -1,0 +1,314 @@
+{
+  "version": 1,
+  "algorithm": "SHA-256 of recursively key-sorted JSON; messages contain kind, whitespace-normalized text, links, imageCount. Matches calibrationMaterialHash.",
+  "scope": "Only material fingerprints and case identifiers. No original forum text, account names, local paths or credentials.",
+  "limitation": "Exact normalized material exclusion only; does not detect paraphrased reuse or arbitrary partial excerpts. Legacy context is represented as one topic message. Three real-thread link-label representations are included.",
+  "entries": [
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C01",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "c05c8539db6ef6e6cc90afa0a9d641dbf87bb6d3d5ca450b9bf1947b8bbe0ffa"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C02",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "e9e5eb0e6a74c80af11a436205012c9fbb9ebb1dfa6831ab3a3a84dcda2abf37"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C03",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "a842c63baa0b1186ff9b80de8f39022366258b8ea08685450b8eade20bebc234"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C04",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "6acbb0a96438db42c72e22c41cd9b8869de755e91d98953af402e6af3be857fe"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C05",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "89f4d0d892bca6b1b34eb9b3457528dd4f3e086d050a85d27f84e8126f74fa3e"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C06",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "32e787e09321f1cb93ce53b39acee6b6f09b552771d09fd2cfe437d3a019edb0"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C07",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "4a5a06b7f5b095c9e5b969670974fb21d85ba96bbbe6e7d5d7614096f9e2a2aa"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C08",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "2f6922884287801dbae0b1fd44bc1b793844d9bd71f1d1d4e176400229a92411"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C09",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "8e0fe3db4bc04f9c64aa8b5780c4b2f9e2f08a52a89c0612631ff10b472cb9a3"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C10",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "712b214e8b1da666c17cb1e98b9e9cb9df9dd10d4c5ec9f21352aeac73229463"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C11",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "938f2bf0162a7967550b21bbc6718ccb529e79acc2431c687a61eac19b24d595"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C12",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "2f97cc9b263ef9230e0bdc83a6e31dcbb57081b842844904ec0ed0324ec8d580"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C13",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "1493544fcfd5eacb16fc3bdd44f004ed0dbd354da16b550f1971c218249880e6"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C14",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "91fe7c53a612076117f166701cbd3ecb7fade1c820c6a26d313991f81139e976"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C15",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "8eb0d1e522fbed76b0dec6167dd7cfd68a72f558576ba33015232f8a736060c4"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C16",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "b091d0cbb1dd08b9f18a17c4a98c909c897f6558f40f5302a90c7049c3c246a5"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C17",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "ae95646fc2ec5e4465d4035dbc66be7306801bff5bca19ff2fcbb6346e75e147"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C18",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "32bd55f82d1418bcc74b10eae70c979fa50e7c8c6a47c10a5ec3c35ef607ab62"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C19",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "d3f88dc89c66ccdd663a9580f485f0da0a27142d3cde16010d91f061486c3e8f"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C20",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "3b32a716297ea72707c16d7d81518a683fb02fe4152f7757b59b538e7c3a544c"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C21",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "08bbd2447e27652849c3fc6bfd297f9b2cbf73c148ec398d05d2dd5d609596d6"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C22",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "9b71309b00f1dc68d1ebbb0e6c27ec56621f12d34ad7711fedab2103cbabd228"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C23",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "e9e5eb0e6a74c80af11a436205012c9fbb9ebb1dfa6831ab3a3a84dcda2abf37"
+    },
+    {
+      "dataset": "reply-calibration-0.1",
+      "caseId": "C24",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "3bd69b333accd678f117703dfbb9f9de5fc98bc70ec6e1c5b1be14ae01bd171c"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C01",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "c05c8539db6ef6e6cc90afa0a9d641dbf87bb6d3d5ca450b9bf1947b8bbe0ffa"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C02",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "e9e5eb0e6a74c80af11a436205012c9fbb9ebb1dfa6831ab3a3a84dcda2abf37"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C03",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "a842c63baa0b1186ff9b80de8f39022366258b8ea08685450b8eade20bebc234"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C04",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "6acbb0a96438db42c72e22c41cd9b8869de755e91d98953af402e6af3be857fe"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C05",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "89f4d0d892bca6b1b34eb9b3457528dd4f3e086d050a85d27f84e8126f74fa3e"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C06",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "32e787e09321f1cb93ce53b39acee6b6f09b552771d09fd2cfe437d3a019edb0"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C07",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "4a5a06b7f5b095c9e5b969670974fb21d85ba96bbbe6e7d5d7614096f9e2a2aa"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C08",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "2f6922884287801dbae0b1fd44bc1b793844d9bd71f1d1d4e176400229a92411"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C09",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "8e0fe3db4bc04f9c64aa8b5780c4b2f9e2f08a52a89c0612631ff10b472cb9a3"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C10",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "712b214e8b1da666c17cb1e98b9e9cb9df9dd10d4c5ec9f21352aeac73229463"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C11",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "938f2bf0162a7967550b21bbc6718ccb529e79acc2431c687a61eac19b24d595"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C12",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "2f97cc9b263ef9230e0bdc83a6e31dcbb57081b842844904ec0ed0324ec8d580"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C13",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "1493544fcfd5eacb16fc3bdd44f004ed0dbd354da16b550f1971c218249880e6"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C14",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "91fe7c53a612076117f166701cbd3ecb7fade1c820c6a26d313991f81139e976"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C15",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "8eb0d1e522fbed76b0dec6167dd7cfd68a72f558576ba33015232f8a736060c4"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C16",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "b091d0cbb1dd08b9f18a17c4a98c909c897f6558f40f5302a90c7049c3c246a5"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C17",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "ae95646fc2ec5e4465d4035dbc66be7306801bff5bca19ff2fcbb6346e75e147"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C18",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "32bd55f82d1418bcc74b10eae70c979fa50e7c8c6a47c10a5ec3c35ef607ab62"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C19",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "d3f88dc89c66ccdd663a9580f485f0da0a27142d3cde16010d91f061486c3e8f"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C20",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "3b32a716297ea72707c16d7d81518a683fb02fe4152f7757b59b538e7c3a544c"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C21",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "08bbd2447e27652849c3fc6bfd297f9b2cbf73c148ec398d05d2dd5d609596d6"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C22",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "9b71309b00f1dc68d1ebbb0e6c27ec56621f12d34ad7711fedab2103cbabd228"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C23",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "e9e5eb0e6a74c80af11a436205012c9fbb9ebb1dfa6831ab3a3a84dcda2abf37"
+    },
+    {
+      "dataset": "reply-calibration-0.2",
+      "caseId": "C24",
+      "representation": "context-as-topic/text-as-reply",
+      "materialHash": "3bd69b333accd678f117703dfbb9f9de5fc98bc70ec6e1c5b1be14ae01bd171c"
+    },
+    {
+      "dataset": "real-thread-121894",
+      "caseId": "GZK-121894-20260915-A",
+      "representation": "text-only",
+      "materialHash": "5d7a4fefda73ee7ea6e382b3eafe5b2313b00f6396b93687c3c4868ae2db347f"
+    },
+    {
+      "dataset": "real-thread-121894",
+      "caseId": "GZK-121894-20260915-A",
+      "representation": "url-labelled-links",
+      "materialHash": "2391d34ae21b0abc58691e76ccf0533ac74b16f8f7280beb6f7facb0076791dc"
+    },
+    {
+      "dataset": "real-thread-121894",
+      "caseId": "GZK-121894-20260915-A",
+      "representation": "empty-labelled-links",
+      "materialHash": "99f862074b4e1156b5b57853dcb169ddac07d122ad43d07ae50b9aa92055c000"
+    }
+  ]
+}

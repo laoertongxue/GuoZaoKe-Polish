@@ -10,6 +10,11 @@ The experience reference is [V2EX Polish](https://github.com/coolpace/V2EX_Polis
 | html-to-image | 1.11.13 | MIT |
 | marked | 16.4.2 | MIT |
 | qrcode | 1.5.4 | MIT |
+| pdfjs-dist | 6.3.289 | Apache-2.0 |
+
+讨论分析中的文字 PDF 解析使用 Mozilla PDF.js；解析器和 worker 随扩展打包。完整 Apache 2.0 许可一并分发于 [public/licenses/pdfjs-dist-LICENSE.txt](public/licenses/pdfjs-dist-LICENSE.txt)。
+
+Text PDF extraction uses Mozilla PDF.js, bundled with its worker. Its Apache 2.0 license is included in the extension under `licenses/pdfjs-dist-LICENSE.txt`.
 
 依赖完整许可文本位于相应安装包中，构建和测试依赖保留各自许可证。表情通过公开图片 URL 加载，本项目不主张其素材版权；作者提供的头像用于作者信息展示。站点名称与标识属于各自权利人。本项目自身代码尚未选择开源许可证。
 

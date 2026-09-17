@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>讨论分析 · 本地流程验收</title></head>
+<body>
+  <aside style="padding:16px;background:#fff3c4;color:#3b341c">
+    <strong>本地交互验收 · 合成帖子与模拟模型 · 无真实 API 请求</strong>
+    <p>这里只验证真实工作区和执行器的交互，不代表安装扩展、模型校准或事实核验。每次模拟响应需主动放行；模拟记录只保存在此本地页面。</p>
+    <label>验收主题 <select id="theme"><option value="light">浅色</option><option value="dark">深色</option></select></label>
+    <button id="respond" disabled>返回当前模拟响应</button>
+    <button id="fail" disabled>模拟当前请求失败</button>
+    <p id="calls" aria-live="polite">尚无模拟请求。</p>
+    <p>材料地址：https://example.org/report；帖子地址：https://www.guozaoke.com/t/121894。两者仅由夹具返回本地示例，均不联网读取。</p>
+  </aside>
+  <div id="app"></div><script type="module" src="./analysis-workflow.ts"></script>
+</body></html>

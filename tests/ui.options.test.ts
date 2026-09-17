@@ -5,12 +5,12 @@ import { el, link } from '../src/shared/app-ui';
 
 const api = vi.hoisted(() => ({
   getState: vi.fn(), saveSettings: vi.fn(), setTags: vi.fn(), mutate: vi.fn(), watchState: vi.fn(),
-  permissionsRequest: vi.fn(), storageGet: vi.fn(), storageSet: vi.fn(),
+  permissionsRequest: vi.fn(), permissionsContains:vi.fn(), permissionsRemove:vi.fn(), storageGet: vi.fn(), storageSet: vi.fn(),
 }));
 vi.mock('../src/shared/store', () => api);
 vi.mock('wxt/browser', () => ({ browser: {
   runtime: { getURL:(path:string)=>`chrome-extension://test${path}`,getManifest: () => ({ version: '0.1.0' }) },
-  permissions: { request: api.permissionsRequest },
+  permissions: { request: api.permissionsRequest, contains:api.permissionsContains,remove:api.permissionsRemove },
   storage: { local: { get: api.storageGet, set: api.storageSet } },
 } }));
 
@@ -29,6 +29,7 @@ beforeEach(() => {
   api.storageGet.mockResolvedValue({});
   api.storageSet.mockResolvedValue(undefined);
   api.permissionsRequest.mockResolvedValue(true);
+  api.permissionsContains.mockResolvedValue(false);api.permissionsRemove.mockResolvedValue(true);
 });
 afterEach(() => { window.dispatchEvent(new Event('pagehide')); });
 
@@ -120,9 +121,29 @@ describe('options page persistence', () => {
     expect(document.body.textContent).toContain('未获得 Imgur 访问权限，配置未保存');
     findButton('授权并保存').click();
     await settle();
-    expect(api.storageSet).toHaveBeenCalledWith({ 'gzk:imgur-client': 'my-client-id' });
+    expect(api.storageSet).toHaveBeenCalledWith({ 'gzk:imgur-client': 'my-client-id', 'gzk:image-provider':'imgur' });
     expect(api.saveSettings).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain('Imgur Client ID 已保存到本机');
+  });
+  it('B站启用只请求必要权限并保存非凭据偏好，拒绝时不保存',async()=>{
+    api.permissionsRequest.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    await import('../entrypoints/options/main');await settle();
+    expect(document.querySelector('input[name="SESSDATA"]')).toBeNull();
+    findButton('启用 B 站上传').click();await settle();
+    expect(api.permissionsRequest).toHaveBeenCalledWith({permissions:['cookies'],origins:['https://api.bilibili.com/*']});
+    expect(api.storageSet).not.toHaveBeenCalled();
+    findButton('启用 B 站上传').click();await settle();
+    expect(api.storageSet).toHaveBeenCalledExactlyOnceWith({'gzk:image-provider':'bilibili'});
+    expect(document.body.textContent).toContain('已启用');
+  });
+  it('停用B站可撤销权限，并保留Imgur配置',async()=>{
+    api.permissionsContains.mockResolvedValue(true);
+    api.storageGet.mockResolvedValue({'gzk:imgur-client':'keep-client'});
+    await import('../entrypoints/options/main');await settle();
+    findButton('停用 B 站上传').click();await settle();
+    expect(api.permissionsRemove).toHaveBeenCalledWith({permissions:['cookies'],origins:['https://api.bilibili.com/*']});
+    expect(api.storageSet).toHaveBeenCalledWith({'gzk:image-provider':'imgur'});
+    expect(document.querySelector<HTMLInputElement>('#imgur-client-id')!.value).toBe('keep-client');
   });
 });
 
