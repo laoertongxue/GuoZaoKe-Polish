@@ -23,7 +23,7 @@ export interface ChatOptions {
 export type ProviderErrorCode =
   | 'invalid_url' | 'invalid_config' | 'invalid_key' | 'invalid_request'
   | 'unauthorized' | 'rate_limited' | 'http_error' | 'network'
-  | 'timeout' | 'cancelled' | 'too_large' | 'invalid_json' | 'schema';
+  | 'timeout' | 'cancelled' | 'too_large' | 'invalid_json' | 'schema' | 'output_truncated';
 
 const ERROR_MESSAGES: Record<ProviderErrorCode, string> = {
   invalid_url: '地址必须是无账号、无片段的公开 HTTPS 地址。',
@@ -37,6 +37,7 @@ const ERROR_MESSAGES: Record<ProviderErrorCode, string> = {
   timeout: '模型请求超时。',
   cancelled: '模型请求已取消。',
   too_large: '模型响应超过允许的大小。',
+  output_truncated: '模型回答达到输出上限，内容不完整。',
   invalid_json: '模型未返回有效的 JSON 对象。',
   schema: '模型返回内容不符合分析结构。',
 };
@@ -152,6 +153,7 @@ function parseCompletion(text: string, validate?: ChatOptions['validate']): Chat
   try { raw = JSON.parse(text); } catch { throw new ProviderError('invalid_json'); }
   if (!isObject(raw) || !Array.isArray(raw.choices)) throw new ProviderError('invalid_json');
   const choice: unknown = raw.choices[0];
+  if (isObject(choice) && choice.finish_reason === 'length') throw new ProviderError('output_truncated');
   if (isObject(choice) && (choice.finish_reason === 'tool_calls' || choice.finish_reason === 'function_call')) throw new ProviderError('invalid_json');
   const message = isObject(choice) ? choice.message : undefined;
   if (!isObject(message) || message.role !== 'assistant' || typeof message.content !== 'string'

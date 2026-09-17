@@ -205,3 +205,23 @@ it('also invalidates an existing qualification when an exploratory replay observ
   await expect(test.handle({type:'analysis:call',jobId:job.id,ticket:1,stage:'replies',input:{}},trusted)).rejects.toThrow('qualification_model_changed');
   expect(await test.handle({type:'analysis:qualification:get',configId:cfg.id},trusted)).toBeNull();
 });
+
+it('persists an explicit default without changing it when another configuration is added or edited',async()=>{
+ const {handle}=setup();
+ await handle({type:'analysis:config:save',config,key:'test-only'},trusted);
+ expect(await handle({type:'analysis:config:get'},trusted)).toMatchObject({defaultConfigId:'m1'});
+ const second={...config,id:'m2',name:'Second'};
+ await handle({type:'analysis:config:save',config:second,key:'test-only'},trusted);
+ expect(await handle({type:'analysis:config:get'},trusted)).toMatchObject({defaultConfigId:'m1'});
+ await handle({type:'analysis:config:default',configId:'m2'},trusted);
+ await handle({type:'analysis:config:save',config:{...config,name:'Renamed'},key:''},trusted);
+ expect(await handle({type:'analysis:config:get'},trusted)).toMatchObject({defaultConfigId:'m2'});
+ await expect(handle({type:'analysis:config:default',configId:'missing'},trusted)).rejects.toThrow('missing_configuration');
+ await expect(handle({type:'analysis:config:default',configId:'m1'},website)).rejects.toThrow('untrusted_sender');
+ await handle({type:'analysis:config:delete',configId:'m2'},trusted);
+ expect(await handle({type:'analysis:config:get'},trusted)).toMatchObject({defaultConfigId:'m1'});
+});
+it('does not silently choose among multiple legacy configurations with no default',async()=>{
+ const {handle,localValues}=setup();localValues['gzk:analysis:configs:v1']=[config,{...config,id:'m2'}];
+ expect(await handle({type:'analysis:config:get'},trusted)).toMatchObject({defaultConfigId:null});
+});

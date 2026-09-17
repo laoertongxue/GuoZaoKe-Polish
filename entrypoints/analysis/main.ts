@@ -1,3 +1,4 @@
+import {unwrapAnalysisResponse,analysisErrorCode} from '../../src/analysis/errors';
 import { browser } from 'wxt/browser';
 import { mountWorkspace } from '../../src/analysis/workspace';
 import { AnalysisRepository } from '../../src/analysis/repository';
@@ -10,13 +11,23 @@ import '../../src/styles/analysis.css';
 
 async function request(message: Record<string, unknown>) {
   const response = await browser.runtime.sendMessage(message);
-  if (!response?.ok) throw new Error(response?.error || '后台请求未完成，请重新打开分析页面。');
-  return response.data;
+  return unwrapAnalysisResponse(response);
 }
 const root = document.getElementById('app')!;
 async function main() {
   const state = await readStoredState(); applyTheme(state.settings); const stopTheme = watchSystemTheme(() => state.settings);
-  const topic = new URL(location.href).searchParams.get('topic');
+  const params=new URL(location.href).searchParams;const topic=params.get('topic');
+  const url=topic&&/^\d+$/.test(topic)?`https://www.guozaoke.com/t/${topic}`:undefined;
+  const autoStart=!!(url&&params.get('launch')&&await request({type:'analysis:launch:consume',token:params.get('launch'),url}));
+  let activate:(()=>Promise<void>)|undefined;
+  const onLaunch=(message:any,sender:{id?:string})=>{
+    if(!activate||sender.id!==browser.runtime.id||message?.type!=='analysis:panel:activate'||message.url!==url||String(message.tabId)!==params.get('panelTab'))return;
+    return request({type:'analysis:launch:consume',token:message.token,url}).then(accepted=>{
+      if(accepted)void activate!();
+      return {analysisLaunchAccepted:accepted===true};
+    });
+  };
+  browser.runtime.onMessage.addListener(onLaunch);
   const dispose = await mountWorkspace(root, {
     request, repo: new AnalysisRepository(browser.storage.local), loadTopic: fetchDocument,
     permissions: {
@@ -32,11 +43,12 @@ async function main() {
         const bytes = Uint8Array.from(atob(value.base64), c => c.charCodeAt(0));
         return new Response(bytes, { headers: { 'content-type': value.contentType } });
       } catch(error) {
-        if(error instanceof Error&&['source_budget_exhausted','source_budget_changed','source_budget_corrupt'].includes(error.message))throw new SourceBudgetError(error.message as SourceBudgetError['code']);
+        const code=analysisErrorCode(error);
+        if(['source_budget_exhausted','source_budget_changed','source_budget_corrupt'].includes(code))throw new SourceBudgetError(code as SourceBudgetError['code']);
         throw error;
       } finally { signal?.removeEventListener('abort', onAbort); }
     } }),
-  }, topic && /^\d+$/.test(topic) ? `https://www.guozaoke.com/t/${topic}` : undefined, location.hash === '#settings' ? 'settings' : 'overview', { compact: new URL(location.href).searchParams.get('panel') === '1' });
-  window.addEventListener('pagehide', () => { dispose(); stopTheme(); }, { once: true });
+  }, topic && /^\d+$/.test(topic) ? `https://www.guozaoke.com/t/${topic}` : undefined, location.hash === '#settings' ? 'settings' : 'overview', { compact: params.get('panel') === '1',simple:params.get('advanced')!=='1',autoStart,onReady:start=>{activate=start;} });
+  window.addEventListener('pagehide', () => { browser.runtime.onMessage.removeListener(onLaunch);dispose(); stopTheme(); }, { once: true });
 }
 main().catch(() => { root.textContent = '讨论分析未能打开。请重新加载扩展后再试。'; });

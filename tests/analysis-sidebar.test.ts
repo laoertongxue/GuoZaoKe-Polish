@@ -14,14 +14,14 @@ function storage() {
 }
 function setup() {
   const local = storage(); const session = storage();
-  const api = { runtime: { id: 'ours', getURL: (path: string) => `chrome-extension://ours${path}` }, storage: { local, session }, permissions: { contains: async () => true }, tabs: { create: vi.fn(async () => ({})) }, sidePanel: { setOptions: vi.fn(async () => {}), open: vi.fn(async () => {}) } };
+  const api = { runtime: { id: 'ours', getURL: (path: string) => `chrome-extension://ours${path}` }, storage: { local, session }, permissions: { contains: async () => true }, tabs: { create: vi.fn(async (_options: {url:string}) => ({})) }, sidePanel: { setOptions: vi.fn(async (_options: {tabId:number;path:string;enabled:boolean}) => {}), open: vi.fn(async () => {}) } };
   return { api, handle: createAnalysisHandler(api), repo: new AnalysisRepository(local) };
 }
 const sender = { id: 'ours', url: topic, frameId: 0, tab: { id: 7 } };
 it('opens a trusted native analysis panel bound to the clicked topic and sender tab', async () => {
   const { handle, api } = setup();
   await expect(handle({ type: 'analysis:panel:prepare', url: topic }, sender)).resolves.toBe(true);
-  expect(api.sidePanel.setOptions).toHaveBeenCalledWith({ tabId: 7, path: 'analysis.html?topic=121894&panel=1', enabled: true });
+  expect(api.sidePanel.setOptions).toHaveBeenCalledWith({ tabId: 7, path: 'analysis.html?topic=121894&panel=1&panelTab=7', enabled: true });
   await handle({ type: 'analysis:panel:open', url: topic, tabId: 999 }, sender);
   expect(api.sidePanel.open).toHaveBeenCalledWith({ tabId: 7 });
   expect(api.tabs.create).not.toHaveBeenCalled();
@@ -143,4 +143,33 @@ it('uses the visible stored cap when reopening history, not an abandoned higher 
     await vi.waitFor(async () => expect((await repo.getJob(job.id))?.state).toBe('partial'));
     expect((await repo.getJob(job.id))?.budget.maxCalls).toBe(30);
   } finally { dispose(); }
+});
+it('creates a one-use start intent only on an explicit topic click, not panel preparation',async()=>{
+ const {handle,api}=setup();
+ await handle({type:'analysis:panel:prepare',url:topic},sender);
+ expect(api.sidePanel.setOptions.mock.calls[0]?.[0].path).not.toContain('launch=');
+ await handle({type:'analysis:panel:open',url:topic,start:true},sender);
+ const path=api.sidePanel.setOptions.mock.calls.at(-1)![0].path;
+ expect(path).toContain('launch=');
+ const token=new URL(path,'https://extension.invalid').searchParams.get('launch');
+ const trusted={id:'ours',url:`chrome-extension://ours/${path}`};
+ expect(await handle({type:'analysis:launch:consume',token,url:topic},trusted)).toBe(true);
+ expect(await handle({type:'analysis:launch:consume',token,url:topic},trusted)).toBe(false);
+ await expect(handle({type:'analysis:launch:consume',token,url:topic},sender)).rejects.toThrow('untrusted_sender');
+});
+it('does not issue an automatic start from an embedded forum frame, while advanced opening stays manual',async()=>{
+ const {handle,api}=setup();
+ await expect(handle({type:'analysis:open',url:topic,start:true},{...sender,frameId:1})).rejects.toThrow('untrusted_sender');
+ const trusted={id:'ours',url:'chrome-extension://ours/analysis.html'};
+ await handle({type:'analysis:open',url:topic,advanced:true},trusted);
+ expect(api.tabs.create.mock.calls.at(-1)![0].url).toContain('advanced=1');
+ expect(api.tabs.create.mock.calls.at(-1)![0].url).not.toContain('launch=');
+});
+
+it('reactivates an existing panel without replacing its document or active request',async()=>{
+ const {api}=setup();const sendMessage=vi.fn(async()=>({analysisLaunchAccepted:true}));
+ const handle=createAnalysisHandler({...api,runtime:{...api.runtime,sendMessage}});
+ await handle({type:'analysis:panel:open',url:topic,start:true},sender);
+ expect(api.sidePanel.open).toHaveBeenCalledWith({tabId:7});expect(api.sidePanel.setOptions).not.toHaveBeenCalled();
+ expect(sendMessage).toHaveBeenCalledWith(expect.objectContaining({type:'analysis:panel:activate',url:topic,tabId:7}));
 });

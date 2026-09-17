@@ -1,5 +1,16 @@
 # 验证范围 / Verification scope
 
+## 0.4.3 一键分析 / One-click analysis
+
+- 2026-09-17：全量 50 个测试文件、610 项通过，类型检查与生产打包通过；最后的入口/侧栏/简单模式回归 29 项通过。
+- 覆盖点击启动、单一及多配置默认模型、保存配置后继续、缺 Key 换模型重跑、取消采集、失败重试、旧报告保留、重复点击、历史跨帖激活、合成点击拦截与一次性启动令牌。原生侧栏通过消息唤起已有文档，后台与工作区相关回归通过。
+- 本地浏览器使用合成帖子与模拟响应，验证自动开始、网络失败提示、重试、4 类模型阶段自动衔接、结论与回复观察展示；440×900 视口下可读。实际 API 调用为 0，不能据此证明真实 DeepSeek 回答质量或 Chrome 原生侧栏生命周期已验收。
+- ZIP：`GuoZaoKe-Polish-0.4.3-chrome.zip`，815863 字节、31 个条目，根 manifest 版本为 0.4.3。归档校验通过，权限与 0.4.2 完全一致，不包含研究原件、测试、Git、环境文件或 source map；常见 Key 形态无匹配。
+- SHA-256：`131992fa389553f4e2653f9946edbfa538fd12c8222f0675438b2b0cd9d80cdc`。
+- 下载：[v0.4.3 Releases](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.4.3)。此版本为 GitHub 预发布，Chrome 应用商店单独更新。
+
+610 local tests across 50 files, type checking, and packaging passed. The local browser fixture verifies the simplified workflow and narrow layout with synthetic responses. It does not establish installed-extension or real-provider acceptance. No permissions were added. Earlier validation records below describe their respective versions.
+
 ## 0.4.2 讨论分析与 B 站图床预发布 / Analysis and upload prerelease
 
 - 2026-09-17 最终运行 `npm test -- --maxWorkers=4`：47 个文件、590 项测试通过；`npm run typecheck`、`npm run zip`、`git diff --check` 通过。完整本地冻结样板有 1 项条件测试，公开仓库未附整帖原件时会跳过；其余回归使用随仓库提供的夹具。

@@ -1,5 +1,17 @@
 # 更新日志 / Changelog
 
+## 0.4.3 · 2026-09-17 · 预发布 / Prerelease
+
+- 点击「讨论分析」自动采集并分析，直接展示结论；缺少配置时引导设置并继续，单一模型自动默认，多个模型可指定默认。
+- 结果页支持切换模型重新分析，旧报告保留；预算、采集检查、导出和校准移入高级工作区，来源与待核限制仍可查看。
+- 防止网页合成点击启动付费分析；已有侧栏通过消息激活，避免重复导航打断请求。刷新不重复消费启动令牌，同帖并发受到任务锁保护。
+- 修复模型错误在消息传递中丢失类型、只显示 `stage_failed` 的问题；回答截断时拒绝保存不完整结论，展示明确重试提示。
+- 更新中英文说明与隐私政策。Key 仍仅在本次浏览器会话保存，没有新增权限。
+
+Click once to analyze with the default model. Missing configuration opens setup, one model becomes the default automatically, and switching models preserves earlier results. Advanced workflow controls are separate from everyday results. Synthetic clicks are rejected, existing panels keep active requests, and provider failures retain actionable error types. Truncated responses cannot become conclusions. No new permissions; keys remain session-only.
+
+验证详情见 [验证范围](docs/verification.md)。真实 DeepSeek 响应与已安装原生侧栏的端到端验收仍待进行。
+
 ## 0.4.2 · 2026-09-17 · 预发布 / Prerelease
 
 ### 中文

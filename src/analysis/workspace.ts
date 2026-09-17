@@ -1,3 +1,4 @@
+import {ANALYSIS_ERRORS,analysisErrorCode} from './errors';
 import { el, button, link } from '../shared/app-ui';
 import { AnalysisRepository } from './repository';
 import { assertPackage, exportPackage, hashValue, importPackage } from './contracts';
@@ -22,6 +23,7 @@ const DISAGREEMENTS = { none_observed: '未观察到分歧', fact: '事实分歧
 const STATE_NAMES = { ready: '待开始', running: '执行中', paused: '等待继续', partial: '部分完成', completed: '本轮完成', failed: '执行失败', cancelled: '已取消' };
 const USER_ERRORS: Record<string,string> = {configuration_changed:'配置或流程版本已变化，请建立新分析；旧结果仍然保留。',qualification_changed:'原有试验资格已失效，请重新校准并建立新分析。',qualification_model_changed:'服务返回的模型标识发生变化，已停止调用并使旧试验资格失效。',configuration_invalidated:'模型标识变化后，旧批次已失效，需要新建整轮校准。'};
 Object.assign(USER_ERRORS, { missing_key: '本次会话的 Key 不可用，请到模型设置重新填写。', network: '无法连接模型服务，请检查网络和 API 地址。', unauthorized: '模型服务拒绝认证，请检查 Key。', rate_limited: '模型服务限流，请稍后继续。', timeout: '模型请求超时，已保存完成的步骤。', permission_required: '等待读取来源权限。', budget_exhausted: '已达到本次调用上限，已完成的结果仍然保留。' });
+Object.assign(USER_ERRORS,ANALYSIS_ERRORS);
 const note = (text: string) => el('p', 'analysis-note', text);
 const dimensionState = (d: AnalysisPackage['evaluations'][number]['dimensions']['R']) => d.applicability === 'no' ? '不适用（NA）' : d.applicability === 'uncertain' ? '适用性待确定（P）' : d.grade === 'U' ? '无法判断（U）' : `等级 ${d.grade}`;
 function section(title: string, ...children: Node[]) { const card = el('section', 'analysis-card'); card.append(el('h2', '', title), ...children); return card; }
@@ -98,25 +100,28 @@ function replyConclusions(pkg: AnalysisPackage) {
 }
 
 /** Shared by the full page and read-only report preview; no generated HTML is ever inserted. */
-export function renderReport(root: HTMLElement, pkg: AnalysisPackage, view: 'overview' | 'evidence' | 'replies', qualification?: ReportQualification) {
+export function renderReport(root: HTMLElement, pkg: AnalysisPackage, view: 'overview' | 'evidence' | 'replies', qualification?: ReportQualification, simple = false) {
   root.replaceChildren();
   const heading = el('div', 'analysis-report-heading'); heading.append(el('h1', '', pkg.snapshot.title), note(`${pkg.status === 'partial' ? '部分完成' : pkg.unresolved.length ? '本轮完成 · 有待核事项' : '本轮完成'} · ${qualification?.state === 'qualified_trial' ? '标准分析试用' : pkg.provenance.mode === 'standard' ? '准入未核实' : '探索分析'} · 规则 ${pkg.methodVersion}`)); root.append(heading);
+  if(simple){const label=heading.querySelector('p');if(label)label.textContent=`${pkg.status==='partial'?'部分结果':'分析结果'} · ${pkg.provenance.model}`;}
   const structureValid = (()=>{try{assertPackage(pkg);return true;}catch{return false;}})();
   if(qualification?.state==='qualified_trial') root.append(note(`配置通过本轮试验校准 · ${qualification.assessedAt} · ${qualification.referenceLabel}。不代表每条结论已经核验。`));
   else if(qualification?.state==='expired') root.append(note('原有试验资格已失效或模型标识变化。当前结果保留供复核，重新校准后再建立新分析。'));
   else if(pkg.provenance.mode==='standard') root.append(note('报告声明的准入尚未由本机运行记录核实；导入标记不能证明已经通过校准。'));
-  root.append(note(`${structureValid?'结构校验通过':'结构校验未通过'}；采集覆盖与材料支持另列，结构通过不等于事实正确。`));
+  if(!simple)root.append(note(`${structureValid?'结构校验通过':'结构校验未通过'}；采集覆盖与材料支持另列，结构通过不等于事实正确。`));
   if (view === 'overview') {
     root.append(reportConclusions(pkg), replyConclusions(pkg));
     const counts = el('div', 'analysis-counts');
     for (const [number, label] of [[pkg.snapshot.messages.filter(m => m.kind === 'reply').length, '已采集回复'], [pkg.claims.length, '固化主张'], [pkg.sources.filter(s => s.status === 'read').length, '已读取来源'], [pkg.evaluations.length, '评价单元']]) {
       const item = el('div'); item.append(el('strong', '', String(number)), el('span', '', String(label))); counts.append(item);
     }
-    root.append(counts, section('这份分析的范围', note(`采集时间：${pkg.snapshot.capturedAt}。${pkg.snapshot.expectedReplies === null ? '页面没有提供可确认的回复总数。' : `页面声明 ${pkg.snapshot.expectedReplies} 条回复。`}采集状态：${pkg.snapshot.completeness === 'complete' ? '文字范围完整' : pkg.snapshot.completeness === 'partial' ? '存在覆盖缺口' : '完整性未知'}。`), note('评价仅限本帖中可观察的表达和举证。材料支持关系与参与者原先是否举证分开显示。'), originalLink(pkg, pkg.snapshot.messages[0]?.id || '')));
+    const metadata=el('div');
+    metadata.append(counts, section('这份分析的范围', note(`采集时间：${pkg.snapshot.capturedAt}。${pkg.snapshot.expectedReplies === null ? '页面没有提供可确认的回复总数。' : `页面声明 ${pkg.snapshot.expectedReplies} 条回复。`}采集状态：${pkg.snapshot.completeness === 'complete' ? '文字范围完整' : pkg.snapshot.completeness === 'partial' ? '存在覆盖缺口' : '完整性未知'}。`), note('评价仅限本帖中可观察的表达和举证。材料支持关系与参与者原先是否举证分开显示。'), originalLink(pkg, pkg.snapshot.messages[0]?.id || '')));
     const gaps = [...new Set([...pkg.snapshot.gaps, ...pkg.unresolved])];
     root.append(section('待核与限制', ...(gaps.length ? gaps.map(note) : [note('程序未记录额外缺口；这不代表事实核查已获独立认证。')])));
-    root.append(section('核查问题', ...(pkg.questions.length ? pkg.questions.map(q => { const row = el('div', 'analysis-question'); row.append(el('strong', '', q.question), note(`${DISAGREEMENTS[q.disagreement]} · ${q.claimIds.join('、')}`), note(`需要：${q.needed.join('；') || '待补充'}`),questionPlan(q)); return row; }) : [note('尚未形成核查问题。')])));
-    root.append(section('本次运行依据', note(`模型：${pkg.provenance.model} · 服务地址：${pkg.provenance.endpoint}`), note(`服务端返回型号：${pkg.provenance.providerModel ?? '未知'}；用户声明版本：${pkg.provenance.declaredVersion || '未声明'}。这些名称不能保证服务商后端版本不变。`), note(`原文指纹：${pkg.provenance.stageHashes.snapshot || '尚未执行'}。报告 ID：${pkg.id}`)));
+    metadata.append(section('核查问题', ...(pkg.questions.length ? pkg.questions.map(q => { const row = el('div', 'analysis-question'); row.append(el('strong', '', q.question), note(`${DISAGREEMENTS[q.disagreement]} · ${q.claimIds.join('、')}`), note(`需要：${q.needed.join('；') || '待补充'}`),questionPlan(q)); return row; }) : [note('尚未形成核查问题。')])));
+    metadata.append(section('本次运行依据', note(`模型：${pkg.provenance.model} · 服务地址：${pkg.provenance.endpoint}`), note(`服务端返回型号：${pkg.provenance.providerModel ?? '未知'}；用户声明版本：${pkg.provenance.declaredVersion || '未声明'}。这些名称不能保证服务商后端版本不变。`), note(`原文指纹：${pkg.provenance.stageHashes.snapshot || '尚未执行'}。报告 ID：${pkg.id}`)));
+    root.append(simple?disclosure('分析范围与详细记录',metadata):metadata);
   } else if (view === 'evidence') {
     root.append(note('按主张与统计口径查看资料。未观察到分歧不等于共识；来源数量不等于独立证据数量。'));
     for (const question of pkg.questions) {
@@ -181,8 +186,9 @@ export interface WorkspaceServices {
   readSource?(url: string, requestId: string, scope: 'job'|'manual', signal?: AbortSignal): Promise<EvidenceSource>;
   importFile?(file: File): Promise<EvidenceSource>;
 }
-export async function mountWorkspace(root: HTMLElement, services: WorkspaceServices, initialTopic?: string, initialView: View = 'overview', options: { compact?: boolean } = {}): Promise<() => void> {
+export async function mountWorkspace(root: HTMLElement, services: WorkspaceServices, initialTopic?: string, initialView: View = 'overview', options: { compact?: boolean; simple?: boolean; autoStart?: boolean; onReady?:(start:()=>Promise<void>)=>void } = {}): Promise<() => void> {
   root.classList.toggle('analysis-compact', !!options.compact);
+  let defaultModelId='';let starting=false;let pendingStart=!!options.autoStart;let pendingFresh=false;let stopRequested=false;
   let view: View = initialView; let configurations: (ModelConfig & { hasKey: boolean })[] = []; let hasSearchKey = false;
   let current: RunCheckpoint | null = null; let report: AnalysisPackage | null = null; let topic = initialTopic || '';
   let busy = false; let controller: AbortController | null = null; let disposed = false; let modelId = '';
@@ -205,12 +211,14 @@ export async function mountWorkspace(root: HTMLElement, services: WorkspaceServi
   progress.setAttribute('aria-label', '本轮分析进度'); progress.hidden = true;
   let refreshVisibleReport: (() => void) | null = null;
   let readingVisibleReport = () => false;
-  root.replaceChildren(brand, nav, status, progress, content);
+  root.replaceChildren(brand,nav,status,...(options.simple?[]:[progress]),content);
+  if(options.simple){brand.querySelector('p')?.remove();brand.append(button('模型设置','button',()=>setView('settings')));}
   const say = (text: string, error = false) => { status.textContent = text; status.dataset.error = String(error); };
-  const perform = async (action: () => Promise<void>) => { try { await action(); } catch (error) { say(error instanceof Error ? USER_ERRORS[error.message] || error.message : '操作未完成', true); } };
+  const perform = async (action: () => Promise<void>) => { try { await action(); } catch (error) { say(options.simple?ANALYSIS_ERRORS[analysisErrorCode(error)]!:error instanceof Error ? USER_ERRORS[error.message] || error.message : '操作未完成', true); } };
   const refreshConfigurations = async () => {
     const data = await services.request({ type: 'analysis:config:get' }); configurations = (data.configs || []).map((c: any) => ({ ...normalizeModelConfig(c), hasKey: c.hasKey === true })); hasSearchKey = data.hasSearchKey === true;
-    if (!configurations.some(c => c.id === modelId)) modelId = configurations[0]?.id || '';
+    defaultModelId=configurations.length===1?configurations[0]!.id:data.defaultConfigId||'';
+    if (!configurations.some(c => c.id === modelId)) modelId = options.simple?defaultModelId:defaultModelId||configurations[0]?.id||'';
   };
   const setView = (next: View) => { view = next; render(); };
   function updateProgress() {
@@ -248,7 +256,8 @@ export async function mountWorkspace(root: HTMLElement, services: WorkspaceServi
       read: (url, signal) => { if (!services.readSource) throw new Error('retrieval_unavailable'); return services.readSource(url, current!.id, 'job', signal); },
     });
     pendingOrigins = result.pendingOrigins;
-    if (pendingOrigins.length) throw new AnalysisPause('permission_required');
+    if (pendingOrigins.length&&!options.simple) throw new AnalysisPause('permission_required');
+    if(pendingOrigins.length)await controls.recordGaps?.([`以下资料域名尚未授权读取，本轮保留待核：${pendingOrigins.join('、')}。可在高级工作区补充。`]);
     return result.sources;
   }
 
@@ -292,12 +301,13 @@ export async function mountWorkspace(root: HTMLElement, services: WorkspaceServi
         call: (stage, input) => services.request({ type: 'analysis:call', jobId: current!.id, ticket: current!.callsUsed, stage, input }),
         acquireEvidence: acquire,
         onProgress: job => {
-          say(`${STATE_NAMES[job.state]} · ${STAGE_NAMES[job.stage]} · 已使用 ${job.callsUsed}/${job.budget.maxCalls} 次调用`);
+          if(!options.simple)say(`${STATE_NAMES[job.state]} · ${STAGE_NAMES[job.stage]} · 已使用 ${job.callsUsed}/${job.budget.maxCalls} 次调用`);
           if (!disposed) { updateProgress(); refreshVisibleReport?.(); }
         },
       }, controller.signal);
       current = result; report = result.package;
-      say(`${STATE_NAMES[result.state]}${result.errors.length ? ` · ${USER_ERRORS[result.errors.at(-1)!.code] || result.errors.at(-1)!.code}` : ''}。已完成的步骤保存在本机。`);
+      if(options.simple)say(result.state==='completed'?'分析完成':ANALYSIS_ERRORS[result.errors.at(-1)?.code||'stage_failed']||ANALYSIS_ERRORS.stage_failed!,result.state!=='completed');
+      else say(`${STATE_NAMES[result.state]}${result.errors.length ? ` · ${USER_ERRORS[result.errors.at(-1)!.code] || result.errors.at(-1)!.code}` : ''}。已完成的步骤保存在本机。`);
     } finally {
       busy = false; controller = null;
       refreshAfterTask();
@@ -310,7 +320,7 @@ export async function mountWorkspace(root: HTMLElement, services: WorkspaceServi
     if(busy || queueActive)return;
     const cfg=configurations.find(c=>c.id===modelId);
     if(!cfg){setView('settings');say('先添加一个模型配置。采集不会调用 AI。');return;}
-    topic=url;busy=true;say('读取主题和分页…');render();
+    topic=url;busy=true;say(options.simple?'正在分析，请稍候…':'读取主题和分页…');render();
     try {
       const old=report?.snapshot;const page=await services.loadTopic(topic);
       const result=await collectSnapshot(page,topic,{fetchPage:services.loadTopic,identities});identities=result.identities;
@@ -318,12 +328,68 @@ export async function mountWorkspace(root: HTMLElement, services: WorkspaceServi
         result.snapshot.gaps.push(`用户标记旧报告 ${review.reportId} 的 ${review.messageId} 需要复核：${review.reason}。重新采集不代表该问题已被证明修复，相关解释仍需核对。`);
         if(result.snapshot.completeness==='complete')result.snapshot.completeness='unknown';
       }
+      if(disposed||(options.simple&&stopRequested))return;
       const next=createRun(result.snapshot,cfg,{...budget,maxOutputTokens:cfg.maxOutputTokens});next.package.sources=structuredClone(importedSources);
       await save(next);view='overview';pendingOrigins=[];
-      if(review)say('已建立带复核标记的新快照；旧报告保留在历史中。请核对原文，再主动开始新分析。');
+      if(options.simple)say('正在分析，请稍候…');
+      else if(review)say('已建立带复核标记的新快照；旧报告保留在历史中。请核对原文，再主动开始新分析。');
       else if(old && old.topicId===result.snapshot.topicId){const diff=snapshotDiff(old,result.snapshot);say(`新快照：新增 ${diff.added.length}、修改 ${diff.changed.length}、当前缺失 ${diff.removed.length} 条。将重新核查相关语境。`);}
       else say('采集完成。请查看发送范围后开始分析。');
     } finally {busy=false;render();}
+  }
+  async function loadSavedTopic() {
+    const canonical=topicUrl(topic);
+    for(const item of (await services.repo.list()).sort((a,b)=>b.createdAt.localeCompare(a.createdAt))){
+      const saved=await services.repo.getPackage(item.id);
+      if(saved?.snapshot.url===canonical){report=saved;current=await services.repo.getJob(saved.id);return;}
+    }
+  }
+  async function startSimple(fresh=false) {
+    if(starting||busy||disposed)return;
+    starting=true;stopRequested=false;pendingStart=true;pendingFresh=fresh;render();
+    try {
+      if(!fresh){await loadSavedTopic();if(report?.status==='completed'){pendingStart=false;say('已展示保存的分析结果');return;}}
+      await refreshConfigurations();
+      const cfg=configurations.find(c=>c.id===modelId);
+      if(!cfg?.hasKey){selectedConfiguration=cfg?.id??null;view='settings';say(cfg?'请补充模型的 API Key。':configurations.length?'请选择默认模型':'请先配置模型，保存后将自动分析本帖。');return;}
+      pendingStart=false;
+      const start=async()=>{
+        if(disposed||stopRequested)return;
+        if(!fresh)await loadSavedTopic();
+        if(!fresh&&report?.status==='completed'){say('已展示保存的分析结果');return;}
+        view='overview';say('正在分析，请稍候…');render();
+        if(fresh||!current||current.package.provenance.modelConfigId!==cfg.id||current.errors.some(e=>['configuration_changed','qualification_changed','qualification_model_changed'].includes(e.code)))await captureTopic(topic);
+        if(disposed||stopRequested)return;
+        await run();
+      };
+      if(navigator.locks)await navigator.locks.request(`gzk-analysis-topic:${topicUrl(topic)}`,{mode:'exclusive',ifAvailable:true},async lock=>{if(lock)await start();else say('本帖正在另一个窗口分析，请稍后查看。');});
+      else if(/^(chrome|moz)-extension:$/.test(location.protocol))throw new Error('request_in_progress');
+      else await start();
+    } finally {starting=false;if(!disposed){if(stopRequested)say('分析已停止，已完成结果仍然保留。');render();}}
+  }
+  function renderQuickStart() {
+    if(starting||busy){
+      content.append(section('正在分析',note('正在阅读本帖并整理结论，请稍候。'),button('停止分析','button',()=>{
+        stopRequested=true;pendingStart=false;controller?.abort();
+        if(current)void services.request({type:'analysis:cancel',jobId:current.id});
+        say('正在停止分析…');
+      })));
+      return;
+    }
+    const card=el('section','analysis-card analysis-quick-actions');
+    if(!topic){const address=inputField('过早客帖子地址','','url');address.input.onchange=()=>{topic=address.input.value.trim();};card.append(address.row);}
+    const choose=el('select');choose.setAttribute('aria-label','分析模型');
+    for(const cfg of configurations){const option=el('option','',`${cfg.name} · ${cfg.model}${cfg.id===defaultModelId?'（默认）':''}`);option.value=cfg.id;choose.append(option);}
+    choose.value=modelId;choose.onchange=()=>{modelId=choose.value;};
+    const cfg=configurations.find(c=>c.id===modelId);
+    if(cfg){
+      card.append(choose,button(report?'重新分析':'开始分析','button primary',()=>void perform(()=>startSimple(true))));
+      if(current&&current.state!=='completed'&&current.callsUsed)card.append(button('重试','button',()=>void perform(()=>startSimple(false))));
+      card.append(note('选择其他模型后点击重新分析，旧结果会保留。'));
+    }else card.append(note('先配置模型并设为默认，即可分析。'),button('配置模型','button primary',()=>{pendingStart=true;setView('settings');}));
+    const more=el('div');more.append(button('历史结果','button',()=>setView('history')));
+    if(topic)more.append(button('高级工作区','button',()=>void perform(async()=>{await services.request({type:'analysis:open',url:topic,advanced:true});})));
+    card.append(disclosure('更多',more));content.append(card);
   }
   function renderExcerptReview(shown: AnalysisPackage) {
     if(shown.snapshot.id.startsWith('calibration-'))return;
@@ -370,15 +436,31 @@ export async function mountWorkspace(root: HTMLElement, services: WorkspaceServi
     const model = inputField('模型 ID', old?.model || 'deepseek-chat'); const key = inputField('API Key（仅本次浏览器会话）', '', 'password'); key.input.autocomplete = 'off'; key.input.spellcheck = false;
     const version = inputField('服务商版本说明（可留空）', old?.declaredVersion || ''); const output = inputField('单次最大输出 Token', String(old?.maxOutputTokens || 4096), 'number');
     const submit = button(old ? '保存配置' : '添加配置', 'button primary'); submit.type = 'submit'; submit.disabled = busy || queueActive;
-    form.append(name.row, base.row, model.row, key.row, version.row, output.row, note('温度固定为 0。Key 不进入同步存储、分析报告或导出包；浏览器重启或扩展重载后需重新填写。请自行确认服务商的数据处理方式。'), submit);
+    const defaultToggle=el('input');defaultToggle.type='checkbox';defaultToggle.checked=!configurations.length||old?.id===defaultModelId;const defaultLabel=el('label','analysis-choice');defaultLabel.append(defaultToggle,document.createTextNode('设为默认模型'));
+    const extra=el('div');extra.append(version.row,output.row);
+    form.append(name.row, base.row, model.row, key.row, ...(options.simple?[disclosure('高级参数',extra)]:[extra]),defaultLabel, note('温度固定为 0。Key 不进入同步存储、分析报告或导出包；浏览器重启或扩展重载后需重新填写。请自行确认服务商的数据处理方式。'), submit);
+    if(options.simple)form.prepend(note('点击分析会将本帖正文、回复及核查材料发送至所选 API 服务；可能产生该服务的调用费用。不会发送编辑器草稿，Key 不随帖子发送。'));
     form.onsubmit = event => { event.preventDefault(); void perform(async () => {
       if (busy || queueActive) { say('当前任务使用已固定的配置，请完成或取消后再修改。'); return; }
       const cfg = normalizeModelConfig({ id: old?.id || crypto.randomUUID(), name: name.input.value, baseUrl: base.input.value.trim(), model: model.input.value, temperature: 0, maxOutputTokens: Number(output.input.value), declaredVersion: version.input.value });
       if (!await services.permissions.request([new URL(cfg.baseUrl).origin])) { say('未获得模型服务访问权限，配置尚未保存。'); return; }
-      await services.request({ type: 'analysis:config:save', config: cfg, key: key.input.value }); key.input.value = ''; selectedConfiguration = null; await refreshConfigurations(); modelId = cfg.id; say('模型配置已保存，Key 仅保留在本次会话。'); render();
+      await services.request({ type: 'analysis:config:save', config: cfg, key: key.input.value }); key.input.value = '';
+      if(defaultToggle.checked)await services.request({type:'analysis:config:default',configId:cfg.id});
+      const resumeSelected=pendingStart&&modelId===cfg.id;
+      selectedConfiguration = null; await refreshConfigurations(); modelId = options.simple?(resumeSelected?cfg.id:defaultModelId):cfg.id;
+      say('模型配置已保存，Key 仅保留在本次会话。');
+      if(options.simple&&pendingStart&&modelId){view='overview';await startSimple(pendingFresh);}else render();
     }); };
     content.append(section('接入你自己的模型', form));
     for (const cfg of configurations) {
+      if(options.simple){
+        const makeDefault=button(cfg.id===defaultModelId?'默认模型':'设为默认','button',()=>void perform(async()=>{
+          if(busy||starting)return;await services.request({type:'analysis:config:default',configId:cfg.id});await refreshConfigurations();modelId=cfg.id;
+          if(pendingStart)await startSimple(pendingFresh);else render();
+        }));makeDefault.disabled=cfg.id===defaultModelId||busy||starting;
+        content.append(section(cfg.name,note(`${cfg.model} · ${cfg.hasKey?'已配置 Key':'需要补充 Key'}`),makeDefault,button('编辑','button',()=>{selectedConfiguration=cfg.id;render();}),button('删除配置','button',()=>void perform(async()=>{if(busy||starting)return;await services.request({type:'analysis:config:delete',configId:cfg.id});selectedConfiguration=null;await refreshConfigurations();render();}))));
+        continue;
+      }
       const row = el('div', 'analysis-config-row'); row.append(el('strong', '', cfg.name), note(`${cfg.model} · ${cfg.baseUrl} · ${cfg.hasKey ? '本次会话已配置 Key' : '尚未填写 Key'}`), button('编辑', 'button', () => { selectedConfiguration = cfg.id; render(); }), button('测试连接与 JSON 结构', 'button', () => void perform(async () => {
         if (busy || queueActive) return; busy=true;
         try { say('发送一次最小测试请求…'); const result = await services.request({ type: 'analysis:probe', configId: cfg.id, structure: true }); say(`连接通过；JSON 结构${result.structure ? '通过' : '未通过'}。这不代表语义校准通过。`); }
@@ -386,6 +468,7 @@ export async function mountWorkspace(root: HTMLElement, services: WorkspaceServi
       })), button('校准此配置', 'button', () => { if(busy || queueActive)return; modelId = cfg.id; setView('calibration'); }), button('删除配置', 'button', () => void perform(async () => { if (busy || queueActive) return; await services.request({ type: 'analysis:config:delete', configId: cfg.id }); await refreshConfigurations(); render(); })));
       content.append(section('已保存配置', row));
     }
+    if(options.simple){content.append(button('返回分析','button',()=>setView('overview')),button('清除本次会话的全部 Key','button',()=>void perform(async()=>{if(busy||starting)return;await services.request({type:'analysis:key:clear'});await refreshConfigurations();render();})));return;}
     const search = inputField('Tavily 检索 Key（可选，仅本次会话）', '', 'password'); search.input.autocomplete = 'off';
     content.append(section('公开资料检索', search.row, note(hasSearchKey ? '本次会话已配置检索 Key。' : '没有检索 Key 时，可以读取帖内来源链接或自行补充材料。'), button('保存检索配置', 'button', () => void perform(async () => {
       if (busy || queueActive) return;
@@ -517,7 +600,7 @@ export async function mountWorkspace(root: HTMLElement, services: WorkspaceServi
   function render() {
     if (disposed) return;
     refreshVisibleReport = null; readingVisibleReport = () => false; updateProgress();
-    nav.replaceChildren(); for (const key of Object.keys(VIEW_NAMES) as View[]) { const item = button(VIEW_NAMES[key], 'analysis-nav-item', () => setView(key)); item.setAttribute('aria-current', view === key ? 'page' : 'false'); nav.append(item); }
+    nav.replaceChildren(); for (const key of (options.simple?(['overview','evidence','replies'] as View[]):Object.keys(VIEW_NAMES) as View[])) { const item = button(options.simple&&key==='overview'?'分析结果':VIEW_NAMES[key], 'analysis-nav-item', () => setView(key)); item.setAttribute('aria-current', view === key ? 'page' : 'false'); nav.append(item); }
     content.replaceChildren();
     if (view === 'settings') { renderSettings(); return; }
     if (view === 'history') {
@@ -530,25 +613,26 @@ export async function mountWorkspace(root: HTMLElement, services: WorkspaceServi
     }
     if (view === 'compare') { renderComparison(); return; }
     if (view === 'calibration') { renderCalibration(); return; }
-    if (view === 'overview') renderStart();
-    if (report) {
-      const rendered = el('div'); let shown=report; const reportView=view; renderReport(rendered,shown,reportView);
-      content.append(rendered,button('导出这份分析包','button',()=>void perform(async()=>download(await exportPackage(shown),`讨论分析-${shown.snapshot.topicId}.json`))));
-      renderExcerptReview(shown);
+    if(options.simple){renderQuickStart();if(starting||busy)return;}
+    else if (view === 'overview') renderStart();
+    if (report&&(!options.simple||report.claims.length||report.evaluations.length||report.status==='completed')) {
+      const rendered = el('div'); let shown=report; const reportView=view; renderReport(rendered,shown,reportView,undefined,options.simple);
+      content.append(rendered);
+      if(!options.simple){content.append(button('导出这份分析包','button',()=>void perform(async()=>download(await exportPackage(shown),`讨论分析-${shown.snapshot.topicId}.json`))));renderExcerptReview(shown);}
       readingVisibleReport = () => rendered.parentNode === content && (rendered.contains(document.activeElement) || Boolean(rendered.querySelector('details[open]')));
       refreshVisibleReport = () => {
         if (!report || report === shown || rendered.parentNode !== content) return;
         // Do not replace an excerpt the user is reading or move keyboard focus during a checkpoint.
         if (readingVisibleReport()) return;
-        shown = report; renderReport(rendered, shown, reportView);
+        shown = report; renderReport(rendered, shown, reportView,undefined,options.simple);
       };
       const qualificationPackage = shown;
       void hashValue(qualificationPackage).then(packageHash=>services.request({type:'analysis:report:qualification',packageId:qualificationPackage.id,packageHash})).then(qualification=>{
-        if(!disposed && rendered.parentNode===content && report===qualificationPackage && !readingVisibleReport())renderReport(rendered,qualificationPackage,reportView,qualification);
+        if(!disposed && rendered.parentNode===content && report===qualificationPackage && !readingVisibleReport())renderReport(rendered,qualificationPackage,reportView,qualification,options.simple);
       }).catch(()=>{/* The default rendering explicitly leaves qualification unverified. */});
     }
-    else content.append(section('尚无分析结果', note('先配置模型并采集一篇帖子。开始分析前可检查采集范围、接收服务和预算。')));
-    if (view === 'evidence' || view === 'overview') renderMaterials();
+    else if(!options.simple)content.append(section('尚无分析结果', note('先配置模型并采集一篇帖子。开始分析前可检查采集范围、接收服务和预算。')));
+    if (!options.simple&&(view === 'evidence' || view === 'overview')) renderMaterials();
   }
   await refreshConfigurations();
   if (initialTopic && initialView === 'overview') {
@@ -560,15 +644,22 @@ export async function mountWorkspace(root: HTMLElement, services: WorkspaceServi
         if (!saved || topicUrl(saved.snapshot.url) !== canonical) continue;
         report = saved; current = await services.repo.getJob(saved.id);
         if (current) {
-          modelId = current.package.provenance.modelConfigId;
+          if(!options.simple)modelId = current.package.provenance.modelConfigId;
           const error = current.errors.at(-1)?.code;
-          say(`已恢复本帖分析：${STATE_NAMES[current.state]}${error ? ` · ${USER_ERRORS[error] || error}` : ''}。${current.state === 'completed' ? '展示已保存结论，不会重复调用模型。' : '继续前请确认发送范围与剩余额度。'}`);
+          if(options.simple)say(current.state==='completed'?'已展示保存的分析结果':error?ANALYSIS_ERRORS[error]||ANALYSIS_ERRORS.stage_failed!:'点击重试可继续分析');
+          else say(`已恢复本帖分析：${STATE_NAMES[current.state]}${error ? ` · ${USER_ERRORS[error] || error}` : ''}。${current.state === 'completed' ? '展示已保存结论，不会重复调用模型。' : '继续前请确认发送范围与剩余额度。'}`);
         } else say('已读取本帖保存的分析结果，不会重复调用模型。');
         break;
       }
     });
-    if (options.compact && !report && configurations.find(c => c.id === modelId)?.hasKey) await perform(() => captureTopic(canonical));
+    if (!options.simple && options.compact && !report && configurations.find(c => c.id === modelId)?.hasKey) await perform(() => captureTopic(canonical));
   }
   render();
+  options.onReady?.(()=>perform(async()=>{
+    if(starting||busy||disposed)return;
+    if(initialTopic){topic=initialTopic;report=null;current=null;modelId='';}
+    view='overview';await startSimple();
+  }));
+  if(options.simple&&options.autoStart&&initialView==='overview')void perform(()=>startSimple());
   return () => { disposed = true; queueCancelled=true;controller?.abort(); if (calibrationId) void services.request({type:'analysis:cancel',jobId:calibrationId}); if (current && busy) void services.request({ type: 'analysis:cancel', jobId: current.id }); root.replaceChildren(); };
 }

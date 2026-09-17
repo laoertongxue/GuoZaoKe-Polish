@@ -7,7 +7,8 @@ import type { ModelConfig } from '../../src/analysis/providers';
 import '../../src/styles/analysis.css';
 
 // Deliberately isolated fixture storage, never extension storage or real credentials.
-const prefix = 'gzk-analysis-workflow-fixture:';
+const simple=new URL(location.href).searchParams.get('simple')==='1';
+const prefix = simple?'gzk-analysis-simple-fixture:':'gzk-analysis-workflow-fixture:';
 const repo = new AnalysisRepository({
   get: async key => { const stored = localStorage.getItem(prefix + key); return { [key]: stored === null ? undefined : JSON.parse(stored) }; },
   set: async data => { for (const [key, value] of Object.entries(data)) localStorage.setItem(prefix + key, JSON.stringify(value)); },
@@ -23,7 +24,7 @@ function updateCalls() {
   respond.disabled = fail.disabled = pending === null;
 }
 respond.onclick = () => { pending?.resolve(); pending = null; updateCalls(); };
-fail.onclick = () => { pending?.reject(new Error('fixture_network')); pending = null; updateCalls(); };
+fail.onclick = () => { pending?.reject(new Error('network')); pending = null; updateCalls(); };
 document.querySelector<HTMLSelectElement>('#theme')!.onchange = event => { document.documentElement.dataset.theme = (event.target as HTMLSelectElement).value; };
 await mountWorkspace(document.querySelector<HTMLElement>('#app')!, {
   repo,
@@ -61,8 +62,8 @@ await mountWorkspace(document.querySelector<HTMLElement>('#app')!, {
       claims: pkg.claims,
       coverage: (message.input as { messages: ThreadMessage[] }).messages.flatMap(m => splitSpans(m).map(span => ({ span, claimIds: m.kind === 'reply' ? ['C01'] : [], disposition: m.kind === 'reply' ? 'claim' : 'non_assertive', reason: m.kind === 'reply' ? '提出费用事实' : '提问' }))),
     } : stage === 'plan' ? { questions: questionDrafts() }
-      : stage === 'relations' ? { relations: pkg.relations, data: [] }
+      : stage === 'relations' ? { relations: simple?[]:pkg.relations, data: [] }
         : { evaluations: pkg.evaluations };
     return { value, usage: { inputTokens: 10, outputTokens: 10 }, providerModel: 'fixture-only' };
   },
-}, 'https://www.guozaoke.com/t/121894', 'overview', { compact: new URL(location.href).searchParams.get('panel') === '1' });
+}, 'https://www.guozaoke.com/t/121894', 'overview', { compact: new URL(location.href).searchParams.get('panel') === '1',simple,autoStart:simple });

@@ -10,7 +10,7 @@ import { configurationFingerprint, qualificationMatches } from './comparison';
 import {DEFAULT_SOURCE_BYTES,MAX_SOURCE_FILE_BYTES,SourceBudgetError,SourceReadBudget} from './source-budget';
 
 export interface AnalysisBrowser {
-  runtime: { id: string; getURL(path: string): string };
+  runtime: { id: string; getURL(path: string): string; sendMessage?(message:Record<string,unknown>):Promise<unknown> };
   storage: { local: StorageArea; session: StorageArea };
   permissions: { contains(permission: { origins: string[] }): Promise<boolean> };
   tabs: { create(options: { url: string }): Promise<unknown> };
@@ -22,6 +22,8 @@ interface Dependencies {
   readSource?: (url: string, signal: AbortSignal, maxBytes?: number) => Promise<{ url: string; bytes: Uint8Array; contentType: string }>;
 }
 const CONFIG_KEY = 'gzk:analysis:configs:v1';
+const DEFAULT_CONFIG_KEY = 'gzk:analysis:default-model:v1';
+const LAUNCH_KEY = 'gzk:analysis:launches:v1';
 const TICKETS_KEY = 'gzk:analysis:tickets:v1';
 const SEARCH_ORIGIN = 'https://api.tavily.com';
 const isRecord = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -57,6 +59,20 @@ export function createAnalysisHandler(api: AnalysisBrowser, deps: Dependencies =
     if (!Array.isArray(value) || value.length > 12) throw new Error('config_corrupt');
     return value.map(normalizeModelConfig);
   };
+  const defaultConfig = async (list:ModelConfig[]) => {
+    if(list.length===1)return list[0]!.id;
+    const id=(await api.storage.local.get(DEFAULT_CONFIG_KEY))[DEFAULT_CONFIG_KEY];
+    return list.some(c=>c.id===id)?id as string:null;
+  };
+  const launches = async (): Promise<{token:string;url:string;expires:number}[]> => {
+    const value=(await api.storage.session.get(LAUNCH_KEY))[LAUNCH_KEY];
+    return Array.isArray(value)?value.filter(v=>isRecord(v)&&typeof v.token==='string'&&typeof v.url==='string'&&typeof v.expires==='number'&&v.expires>Date.now()).slice(-20):[];
+  };
+  const issueLaunch = (url:string) => serial(async()=>{
+    const token=crypto.randomUUID();
+    await api.storage.session.set({[LAUNCH_KEY]:[...(await launches()),{token,url,expires:Date.now()+300_000}]});
+    return token;
+  });
   const config = async (id: unknown) => { const found = (await configs()).find(c => c.id === id); if (!found) throw new Error('missing_configuration'); return found; };
   const permission = async (origin: string) => { if (!await api.permissions.contains({ origins: [`${origin}/*`] })) throw new Error('permission_required'); };
   async function invokeFrozen(cfg: ModelConfig, input: ChatMessage[], signal?: AbortSignal, outputLimit?: number, job?: RunCheckpoint): Promise<ChatResult> {
@@ -141,7 +157,7 @@ export function createAnalysisHandler(api: AnalysisBrowser, deps: Dependencies =
     if (!isRecord(input)) throw new Error('invalid_request');
     const message = input;
     if (message.type === 'analysis:panel:prepare' || message.type === 'analysis:panel:open') {
-      // A forum content script may open UI for its own topic, never send a paid request.
+      // Only this extension’s top-frame content script can request a one-use launch for its own topic.
       // The native panel is analysis.html, which is NOT web-accessible or embeddable.
       let url: string;
       try {
@@ -151,12 +167,23 @@ export function createAnalysisHandler(api: AnalysisBrowser, deps: Dependencies =
       const tabId = sender.tab!.id!;
       if (message.type === 'analysis:panel:prepare') {
         if (!api.sidePanel?.open) return false;
-        await api.sidePanel.setOptions({ tabId, path: `analysis.html?topic=${url.split('/').pop()}&panel=1`, enabled: true });
+        await api.sidePanel.setOptions({ tabId, path: `analysis.html?topic=${url.split('/').pop()}&panel=1&panelTab=${tabId}`, enabled: true });
         return true;
       }
       // No asynchronous storage reads before open(): retain the click's user gesture.
-      if (api.sidePanel?.open) { await api.sidePanel.open({ tabId }); return true; }
-      await api.tabs.create({ url: `${api.runtime.getURL('/analysis.html')}?topic=${url.split('/').pop()}` });
+      if (api.sidePanel?.open) {
+        await api.sidePanel.open({ tabId });
+        if(message.start===true){
+          const token=await issueLaunch(url);
+          // An existing panel keeps its document and active request. Only navigate when no panel accepts the launch.
+          let accepted=false;
+          try{const response=await api.runtime.sendMessage?.({type:'analysis:panel:activate',token,url,tabId});accepted=isRecord(response)&&response.analysisLaunchAccepted===true;}catch{/* No live panel yet. */}
+          if(!accepted)await api.sidePanel.setOptions({tabId,path:`analysis.html?topic=${url.split('/').pop()}&panel=1&panelTab=${tabId}&launch=${token}`,enabled:true});
+        }
+        return true;
+      }
+      const token=message.start===true?await issueLaunch(url):null;
+      await api.tabs.create({ url: `${api.runtime.getURL('/analysis.html')}?topic=${url.split('/').pop()}${token?`&launch=${token}`:''}` });
       return true;
     }
     if (message.type === 'analysis:open') {
@@ -165,7 +192,9 @@ export function createAnalysisHandler(api: AnalysisBrowser, deps: Dependencies =
       if (!trusted(sender) && readOnlyTopic(sender) !== url) {
         try { if (topicUrl(sender.url || '') !== url) throw new Error(); } catch { throw new Error('untrusted_sender'); }
       }
-      await api.tabs.create({ url: `${api.runtime.getURL('/analysis.html')}?topic=${url.split('/').pop()}` }); return true;
+      if(message.start===true&&!trusted(sender)&&(sender.frameId!==0||!Number.isInteger(sender.tab?.id)||sender.tab!.id!<0))throw new Error('untrusted_sender');
+      const token=message.start===true?await issueLaunch(url):null;
+      await api.tabs.create({ url: `${api.runtime.getURL('/analysis.html')}?topic=${url.split('/').pop()}${token?`&launch=${token}`:''}${trusted(sender)&&message.advanced===true?'&advanced=1':''}` }); return true;
     }
     if (message.type === 'analysis:view:get') {
       const url = readOnlyTopic(sender); if (!url) throw new Error('untrusted_sender');
@@ -183,6 +212,12 @@ export function createAnalysisHandler(api: AnalysisBrowser, deps: Dependencies =
       return reportQualification(id,string(message.packageHash,64));
     }
     if (!trusted(sender)) throw new Error('untrusted_sender');
+    if (message.type === 'analysis:launch:consume') return serial(async()=>{
+      const token=string(message.token);const url=topicUrl(string(message.url,2048));
+      const list=await launches();const launch=list.find(item=>item.token===token&&item.url===url);
+      await api.storage.session.set({[LAUNCH_KEY]:list.filter(item=>item.token!==token)});
+      return Boolean(launch);
+    });
     if (message.type === 'analysis:run:prepare') return serial(async()=>{
       const job=await repo.getJob(string(message.jobId)); if(!job)throw new Error('missing_run');
       const cfg=await config(job.package.provenance.modelConfigId);checkConfiguration(job,cfg);
@@ -226,8 +261,11 @@ export function createAnalysisHandler(api: AnalysisBrowser, deps: Dependencies =
     if (message.type === 'analysis:qualification:get') return currentQualification(await config(message.configId));
     if (message.type === 'analysis:config:get') {
       const list = await configs();
-      return { configs: await Promise.all(list.map(async c => ({ ...c, hasKey: await vault.has(`model-${c.id}`, new URL(c.baseUrl).origin) }))), hasSearchKey: await vault.has('search-tavily', SEARCH_ORIGIN) };
+      return { defaultConfigId: await defaultConfig(list), configs: await Promise.all(list.map(async c => ({ ...c, hasKey: await vault.has(`model-${c.id}`, new URL(c.baseUrl).origin) }))), hasSearchKey: await vault.has('search-tavily', SEARCH_ORIGIN) };
     }
+    if (message.type === 'analysis:config:default') return serial(async()=>{
+      const cfg=await config(message.configId); await api.storage.local.set({[DEFAULT_CONFIG_KEY]:cfg.id});return true;
+    });
     if (message.type === 'analysis:config:save') return serial(async () => {
       const next = normalizeModelConfig(message.config); const origin = new URL(next.baseUrl).origin; await permission(origin);
       if (calibrating.has(next.id)) throw new Error('configuration_in_use');
@@ -235,11 +273,13 @@ export function createAnalysisHandler(api: AnalysisBrowser, deps: Dependencies =
       if (!old && list.length >= 12) throw new Error('configuration_limit');
       if (old && new URL(old.baseUrl).origin !== origin) await vault.clear(`model-${old.id}`);
       if (typeof message.key === 'string' && message.key) await vault.set(`model-${next.id}`, origin, message.key);
-      await api.storage.local.set({ [CONFIG_KEY]: [...list.filter(c => c.id !== next.id), next] }); return true;
+      const chosen=await defaultConfig(list);
+      await api.storage.local.set({ [CONFIG_KEY]: [...list.filter(c => c.id !== next.id), next], [DEFAULT_CONFIG_KEY]: chosen || (list.length===0?next.id:null) }); return true;
     });
     if (message.type === 'analysis:config:delete') return serial(async () => {
       const id = string(message.configId); if (calibrating.has(id)) throw new Error('configuration_in_use'); await vault.clear(`model-${id}`);
-      await api.storage.local.set({ [CONFIG_KEY]: (await configs()).filter(c => c.id !== id) }); return true;
+      const remaining=(await configs()).filter(c=>c.id!==id);
+      await api.storage.local.set({ [CONFIG_KEY]: remaining, [DEFAULT_CONFIG_KEY]:await defaultConfig(remaining) }); return true;
     });
     if (message.type === 'analysis:key:clear') return serial(async () => { await vault.clear(message.configId ? `model-${string(message.configId)}` : undefined); return true; });
     if (message.type === 'analysis:search:configure') { await permission(SEARCH_ORIGIN); await vault.set('search-tavily', SEARCH_ORIGIN, string(message.key, 8192)); return true; }

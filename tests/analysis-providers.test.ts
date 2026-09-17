@@ -341,3 +341,7 @@ describe('response bounds and interruption', () => {
     expect(body.locked).toBe(false);
   });
 });
+
+it('identifies output truncation even if the partial content happens to be valid JSON',async()=>{
+ await expect(call(respond({choices:[{finish_reason:'length',message:{role:'assistant',content:'{"claims":[]}'}}]}))).rejects.toMatchObject({code:'output_truncated'});
+});

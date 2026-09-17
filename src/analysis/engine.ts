@@ -1,3 +1,4 @@
+import {analysisErrorCode} from './errors';
 import { assertPackage, hashValue, validateSnapshot } from './contracts';
 import { normalizeModelConfig, type ChatResult, type ModelConfig } from './providers';
 import { buildMessages } from './prompts';
@@ -121,11 +122,6 @@ function stageInput(pkg: AnalysisPackage, stage: Stage, messages: ThreadMessage[
   if (stage === 'relations') return { claims: pkg.claims, questions: pkg.questions, sources: pkg.sources };
   if (stage === 'replies') return { units: evaluationUnits(pkg, messages), messages, context: contextFor(pkg, messages), claims: pkg.claims.filter(c => messages.some(m => m.id === c.messageId)), sources: pkg.sources, relations: pkg.relations, limitations: pkg.snapshot.gaps };
   return null;
-}
-function safeCode(error: unknown): string {
-  if (object(error) && typeof error.code === 'string' && /^(?:unauthorized|rate_limited|http_error|network|timeout|cancelled|too_large|invalid_json|schema)$/.test(error.code)) return error.code;
-  if (error instanceof Error && /^(coverage|ownership|span|reference|unread_evidence|source_attribution|dimension|stage_schema|input_too_large|context|qualification):?/.test(error.message)) return error.message.split(/[: ]/)[0]!;
-  return 'stage_failed';
 }
 
 function frozenStageData(pkg: AnalysisPackage, stage: Stage) {
@@ -268,7 +264,7 @@ export async function executeRun(initial: RunCheckpoint, deps: EngineDependencie
       if (error instanceof AnalysisPause) { job.state = 'paused'; job.errors.push({ stage, code: error.code }); await persist(); return job; }
       // Failed requests may have been billed even when the response was unavailable.
       job.inputTokens = null; job.outputTokens = null;
-      job.state = 'partial'; job.errors.push({ stage, code: safeCode(error) }); await persist(); return job;
+      job.state = 'partial'; job.errors.push({ stage, code: analysisErrorCode(error) }); await persist(); return job;
     }
   }
   job.state = 'completed'; await persist(); return job;

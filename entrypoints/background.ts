@@ -1,3 +1,4 @@
+import {analysisErrorCode} from '../src/analysis/errors';
 import { defineBackground } from 'wxt/utils/define-background';
 import { browser } from 'wxt/browser';
 import { applyAction } from '../src/shared/state';
@@ -70,7 +71,7 @@ export default defineBackground(() => {
       }
       throw new Error('未知请求');
     };
-    run().then(data=>sendResponse({ok:true,data}),error=>sendResponse({ok:false,error:error instanceof Error?error.message:'操作失败'}));
+    run().then(data=>sendResponse({ok:true,data}),error=>sendResponse({ok:false,error:error instanceof Error?error.message:'操作失败',code:analysisErrorCode(error)}));
     return true;
   });
   browser.runtime.onInstalled.addListener(async()=>{
