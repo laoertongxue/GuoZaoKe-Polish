@@ -6,7 +6,7 @@
 - 回归覆盖 64K 从配置传到任务和 HTTP、自动/手动额度、旧配置读取迁移、官方地址识别、官方模型名大小写不敏感、384K 上限、跨越旧 60 秒限制、主动取消、5 分钟超时、大响应读取及新旧结果分离。模拟 HTTP 不代表真实 DeepSeek 输出或已安装扩展已通过验收。
 - ZIP：`GuoZaoKe-Polish-0.4.4-chrome.zip`，816670 字节、31 个条目，根 manifest 为 0.4.4，权限与 0.4.3 相同；归档完整性、排除测试/研究/环境文件及常见 Key 形态扫描通过。
 - SHA-256：`45c7f560d501d131fea38eac8d7f25756fc89f714ccdf99643704c65de86e0ea`。
-- 此轮生成本地安装包，未发布 GitHub Release 或提交 Chrome 应用商店；真实 API 仍待更新扩展后验证。
+- GitHub Release v0.4.4 已发布（[v0.4.4](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.4.4)）：ZIP `GuoZaoKe-Polish-0.4.4-chrome.zip`、816670 字节、SHA-256 `45c7f560d501d131fea38eac8d7f25756fc89f714ccdf99643704c65de86e0ea`、31 个条目。本次未提交 Chrome 应用商店。真实 API 仍待更新扩展后验证。
 
 ## 0.4.3 一键分析 / One-click analysis
 
