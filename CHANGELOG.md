@@ -1,5 +1,15 @@
 # 更新日志 / Changelog
 
+## 0.4.4 · 2026-09-24 · 本地修复版
+
+- DeepSeek 官方 Flash / V4 Pro 的自动输出上限改为 65,536 Token；按型号与官方地址识别，不把其他服务商同名模型误当成官方接口。
+- 读取旧版官方 DeepSeek 4,096 默认配置时自动升级；自定义额度保留。高级参数留空使用自动额度，填写数值使用手动额度。
+- 移除 32K 配置硬上限，配置与任务预算允许最多 393,216 Token；实际支持范围仍由服务商决定，1M 上下文不能当作单次输出额度。
+- 新任务冻结实际输出上限，旧失败任务在额度变更后建立新结果；历史记录和原有调用占用保留，资格按新参数重新匹配。
+- 大输出请求等待上限延长至 5 分钟，响应字节限制随额度调整且有硬上限；仍可取消，截断的 JSON 不会作为完整结论保存，没有新增自动重试。
+
+Raised the automatic output allowance for official DeepSeek Flash / V4 Pro to 64K, migrated the legacy 4K default, and aligned configuration, run budgets, timeouts and bounded response handling. Historical results remain unchanged. Real-provider verification is still pending.
+
 ## 0.4.3 · 2026-09-17 · 预发布 / Prerelease
 
 - 点击「讨论分析」自动采集并分析，直接展示结论；缺少配置时引导设置并继续，单一模型自动默认，多个模型可指定默认。

@@ -53,7 +53,7 @@ npm ci
 npm run build
 ```
 
-在 Chrome 加载 `.output/chrome-mv3`。`npm run zip` 生成 `.output/guozaoke-polish-0.4.3-chrome.zip`，仅供试用验证。
+在 Chrome 加载 `.output/chrome-mv3`。`npm run zip` 生成 `.output/guozaoke-polish-0.4.4-chrome.zip`，仅供试用验证。
 
 ## 图片上传与分享
 

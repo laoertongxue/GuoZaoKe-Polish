@@ -5,6 +5,7 @@ export interface ModelConfig {
   model: string;
   temperature: number;
   maxOutputTokens: number;
+  outputTokenPolicy?: 'auto' | 'manual';
   declaredVersion: string;
 }
 export interface ChatMessage { role: 'system' | 'user'; content: string }
@@ -54,8 +55,21 @@ export class ProviderError extends Error {
   }
 }
 
-const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
+const MAX_RESPONSE_BYTES = 16 * 1024 * 1024;
 const DEFAULT_TIMEOUT_MS = 60_000;
+export const MAX_OUTPUT_TOKENS = 393216;
+
+/** Official defaults verified 2026-09-17. Model names alone do not identify a provider. */
+const OFFICIAL_OUTPUT_MODELS = new Set(['deepseek-flash', 'deepseek-v4-flash', 'deepseek-v4-flash-vision-exp', 'deepseek-v4-pro']);
+export function defaultOutputTokens(baseUrl: string, model: string): number {
+  try {
+    const url = new URL(baseUrl);
+    if (url.origin === 'https://api.deepseek.com'
+      && /^\/(?:v1\/?|(?:v1\/)?chat\/completions\/?)?$/.test(url.pathname)
+      && OFFICIAL_OUTPUT_MODELS.has(model.trim().toLowerCase())) return 65536;
+  } catch { /* Invalid URLs are rejected by configuration validation. */ }
+  return 4096;
+}
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 
 function isPublicIpv4(host: string): boolean {
@@ -127,12 +141,22 @@ export function normalizeModelConfig(input: unknown): ModelConfig {
   const base = configString(input.baseUrl, 2048);
   if (base.includes('?')) throw new ProviderError('invalid_config');
   const url = validatePublicUrl(base);
-  const { temperature, maxOutputTokens } = input;
+  const { temperature, outputTokenPolicy } = input;
+  if (outputTokenPolicy !== undefined && outputTokenPolicy !== 'auto' && outputTokenPolicy !== 'manual') throw new ProviderError('invalid_config');
+  const maxOutputTokens = outputTokenPolicy === 'auto' ? defaultOutputTokens(url.href, model) : input.maxOutputTokens;
   if (typeof temperature !== 'number' || !Number.isFinite(temperature) || temperature < 0 || temperature > 2
-    || typeof maxOutputTokens !== 'number' || !Number.isSafeInteger(maxOutputTokens) || maxOutputTokens < 1 || maxOutputTokens > 32768) {
+    || typeof maxOutputTokens !== 'number' || !Number.isSafeInteger(maxOutputTokens) || maxOutputTokens < 1 || maxOutputTokens > MAX_OUTPUT_TOKENS) {
     throw new ProviderError('invalid_config');
   }
-  return { id, name, baseUrl: url.href.replace(/\/+$/, ''), model, temperature, maxOutputTokens, declaredVersion };
+  return { id, name, baseUrl: url.href.replace(/\/+$/, ''), model, temperature, maxOutputTokens, declaredVersion, ...(outputTokenPolicy ? { outputTokenPolicy } : {}) };
+}
+
+/** Only upgrade the old official DeepSeek 4K default; preserve custom limits and all historical run records. */
+export function normalizeStoredModelConfig(input: unknown): ModelConfig {
+  const config = normalizeModelConfig(input);
+  return config.outputTokenPolicy === undefined && config.maxOutputTokens === 4096
+    && defaultOutputTokens(config.baseUrl, config.model) > 4096
+    ? normalizeModelConfig({ ...config, outputTokenPolicy: 'auto' }) : config;
 }
 
 function requestMessages(messages: ChatMessage[]): ChatMessage[] {
@@ -199,8 +223,9 @@ export async function chatCompletion(config: ModelConfig, key: string, messages:
     model: normalized.model, messages: requestMessages(messages), temperature: normalized.temperature,
     max_tokens: normalized.maxOutputTokens, response_format: { type: 'json_object' }, stream: false,
   });
-  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const maxResponseBytes = options.maxResponseBytes ?? MAX_RESPONSE_BYTES;
+  const timeoutMs = options.timeoutMs ?? (normalized.maxOutputTokens > 8192 ? 300_000 : DEFAULT_TIMEOUT_MS);
+  // Include the reasoning payload and JSON escaping, while retaining a hard byte cap.
+  const maxResponseBytes = options.maxResponseBytes ?? Math.min(MAX_RESPONSE_BYTES, Math.max(2 * 1024 * 1024, normalized.maxOutputTokens * 32));
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 300_000
     || !Number.isSafeInteger(maxResponseBytes) || maxResponseBytes < 1 || maxResponseBytes > MAX_RESPONSE_BYTES) throw new ProviderError('invalid_request');
   if (options.signal?.aborted) throw new ProviderError('cancelled');

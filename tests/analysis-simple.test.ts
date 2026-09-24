@@ -35,7 +35,20 @@ it('prompts for model configuration then automatically analyzes after the first 
  const h=harness([]);const root=document.createElement('div');const close=await mountWorkspace(root,h.services,url,'overview',{simple:true,autoStart:true});
  await vi.waitFor(()=>expect(root.querySelector('form')).not.toBeNull());
  expect(h.loadTopic).not.toHaveBeenCalled();root.querySelector<HTMLInputElement>('input[type=password]')!.value='fixture-key';root.querySelector('form')!.dispatchEvent(new Event('submit',{cancelable:true}));
- await vi.waitFor(()=>expect(root.textContent).toContain('分析完成'));expect(h.loadTopic).toHaveBeenCalledTimes(1);close();
+ await vi.waitFor(()=>expect(root.textContent).toContain('分析完成'));expect(h.loadTopic).toHaveBeenCalledTimes(1);
+ expect(h.request.mock.calls.find(([m])=>m.type==='analysis:config:save')?.[0].config).toMatchObject({model:'deepseek-flash',maxOutputTokens:65536,outputTokenPolicy:'auto'});close();
+});
+
+it('starts a new result after an output-budget upgrade instead of resuming the frozen 4K failure',async()=>{
+ const cfg=config();const h=harness([cfg]);const root=document.createElement('div');
+ const respond=h.request.getMockImplementation()!;let fail=true;
+ h.request.mockImplementation(async(m:any)=>{if(fail&&m.type==='analysis:call')throw Object.assign(new Error(),{code:'output_truncated'});return respond(m);});
+ const close=await mountWorkspace(root,h.services,url,'overview',{simple:true,autoStart:true});
+ await vi.waitFor(()=>expect(root.textContent).toContain('模型回答被截断'));
+ const first=(await h.repo.list())[0]!;fail=false;cfg.maxOutputTokens=65536;click(root,'重试');
+ await vi.waitFor(()=>expect(root.textContent).toContain('分析完成'));
+ expect(await h.repo.list()).toHaveLength(2);expect((await h.repo.getJob(first.id))?.budget.maxOutputTokens).toBe(4096);
+ expect((await h.repo.getJob((await h.repo.list()).find(p=>p.id!==first.id)!.id))?.budget.maxOutputTokens).toBe(65536);close();
 });
 it('uses the configured default, reruns with another model, and retains the previous result',async()=>{
  const h=harness([config('m1'),config('m2')],'m2');const root=document.createElement('div');const close=await mountWorkspace(root,h.services,url,'overview',{simple:true,autoStart:true});

@@ -17,6 +17,23 @@ function setup() {
 const trusted = { id: 'ours', url: 'chrome-extension://ours/analysis.html?topic=121894' };
 const website = { id: 'ours', url: 'https://www.guozaoke.com/t/121894' };
 const config = { id: 'm1', name: 'My AI', baseUrl: 'https://api.deepseek.com/v1', model: 'deepseek-chat', temperature: 0, maxOutputTokens: 4096, declaredVersion: '' };
+it('upgrades the legacy official DeepSeek default without rewriting historical storage or custom limits',async()=>{
+ const test=setup();
+ const legacy={...config,model:'deepseek-flash'};
+ test.localValues['gzk:analysis:configs:v1']=[legacy,{...legacy,id:'manual',outputTokenPolicy:'manual'},{...legacy,id:'custom',maxOutputTokens:8192},{...legacy,id:'proxy',baseUrl:'https://proxy.example.org'}];
+ const result=await test.handle({type:'analysis:config:get'},trusted) as any;
+ expect(result.configs.map((c:any)=>c.maxOutputTokens)).toEqual([65536,4096,8192,4096]);
+ expect(test.localValues['gzk:analysis:configs:v1'][0]).toEqual(legacy);
+});
+it('dispatches automatic DeepSeek runs at their frozen limit',async()=>{
+ const test=setup();
+ const cfg={...config,model:'deepseek-flash',maxOutputTokens:65536,outputTokenPolicy:'auto' as const};
+ await test.handle({type:'analysis:config:save',config:cfg,key:'fixture'},trusted);
+ const job=createRun(examplePackage().snapshot,cfg);job.state='running';job.callsUsed=1;job.inputCharactersUsed=10000;
+ await new AnalysisRepository(test.api.storage.local).saveJob(job);
+ await test.handle({type:'analysis:call',jobId:job.id,ticket:1,stage:'claims',input:{}},trusted);
+ expect(test.call).toHaveBeenCalledWith(expect.objectContaining({maxOutputTokens:65536,outputTokenPolicy:'manual'}),expect.anything(),expect.anything(),expect.anything());
+});
 describe('analysis message security', () => {
   it('permits only topic opening from content scripts and rejects credential/config/call access', async () => {
     const { handle, api, call } = setup();

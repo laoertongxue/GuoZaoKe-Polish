@@ -1,6 +1,6 @@
 import {analysisErrorCode} from './errors';
 import { assertPackage, hashValue, validateSnapshot } from './contracts';
-import { normalizeModelConfig, type ChatResult, type ModelConfig } from './providers';
+import { MAX_OUTPUT_TOKENS, normalizeModelConfig, type ChatResult, type ModelConfig } from './providers';
 import { buildMessages } from './prompts';
 import { splitSpans } from './snapshot';
 import { createQuestionPlan, QuestionSearchStop } from './planning';
@@ -30,19 +30,19 @@ function keys(value: unknown, expected: string[]): asserts value is Record<strin
 }
 const sortedIds = (values: string[]) => [...values].sort().join('|');
 export function validateBudget(budget: AnalysisBudget): AnalysisBudget {
-  for (const [key, min, max] of [['maxCalls', 1, 500], ['maxInputCharacters', 1000, 4_000_000], ['maxSources', 0, 30], ['maxOutputTokens', 128, 32768]] as const) {
+  for (const [key, min, max] of [['maxCalls', 1, 500], ['maxInputCharacters', 1000, 4_000_000], ['maxSources', 0, 30], ['maxOutputTokens', 128, MAX_OUTPUT_TOKENS]] as const) {
     if (!Number.isSafeInteger(budget[key]) || budget[key] < min || budget[key] > max) throw new Error('invalid_budget');
   }
   const maxSourceBytes=budget.maxSourceBytes ?? DEFAULT_BUDGET.maxSourceBytes!;
   if (!Number.isSafeInteger(maxSourceBytes) || maxSourceBytes<1024 || maxSourceBytes>64*1024*1024) throw new Error('invalid_budget');
   return { maxCalls: budget.maxCalls, maxInputCharacters: budget.maxInputCharacters, maxSources: budget.maxSources, maxOutputTokens: budget.maxOutputTokens, maxSourceBytes };
 }
-export function createRun(snapshot: Snapshot, input: ModelConfig, budget: AnalysisBudget = DEFAULT_BUDGET): RunCheckpoint {
+export function createRun(snapshot: Snapshot, input: ModelConfig, budget?: AnalysisBudget): RunCheckpoint {
   const issues = validateSnapshot(snapshot); if (issues.length) throw new Error(`snapshot: ${issues[0]!.message}`);
   const config = normalizeModelConfig(input); const now = new Date().toISOString(); const id = crypto.randomUUID();
   return {
     id, package: { formatVersion: 1, methodVersion: METHOD_VERSION, id, createdAt: now, snapshot: structuredClone(snapshot), claims: [], coverage: [], questions: [], sources: [], relations: [], evaluations: [], status: 'partial', unresolved: [...snapshot.gaps], provenance: { mode: 'exploratory', modelConfigId: config.id, endpoint: config.baseUrl, model: config.model, providerModel: null, declaredVersion: config.declaredVersion, parameters: { temperature: config.temperature, maxOutputTokens: config.maxOutputTokens }, stageHashes: {}, qualificationId: null } },
-    stage: 'claims', state: 'ready', budget: validateBudget(budget), callsUsed: 0, inputCharactersUsed: 0, inputTokens: 0, outputTokens: 0,
+    stage: 'claims', state: 'ready', budget: validateBudget(budget ?? { ...DEFAULT_BUDGET, maxOutputTokens: config.maxOutputTokens }), callsUsed: 0, inputCharactersUsed: 0, inputTokens: 0, outputTokens: 0,
     completedStages: [], errors: [], requests: [], searchAttempts: [], updatedAt: now,
   };
 }

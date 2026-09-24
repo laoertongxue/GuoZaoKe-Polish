@@ -1,6 +1,6 @@
 import { AnalysisRepository, SessionCredentials, type StorageArea } from './repository';
 import { buildMessages } from './prompts';
-import { chatCompletion, normalizeModelConfig, ProviderError, validatePublicUrl, type ChatOptions, type ChatMessage, type ChatResult, type ModelConfig } from './providers';
+import { chatCompletion, normalizeModelConfig, normalizeStoredModelConfig, ProviderError, validatePublicUrl, type ChatOptions, type ChatMessage, type ChatResult, type ModelConfig } from './providers';
 import { topicUrl } from '../site/urls';
 import { METHOD_VERSION, type Stage, type RunCheckpoint, type ReportQualification } from './types';
 import { hashValue } from './contracts';
@@ -57,7 +57,7 @@ export function createAnalysisHandler(api: AnalysisBrowser, deps: Dependencies =
     const value = (await api.storage.local.get(CONFIG_KEY))[CONFIG_KEY];
     if (value === undefined) return [];
     if (!Array.isArray(value) || value.length > 12) throw new Error('config_corrupt');
-    return value.map(normalizeModelConfig);
+    return value.map(normalizeStoredModelConfig);
   };
   const defaultConfig = async (list:ModelConfig[]) => {
     if(list.length===1)return list[0]!.id;
@@ -89,8 +89,13 @@ export function createAnalysisHandler(api: AnalysisBrowser, deps: Dependencies =
       const key = await vault.read(`model-${live.id}`, origin);
       checkCancelled(signal);
       const response = (async () => {
-        try { return await (deps.call ?? chatCompletion)({ ...live, maxOutputTokens: Math.min(live.maxOutputTokens, outputLimit ?? live.maxOutputTokens) }, key, input, { signal }); }
-        catch (error) { if (error instanceof ProviderError) throw error; throw new Error('provider_failed'); }
+        try {
+          // The job budget is frozen at createRun using cfg.maxOutputTokens.
+          // Dispatch must not let an 'auto' policy invoke defaultOutputTokens and rewrite the limit,
+          // so force 'manual' here and reuse the live (already-stored) value.
+          const dispatchMaxTokens = outputLimit === undefined ? live.maxOutputTokens : Math.min(live.maxOutputTokens, outputLimit);
+          return await (deps.call ?? chatCompletion)({ ...live, outputTokenPolicy: 'manual', maxOutputTokens: dispatchMaxTokens }, key, input, { signal });
+        } catch (error) { if (error instanceof ProviderError) throw error; throw new Error('provider_failed'); }
       })();
       return { response, qualification };
     });

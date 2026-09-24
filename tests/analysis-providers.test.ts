@@ -57,7 +57,7 @@ describe('model configuration', () => {
     { ...config, name: 'x'.repeat(101) }, { ...config, id: 'x'.repeat(101) },
     { ...config, declaredVersion: 'x'.repeat(201) }, { ...config, baseUrl: 'https://api.example.com/' + 'x'.repeat(2048) },
     { ...config, temperature: NaN }, { ...config, temperature: -1 }, { ...config, temperature: 2.1 },
-    { ...config, maxOutputTokens: 0 }, { ...config, maxOutputTokens: 1.5 }, { ...config, maxOutputTokens: 32769 },
+    { ...config, maxOutputTokens: 0 }, { ...config, maxOutputTokens: 1.5 }, { ...config, maxOutputTokens: 393217 },
   ])('rejects invalid configuration %#', input => expect(() => normalizeModelConfig(input)).toThrow(ProviderError));
 });
 
@@ -155,7 +155,7 @@ describe('JSON completion transport', () => {
 
   it.each([
     { timeoutMs: 0 }, { timeoutMs: NaN }, { timeoutMs: 300001 },
-    { maxResponseBytes: 0 }, { maxResponseBytes: 2 * 1024 * 1024 + 1 },
+    { maxResponseBytes: 0 }, { maxResponseBytes: 16 * 1024 * 1024 + 1 },
   ])('rejects invalid resource limits before fetching %#', async options => {
     const fetch = respond();
     await expect(call(fetch, options)).rejects.toMatchObject({ code: 'invalid_request' });

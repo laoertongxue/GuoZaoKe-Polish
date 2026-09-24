@@ -1,5 +1,5 @@
 import { assertPackage, comparableInputs, hashValue } from './contracts';
-import { createRun, DEFAULT_BUDGET, evaluationUnits } from './engine';
+import { createRun, evaluationUnits } from './engine';
 import { normalizeModelConfig, type ModelConfig } from './providers';
 import { METHOD_VERSION, type AnalysisBudget, type AnalysisPackage, type Claim, type Dimension, type ReplyEvaluation, type RunCheckpoint, type Stage, type TextSpan } from './types';
 
@@ -117,7 +117,7 @@ function frozenStageData(pkg: AnalysisPackage, stage: Stage): unknown {
   throw new Error('invalid_stage');
 }
 /** A replay is a fresh exploratory run, never an imported qualification or spent budget. */
-export async function createReplayRun(pkg: AnalysisPackage, config: ModelConfig, track: ReplayTrack, budget: AnalysisBudget = DEFAULT_BUDGET): Promise<RunCheckpoint> {
+export async function createReplayRun(pkg: AnalysisPackage, config: ModelConfig, track: ReplayTrack, budget?: AnalysisBudget): Promise<RunCheckpoint> {
   assertPackage(pkg);
   if (track !== 'extraction' && track !== 'rating') throw new Error('invalid_track');
   if (pkg.methodVersion !== METHOD_VERSION) throw new Error('method_changed');

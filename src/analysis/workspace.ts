@@ -3,7 +3,7 @@ import { el, button, link } from '../shared/app-ui';
 import { AnalysisRepository } from './repository';
 import { assertPackage, exportPackage, hashValue, importPackage } from './contracts';
 import { AnalysisPause, createRun, DEFAULT_BUDGET, executeRun, participantSummary, type EvidenceControls } from './engine';
-import { normalizeModelConfig, validatePublicUrl, type ModelConfig } from './providers';
+import { defaultOutputTokens, MAX_OUTPUT_TOKENS, normalizeModelConfig, validatePublicUrl, type ModelConfig } from './providers';
 import { collectSnapshot, snapshotDiff } from './snapshot';
 import { gatherEvidence } from './retrieval';
 import { compareExtractions, compareRatings, createReplayRun, type ReplayTrack } from './comparison';
@@ -358,7 +358,7 @@ export async function mountWorkspace(root: HTMLElement, services: WorkspaceServi
         if(!fresh)await loadSavedTopic();
         if(!fresh&&report?.status==='completed'){say('已展示保存的分析结果');return;}
         view='overview';say('正在分析，请稍候…');render();
-        if(fresh||!current||current.package.provenance.modelConfigId!==cfg.id||current.errors.some(e=>['configuration_changed','qualification_changed','qualification_model_changed'].includes(e.code)))await captureTopic(topic);
+        if(fresh||!current||current.package.provenance.modelConfigId!==cfg.id||current.package.provenance.parameters.maxOutputTokens!==cfg.maxOutputTokens||current.errors.some(e=>['configuration_changed','qualification_changed','qualification_model_changed'].includes(e.code)))await captureTopic(topic);
         if(disposed||stopRequested)return;
         await run();
       };
@@ -433,16 +433,19 @@ export async function mountWorkspace(root: HTMLElement, services: WorkspaceServi
   function renderSettings() {
     const old = configurations.find(c => c.id === selectedConfiguration); const form = el('form', 'analysis-form');
     const name = inputField('配置名称', old?.name || '我的模型'); const base = inputField('API 地址（兼容 Chat Completions）', old?.baseUrl || 'https://api.deepseek.com/v1', 'url');
-    const model = inputField('模型 ID', old?.model || 'deepseek-chat'); const key = inputField('API Key（仅本次浏览器会话）', '', 'password'); key.input.autocomplete = 'off'; key.input.spellcheck = false;
-    const version = inputField('服务商版本说明（可留空）', old?.declaredVersion || ''); const output = inputField('单次最大输出 Token', String(old?.maxOutputTokens || 4096), 'number');
+    const model = inputField('模型 ID', old?.model || 'deepseek-flash'); const key = inputField('API Key（仅本次浏览器会话）', '', 'password'); key.input.autocomplete = 'off'; key.input.spellcheck = false;
+    const version = inputField('服务商版本说明（可留空）', old?.declaredVersion || ''); const output = inputField('单次最大输出 Token（留空自动）', old && old.outputTokenPolicy !== 'auto' ? String(old.maxOutputTokens) : '', 'number');
+    output.input.min='128';output.input.max=String(MAX_OUTPUT_TOKENS);output.input.step='1';
+    const updateOutputHint=()=>{output.input.placeholder=`自动：${defaultOutputTokens(base.input.value.trim(),model.input.value)}`;};
+    base.input.addEventListener('input',updateOutputHint);model.input.addEventListener('input',updateOutputHint);updateOutputHint();
     const submit = button(old ? '保存配置' : '添加配置', 'button primary'); submit.type = 'submit'; submit.disabled = busy || queueActive;
     const defaultToggle=el('input');defaultToggle.type='checkbox';defaultToggle.checked=!configurations.length||old?.id===defaultModelId;const defaultLabel=el('label','analysis-choice');defaultLabel.append(defaultToggle,document.createTextNode('设为默认模型'));
-    const extra=el('div');extra.append(version.row,output.row);
-    form.append(name.row, base.row, model.row, key.row, ...(options.simple?[disclosure('高级参数',extra)]:[extra]),defaultLabel, note('温度固定为 0。Key 不进入同步存储、分析报告或导出包；浏览器重启或扩展重载后需重新填写。请自行确认服务商的数据处理方式。'), submit);
+    const extra=el('div');extra.append(version.row,output.row,note('DeepSeek 官方 Flash / V4 Pro 默认 65,536 Token；其他接口默认 4,096，可按服务商支持范围调整。上限不代表每次都会用满。'));
+    form.append(name.row, base.row, model.row, key.row, ...(options.simple?[disclosure('高级参数',extra)]:[extra]),defaultLabel, note('请求温度设为 0，部分思考模型会忽略此参数。Key 不进入同步存储、分析报告或导出包；浏览器重启或扩展重载后需重新填写。请自行确认服务商的数据处理方式。'), submit);
     if(options.simple)form.prepend(note('点击分析会将本帖正文、回复及核查材料发送至所选 API 服务；可能产生该服务的调用费用。不会发送编辑器草稿，Key 不随帖子发送。'));
     form.onsubmit = event => { event.preventDefault(); void perform(async () => {
       if (busy || queueActive) { say('当前任务使用已固定的配置，请完成或取消后再修改。'); return; }
-      const cfg = normalizeModelConfig({ id: old?.id || crypto.randomUUID(), name: name.input.value, baseUrl: base.input.value.trim(), model: model.input.value, temperature: 0, maxOutputTokens: Number(output.input.value), declaredVersion: version.input.value });
+      const cfg = normalizeModelConfig({ id: old?.id || crypto.randomUUID(), name: name.input.value, baseUrl: base.input.value.trim(), model: model.input.value, temperature: 0, maxOutputTokens: Number(output.input.value), outputTokenPolicy: output.input.value.trim() ? 'manual' : 'auto', declaredVersion: version.input.value });
       if (!await services.permissions.request([new URL(cfg.baseUrl).origin])) { say('未获得模型服务访问权限，配置尚未保存。'); return; }
       await services.request({ type: 'analysis:config:save', config: cfg, key: key.input.value }); key.input.value = '';
       if(defaultToggle.checked)await services.request({type:'analysis:config:default',configId:cfg.id});
