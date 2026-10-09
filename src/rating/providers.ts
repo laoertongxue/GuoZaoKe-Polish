@@ -1,3 +1,5 @@
+import { isPublicIpv4, isPublicIpv6 } from '../site/network-address';
+
 export interface ModelConfig {
   id: string;
   name: string;
@@ -72,25 +74,6 @@ export function defaultOutputTokens(baseUrl: string, model: string): number {
 }
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 
-function isPublicIpv4(host: string): boolean {
-  const [a = 0, b = 0, c = 0] = host.split('.').map(Number);
-  return !(a === 0 || a === 10 || a === 127 || a >= 224
-    || (a === 100 && b >= 64 && b <= 127)
-    || (a === 169 && b === 254)
-    || (a === 172 && b >= 16 && b <= 31)
-    || (a === 192 && (b === 168 || (b === 0 && (c === 0 || c === 2)) || (b === 88 && c === 99)))
-    || (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100)))
-    || (a === 203 && b === 0 && c === 113));
-}
-
-function isPublicIpv6(host: string): boolean {
-  // URL has already parsed and canonicalized IPv6, including mapped IPv4.
-  const [first = 0, second = 0] = host.slice(1, -1).split(':').map(word => Number.parseInt(word || '0', 16));
-  // Conservatively allow ordinary global unicast only, excluding special-purpose,
-  // documentation and 6to4 prefixes (which can embed a private IPv4 destination).
-  return first >= 0x2000 && first <= 0x3fff && first !== 0x2002 && first !== 0x3fff
-    && !(first === 0x2001 && (second < 0x200 || second === 0xdb8));
-}
 
 /**
  * Shared by provider configuration and evidence URLs. Evidence queries are allowed.

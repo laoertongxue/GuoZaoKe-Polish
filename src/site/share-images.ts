@@ -1,5 +1,8 @@
+import { isPublicIpv4 } from './network-address';
+
 export type ShareImageResult = { data: string } | { permission: string };
 const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
+const IMAGE_READ_FAILED = '读取图片失败，请检查网络或图片防盗链限制';
 /** Encode already-validated image bytes without inserting any image markup into a document. */
 export function imageBytesToDataUrl(bytes:Uint8Array,contentType:string):string {
   const mime=contentType.split(';')[0]!.trim().toLowerCase();
@@ -32,10 +35,8 @@ export function imageSourceLabel(value: string): string {
 export function publicImageUrl(value: string): URL {
   const url = new URL(value), host = url.hostname.toLowerCase().replace(/\.$/, '');
   if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || url.port || !host.includes('.') || host.includes(':') || /(?:^|\.)(?:localhost|local|internal|lan|home)$/.test(host)) throw new Error('仅支持公共网站的图片地址');
-  if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
-    const [a = 0, b = 0] = host.split('.').map(Number);
-    if (a === 0 || a === 10 || a === 127 || a >= 224 || (a === 100 && b >= 64 && b <= 127) || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && (b === 168 || b === 0)) || (a === 198 && (b === 18 || b === 19))) throw new Error('不读取本机或内网图片');
-  }
+  // Same reserved-range table as the provider boundary. Host text only: no DNS resolution is possible here.
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(host) && !isPublicIpv4(host)) throw new Error('不读取本机或内网图片');
   url.hostname = host; url.hash = ''; return url;
 }
 /** Public, credential-free read. Permission requests are never automatic. */
@@ -43,12 +44,13 @@ export async function readShareImage(value: string, hasPermission: (origin: stri
   const url = publicImageUrl(value), origin = `${url.origin}/*`;
   let response: Response;
   try { response = await fetch(url.href, { credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(20000) }); }
-  catch { if (!await hasPermission(origin)) return { permission: origin }; throw new Error(`读取图片失败：${url.hostname}，请检查网络或图片防盗链限制`); }
+  catch { if (!await hasPermission(origin)) return { permission: origin }; throw new Error(IMAGE_READ_FAILED); }
   async function rejectResponse(message: string): Promise<never> {
     await response.body?.cancel().catch(() => undefined);
     throw new Error(message);
   }
-  if (!response.ok) return rejectResponse(`读取图片失败（${response.status}）：${url.hostname}`);
+  // The status code and host are deliberately not echoed back: this reader must not become a probe for internal services.
+  if (!response.ok) return rejectResponse(IMAGE_READ_FAILED);
   const contentType=response.headers.get('content-type')||'',mime=contentType.split(';')[0]!.trim().toLowerCase();
   if (!/^image\/(?:png|jpeg|gif|webp|avif|svg\+xml)$/.test(mime)) return rejectResponse(`不支持的图片格式：${mime || '未知'}`);
   if (Number(response.headers.get('content-length')) > MAX_IMAGE_BYTES) return rejectResponse('每张分享图片最多 12 MB');
