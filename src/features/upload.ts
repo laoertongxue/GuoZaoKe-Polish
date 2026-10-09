@@ -2,6 +2,87 @@ import {browser} from 'wxt/browser';
 import {button,el,modal,toast} from '../shared/ui';
 import {safeLink} from '../site/urls';
 
+const ALLOWED_TYPES = ['image/png','image/jpeg','image/gif','image/webp'];
+const MAX_BYTES = 10 * 1024 * 1024;
+type Provider = 'bilibili' | 'imgur';
+
+async function readBase64(file:File): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(',')[1]!);
+    reader.onerror = () => reject(new Error('读取图片失败'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function readProvider(): Promise<Provider> {
+  try {
+    const config = await browser.storage.local.get(['gzk:image-provider','gzk:imgur-client']);
+    const saved = config['gzk:image-provider'];
+    if (saved === 'imgur' || saved === 'bilibili') return saved;
+    return config['gzk:imgur-client'] ? 'imgur' : 'bilibili';
+  } catch {
+    return 'bilibili';
+  }
+}
+
+function replacePlaceholder(input:HTMLTextAreaElement, placeholder:string, replacement:string): boolean {
+  const index = input.value.indexOf(placeholder);
+  if (index === -1) return false;
+  input.setRangeText(replacement, index, index + placeholder.length, 'end');
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  return true;
+}
+
+function removePlaceholder(input:HTMLTextAreaElement, placeholder:string): boolean {
+  const value = input.value;
+  const index = value.indexOf(placeholder);
+  if (index === -1) return false;
+  // Strip the placeholder together with its two adjacent line breaks.
+  let start = index;
+  let end = index + placeholder.length;
+  if (value[start - 1] === '\n') start--;
+  if (value[end] === '\n') end++;
+  input.setRangeText('', start, end, 'end');
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  return true;
+}
+
+/** Auto-upload an image without opening any dialog. Inserts a placeholder, swaps it for the public link on success, or removes it and shows a toast on failure. */
+export async function autoUploadImage(input:HTMLTextAreaElement, file:File): Promise<void> {
+  if (!ALLOWED_TYPES.includes(file.type) || !file.size || file.size > MAX_BYTES) {
+    toast('每张图片限 PNG/JPG/GIF/WebP 且不超过 10 MB');
+    return;
+  }
+  const placeholder = `[图片上传中：${file.name}…]`;
+  const start = input.selectionStart;
+  input.setRangeText(`\n${placeholder}\n`, start, input.selectionEnd, 'end');
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  const provider = await readProvider();
+  let base64: string;
+  try {
+    base64 = await readBase64(file);
+  } catch (error) {
+    removePlaceholder(input, placeholder);
+    toast(error instanceof Error ? error.message : '读取图片失败');
+    return;
+  }
+  try {
+    const result = await browser.runtime.sendMessage({ type: 'image:upload', provider, base64, mime: file.type });
+    if (!result?.ok) throw new Error(result?.error || '上传失败');
+    const link = safeLink(result.data);
+    if (!link) throw new Error('图床未返回有效图片链接');
+    if (!replacePlaceholder(input, placeholder, link)) {
+      // Placeholder was removed by the user; still surface the link so it is not lost.
+      input.setRangeText(`\n${link}\n`, input.selectionStart, input.selectionEnd, 'end');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  } catch (error) {
+    removePlaceholder(input, placeholder);
+    toast(error instanceof Error ? error.message : '上传失败');
+  }
+}
+
 export async function imageDialog(insert:(text:string)=>void,initial:File[]=[]) {
   let uploading=false;
   const view=modal('上传图片',{canClose:()=>{

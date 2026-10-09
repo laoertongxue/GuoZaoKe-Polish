@@ -6,8 +6,10 @@ import type { Settings } from '../../src/shared/settings';
 import { applyTheme, button, el, emptyState, errorMessage, icon, iconButton, link, watchSystemTheme } from '../../src/shared/app-ui';
 import { ORIGIN } from '../../src/site/urls';
 import { BILIBILI_UPLOAD_PERMISSIONS } from '../../src/site/image-upload';
+import { normalizeRatingConfig, RATING_CONFIG_KEY } from '../../src/rating/storage';
+import { DEFAULT_RATING_CONFIG, type RatingConfig } from '../../src/rating/types';
 
-type Page = 'controls' | 'tags' | 'backup' | 'about';
+type Page = 'controls' | 'tags' | 'backup' | 'rating' | 'about';
 type BooleanSetting = { [K in keyof Settings]: Settings[K] extends boolean ? K : never }[keyof Settings];
 const root = document.querySelector<HTMLElement>('#app')!;
 let state: AppState;
@@ -22,6 +24,9 @@ const tagStatus = el('div', 'status');
 const backupStatus = el('div', 'status');
 const tagList = el('div', 'tag-list');
 const tagSearch = el('input', 'field-input');
+const ratingStatus = el('div', 'status');
+let ratingConfig: RatingConfig = { ...DEFAULT_RATING_CONFIG };
+let ratingSaving = false;
 saveStatus.setAttribute('role', 'status');
 tagStatus.setAttribute('role', 'status');
 backupStatus.setAttribute('role', 'status');
@@ -501,6 +506,71 @@ function buildBackup(): HTMLElement {
   return card;
 }
 
+async function loadRating(): Promise<void> {
+  try {
+    const raw = await browser.storage.local.get(RATING_CONFIG_KEY);
+    ratingConfig = normalizeRatingConfig(raw[RATING_CONFIG_KEY]);
+    const username = document.getElementById('gzk-rating-username') as HTMLInputElement | null;
+    const postReply = document.getElementById('gzk-rating-post-reply') as HTMLInputElement | null;
+    const maxReply = document.getElementById('gzk-rating-max') as HTMLInputElement | null;
+    if (username) username.value = ratingConfig.assistantUsername;
+    if (postReply) postReply.checked = ratingConfig.postReply;
+    if (maxReply) maxReply.value = String(ratingConfig.maxReplyCharacters);
+  } catch (error) {
+    status(ratingStatus, `读取评分配置失败：${errorMessage(error)}`, 'error');
+  }
+}
+
+function buildRating(): HTMLElement {
+  const card = el('section', 'panel-card');
+  const content = el('div', 'panel-content');
+  const hint = el('p', 'setting-description', '在帖子页工具栏点击「扫描评分」即可让评分助手根据 @助手账号 的触发，对回帖给出本地启发式分数和（可选）LLM 评语。需要 LLM 评语时，请在「模型与图片上传」里先配置模型与 Key。');
+  const fields = el('div', 'panel-form');
+  const username = el('input', 'field-input'); username.id = 'gzk-rating-username'; username.placeholder = '例如 gzk-judge';
+  const usernameLabel = el('label', 'setting-label', '助手账号名（不带 @）'); usernameLabel.htmlFor = username.id;
+  const usernameHint = el('p', 'setting-description', '用户先在过早客注册一个"评分专用小号"，然后在同一浏览器登录它。回帖里 @ 此账号即触发评分。');
+  const postReply = el('input'); postReply.type = 'checkbox'; postReply.id = 'gzk-rating-post-reply';
+  const postReplyLabel = el('label', 'setting-label', '评分后用助手账号发回帖'); postReplyLabel.htmlFor = postReply.id;
+  const postReplyHint = el('p', 'setting-description', '关闭时仅在右下角提示评分结果，不发回帖。');
+  const modelSelect = el('select', 'field-input'); modelSelect.id = 'gzk-rating-model';
+  for (const [value, label] of [['auto', '使用启发式（无需 LLM）'] as const]) { const option = el('option', '', label); option.value = value; modelSelect.append(option); }
+  const modelHint = el('p', 'setting-description', 'LLM 评语需要先在「控制选项 → 模型与图片上传」中保存模型与 Key。当前仅展示本地启发式。');
+  const maxReply = el('input', 'field-input'); maxReply.type = 'number'; maxReply.id = 'gzk-rating-max'; maxReply.min = '80'; maxReply.max = '2000'; maxReply.step = '1';
+  const maxReplyLabel = el('label', 'setting-label', '评语最长字符数'); maxReplyLabel.htmlFor = maxReply.id;
+  const maxReplyHint = el('p', 'setting-description', '建议 200–600；上限 2000。');
+  const usernameWrap = el('div', 'field-input-wrap'); usernameWrap.append(username);
+  const usernameRow = el('div', 'setting-row'); usernameRow.append(usernameLabel, usernameWrap);
+  const postRow = el('div', 'setting-row'); const postWrap = el('div', 'switch'); postWrap.append(postReply); postRow.append(postReplyLabel, postWrap);
+  const modelLabel = el('label', 'setting-label', '评语生成'); const modelWrap = el('div', 'field-input-wrap'); modelWrap.append(modelSelect);
+  const modelRow = el('div', 'setting-row'); modelRow.append(modelLabel, modelWrap);
+  const maxWrap = el('div', 'field-input-wrap'); maxWrap.append(maxReply);
+  const maxRow = el('div', 'setting-row'); maxRow.append(maxReplyLabel, maxWrap);
+  fields.append(usernameRow, usernameHint, postRow, postReplyHint, modelRow, modelHint, maxRow, maxReplyHint, ratingStatus);
+  ratingStatus.setAttribute('role', 'status');
+  const apply = button('保存配置', 'button primary', async () => {
+    if (ratingSaving) return;
+    ratingSaving = true;
+    const next: RatingConfig = {
+      assistantUsername: username.value.trim(),
+      postReply: postReply.checked,
+      modelConfigId: null,
+      maxReplyCharacters: Number(maxReply.value) || DEFAULT_RATING_CONFIG.maxReplyCharacters,
+    };
+    try {
+      await browser.storage.local.set({ [RATING_CONFIG_KEY]: next });
+      ratingConfig = next;
+      status(ratingStatus, '已保存。打开帖子页工具栏的「扫描评分」可立即试用。', 'success');
+    } catch (error) {
+      status(ratingStatus, `保存失败：${errorMessage(error)}`, 'error');
+    } finally {
+      ratingSaving = false;
+    }
+  });
+  content.append(hint, fields, apply);
+  card.append(content);
+  return card;
+}
+
 function buildAbout(): HTMLElement {
   const card = el('section', 'panel-card');
   const content = el('div', 'panel-content');
@@ -559,6 +629,7 @@ async function initialize(): Promise<void> {
       { key: 'controls', title: '控制选项', description: '按你的习惯，调整过早客的浏览与阅读体验。', icon: 'sliders', build: buildControls },
       { key: 'tags', title: '用户标签', description: '用自己的方式，记住遇见的人。', icon: 'tag', build: buildTags },
       { key: 'backup', title: '数据备份', description: '导出、导入和管理保存在浏览器中的插件数据。', icon: 'archive', build: buildBackup },
+      { key: 'rating', title: '评分助手', description: '配置 @助手账号 触发的回帖评分与可选的回帖发送。', icon: 'star', build: buildRating },
       { key: 'about', title: '关于', description: 'GuoZaoKe Polish · 过早客浏览体验增强', icon: 'info', build: buildAbout },
     ];
     for (const page of pages) {
@@ -582,14 +653,14 @@ async function initialize(): Promise<void> {
       content.append(panel);
     }
     const analysisLink = el('a', 'nav-link');
-    analysisLink.href = browser.runtime.getURL('/analysis.html') + '#settings';
-    analysisLink.target = '_blank'; analysisLink.rel = 'noopener';
-    analysisLink.append(icon('book'), el('span', '', '讨论分析与模型'));
+    analysisLink.href = '#rating';
+    analysisLink.append(icon('book'), el('span', '', '评分助手'));
     nav.append(analysisLink);
     sidebar.append(brand, nav, el('p', 'sidebar-note', '设置自动保存。用户标签和稍后阅读保存在当前浏览器，可随时在「数据备份」中导出。'), el('p', 'sidebar-footer', `GuoZaoKe Polish ${browser.runtime.getManifest().version}`));
     root.append(sidebar, content);
     syncControls();
     renderTags();
+    await loadRating();
     showPage();
     stopWatching?.();
     stopWatching = watchState(() => {

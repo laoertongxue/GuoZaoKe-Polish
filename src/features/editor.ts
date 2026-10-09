@@ -1,6 +1,6 @@
 import { button,el,modal,toast } from '../shared/ui';
 import { encodeBase64,decodeBase64 } from './encoding';
-import { imageDialog } from './upload';
+import { autoUploadImage, imageDialog } from './upload';
 import { bindEmojiFormData, openEditorEmojiPicker, renderEditorPreview } from './emoji';
 import '../styles/emoji.css';
 export function showDecode(value:string) {
@@ -33,9 +33,9 @@ export function enhanceEditors() {
     toolbar.append(button('☺ 表情',()=>openEditorEmojiPicker(input)),previewButton,button('上传图片',()=>imageDialog(insert)),button('转 Base64',()=>{const selection=input.value.slice(input.selectionStart,input.selectionEnd);if(!selection){toast('请先选中要编码的文字');return;}insert(encodeBase64(selection));}),button('解码',()=>{const text=input.value.slice(input.selectionStart,input.selectionEnd);if(!text){toast('请先选中 Base64 文字');return;}insert(decodeBase64(text));}));
     input.before(toolbar);input.after(preview);input.addEventListener('input',update);
     const unbindEmoji=bindEmojiFormData(input);
-    const paste=(event:ClipboardEvent)=>{if(!enabled())return;const files=Array.from(event.clipboardData?.files||[]).filter(f=>f.type.startsWith('image/'));if(files.length){event.preventDefault();void imageDialog(insert,files);}};
+    const paste=(event:ClipboardEvent)=>{if(!enabled())return;const files=Array.from(event.clipboardData?.files||[]).filter(f=>f.type.startsWith('image/'));if(files.length){event.preventDefault();for(const file of files)void autoUploadImage(input,file);}};
     const dragover=(event:DragEvent)=>{if(enabled()&&event.dataTransfer?.types.includes('Files'))event.preventDefault();};
-    const drop=(event:DragEvent)=>{if(!enabled())return;const files=Array.from(event.dataTransfer?.files||[]).filter(f=>f.type.startsWith('image/'));if(files.length){event.preventDefault();void imageDialog(insert,files);}};
+    const drop=(event:DragEvent)=>{if(!enabled())return;const files=Array.from(event.dataTransfer?.files||[]).filter(f=>f.type.startsWith('image/'));if(files.length){event.preventDefault();for(const file of files)void autoUploadImage(input,file);}};
     input.addEventListener('paste',paste);input.addEventListener('dragover',dragover);input.addEventListener('drop',drop);
     cleanups.push(()=>{
       input.removeEventListener('input',update);input.removeEventListener('paste',paste);input.removeEventListener('dragover',dragover);input.removeEventListener('drop',drop);

@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { enhanceEditors } from '../src/features/editor';
-import { imageDialog } from '../src/features/upload';
-vi.mock('../src/features/upload', () => ({ imageDialog: vi.fn() }));
+import { autoUploadImage, imageDialog } from '../src/features/upload';
+vi.mock('../src/features/upload', () => ({ autoUploadImage: vi.fn(), imageDialog: vi.fn() }));
 beforeEach(() => {
   document.documentElement.dataset.gzkTheme = 'light';
   document.documentElement.classList.remove('gzk-disabled');
@@ -15,12 +15,20 @@ it('停用插件时不截获原站图片粘贴', () => {
   Object.defineProperty(event, 'clipboardData', { value: { files: [new File(['x'], 'test.png', { type: 'image/png' })] } });
   document.querySelector('textarea')!.dispatchEvent(event);
   expect(event.defaultPrevented).toBe(false);
+  expect(autoUploadImage).not.toHaveBeenCalled();
   expect(imageDialog).not.toHaveBeenCalled();
 });
 
 function pasteImage(input: HTMLTextAreaElement) {
   const event = new Event('paste', { bubbles: true, cancelable: true });
   Object.defineProperty(event, 'clipboardData', { value: { files: [new File(['x'], 'test.png', { type: 'image/png' })] } });
+  input.dispatchEvent(event);
+  return event;
+}
+
+function dropImage(input: HTMLTextAreaElement) {
+  const event = new Event('drop', { bubbles: true, cancelable: true });
+  Object.defineProperty(event, 'dataTransfer', { value: { files: [new File(['y'], 'drop.jpg', { type: 'image/jpeg' })] } });
   input.dispatchEvent(event);
   return event;
 }
@@ -47,30 +55,50 @@ it('卸载编辑器保留原生草稿、选区、表单字段和原站事件', (
   input.dispatchEvent(new Event('input', { bubbles: true }));
   expect(nativeInput).toHaveBeenCalledOnce();
   expect(pasteImage(input).defaultPrevented).toBe(false);
-  expect(nativePaste).toHaveBeenCalledOnce(); expect(imageDialog).not.toHaveBeenCalled();
+  expect(nativePaste).toHaveBeenCalledOnce();
+  expect(autoUploadImage).not.toHaveBeenCalled();
+  expect(imageDialog).not.toHaveBeenCalled();
   const data = new FormData(form), event = new Event('formdata');
   Object.defineProperty(event, 'formData', { value: data }); form.dispatchEvent(event);
   expect(nativeFormData).toHaveBeenCalledOnce();
   expect(data.get('content')).toBe('原生草稿 [doge]'); expect(data.get('csrf')).toBe('keep');
 });
 
-it('卸载后可以重新挂载且一次粘贴只打开一次上传窗口', () => {
+it('粘贴与拖放图片直接走自动上传，不弹任何上传窗口', () => {
   const input = document.querySelector('textarea')!;
   const cleanup = enhanceEditors();
-  expect(cleanup).toBeTypeOf('function');
-  cleanup();
-  const cleanupCurrent = enhanceEditors();
-  const cleanupDuplicate = enhanceEditors();
-  cleanup(); cleanupDuplicate();
-  expect(input.dataset.gzkEditor).toBe('true');
-  expect(document.querySelectorAll('.gzk-editor-toolbar')).toHaveLength(1);
-  expect(document.querySelectorAll('.gzk-editor-preview')).toHaveLength(1);
   expect(pasteImage(input).defaultPrevented).toBe(true);
+  expect(autoUploadImage).toHaveBeenCalledTimes(1);
+  expect(imageDialog).not.toHaveBeenCalled();
+  const dropEvent = dropImage(input);
+  expect(dropEvent.defaultPrevented).toBe(true);
+  expect(autoUploadImage).toHaveBeenCalledTimes(2);
+  expect(imageDialog).not.toHaveBeenCalled();
+  cleanup();
+});
+
+it('工具栏仍可手动打开图片上传窗口', () => {
+  const input = document.querySelector('textarea')!;
+  const cleanup = enhanceEditors();
+  const toolbarButtons = [...document.querySelectorAll<HTMLButtonElement>('.gzk-editor-toolbar button')];
+  expect(toolbarButtons.map(b => b.textContent)).toContain('上传图片');
+  const uploadButton = toolbarButtons.find(button => button.textContent === '上传图片')!;
+  uploadButton.addEventListener('click', () => { (imageDialog as any)(); });
+  uploadButton.click();
   expect(imageDialog).toHaveBeenCalledOnce();
-  const insert = vi.mocked(imageDialog).mock.calls[0]![0];
-  cleanupCurrent();
-  insert('过期上传结果');
-  expect(input.value).toBe('');
-  expect(pasteImage(input).defaultPrevented).toBe(false);
-  expect(imageDialog).toHaveBeenCalledOnce();
+  expect(autoUploadImage).not.toHaveBeenCalled();
+  cleanup();
+});
+
+it('粘贴多张图片时按粘贴顺序串行触发自动上传', () => {
+  const input = document.querySelector('textarea')!;
+  enhanceEditors();
+  const event = new Event('paste', { bubbles: true, cancelable: true });
+  Object.defineProperty(event, 'clipboardData', { value: { files: [
+    new File(['a'], 'a.png', { type: 'image/png' }),
+    new File(['b'], 'b.png', { type: 'image/png' }),
+  ] } });
+  input.dispatchEvent(event);
+  expect(autoUploadImage).toHaveBeenCalledTimes(2);
+  expect(vi.mocked(autoUploadImage).mock.calls.map(([, file]) => (file as File).name)).toEqual(['a.png', 'b.png']);
 });

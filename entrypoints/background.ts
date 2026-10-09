@@ -1,4 +1,3 @@
-import {analysisErrorCode} from '../src/analysis/errors';
 import { defineBackground } from 'wxt/utils/define-background';
 import { browser } from 'wxt/browser';
 import { applyAction } from '../src/shared/state';
@@ -6,16 +5,15 @@ import { readableUrl, topicUrl, ORIGIN } from '../src/site/urls';
 import { readStoredState } from '../src/shared/storage';
 import { readShareImage } from '../src/site/share-images';
 import { uploadImage } from '../src/site/image-upload';
-import { createAnalysisHandler } from '../src/analysis/background';
-import { fetchEvidenceBytes, searchTavily } from '../src/analysis/evidence';
+import { createRatingHandler } from '../src/rating/handler';
 
 export default defineBackground(() => {
-  const analysis = createAnalysisHandler(browser, {
-    search: (query, key, signal) => searchTavily(query, key, { signal }),
-    readSource: (url, signal,maxBytes) => fetchEvidenceBytes(url, { signal,maxBytes }),
-  });
   // Keep sensitive storage inaccessible to content scripts, with no persistent fallback.
   void browser.storage.session?.setAccessLevel?.({ accessLevel: 'TRUSTED_CONTEXTS' });
+  const rating = createRatingHandler({
+    storage: { local: browser.storage.local },
+    cookies: browser.cookies,
+  });
   let queue=Promise.resolve();
   const serial=<T>(run:()=>Promise<T>):Promise<T>=>{
     const result=queue.then(run); queue=result.then(()=>undefined,()=>undefined); return result;
@@ -54,7 +52,6 @@ export default defineBackground(() => {
   browser.runtime.onMessage.addListener((message,sender,sendResponse)=>{
     if (sender.id!==browser.runtime.id) return;
     const run=async()=>{
-      if (typeof message?.type === 'string' && message.type.startsWith('analysis:')) return analysis(message, sender);
       if (message?.type==='state:get') return serial(read);
       if (message?.type==='state:mutate') return serial(()=>write(message.action,message.payload));
       if (message?.type==='site:get') return getPage(message.url);
@@ -63,15 +60,24 @@ export default defineBackground(() => {
       if (message?.type==='image:upload') {
         return uploadImage(message,sender);
       }
+      if (message?.type==='rating:trigger') {
+        if (typeof message.topicId !== 'string' || typeof message.topicUrl !== 'string' || typeof message.pageHtml !== 'string') throw new Error('评分请求缺少必要字段');
+        return rating.handleTrigger({ topicId: message.topicId, topicUrl: message.topicUrl, pageHtml: message.pageHtml });
+      }
+      if (message?.type==='rating:preview') {
+        if (typeof message.topicId !== 'string' || typeof message.topicUrl !== 'string' || typeof message.pageHtml !== 'string') throw new Error('评分请求缺少必要字段');
+        return rating.preview({ topicId: message.topicId, topicUrl: message.topicUrl, pageHtml: message.pageHtml });
+      }
       if (message?.type==='options:open') {
         if(message.page==='tags') await browser.tabs.create({url:`${browser.runtime.getURL('/options.html')}#tags`});
         else if(message.page==='images') await browser.tabs.create({url:`${browser.runtime.getURL('/options.html')}#image-hosting`});
+        else if(message.page==='rating') await browser.tabs.create({url:`${browser.runtime.getURL('/options.html')}#rating`});
         else await browser.runtime.openOptionsPage();
         return true;
       }
       throw new Error('未知请求');
     };
-    run().then(data=>sendResponse({ok:true,data}),error=>sendResponse({ok:false,error:error instanceof Error?error.message:'操作失败',code:analysisErrorCode(error)}));
+    run().then(data=>sendResponse({ok:true,data}),error=>sendResponse({ok:false,error:error instanceof Error?error.message:'操作失败'}));
     return true;
   });
   browser.runtime.onInstalled.addListener(async()=>{

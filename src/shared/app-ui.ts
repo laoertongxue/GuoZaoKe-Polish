@@ -42,6 +42,7 @@ const paths: Record<string, string> = {
   horizontal: 'M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4',
   vertical: 'M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4',
   plus: 'M12 4v16M4 12h16',
+  star: 'M12 3l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z',
 };
 
 export function icon(name: string): SVGSVGElement {

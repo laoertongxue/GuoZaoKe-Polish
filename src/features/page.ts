@@ -11,6 +11,7 @@ import { previewTopic, saveTopic, showReading } from './reading';
 import { enhanceEditors, decodePage, showDecode } from './editor';
 import { shareImage } from './share';
 import { installImagePreview } from './image-preview';
+import { detectTrigger } from '../rating/trigger';
 import type { Settings } from '../shared/settings';
 import { createSiteFooter } from './site-footer';
 import { enhanceProfile } from './profile';
@@ -18,7 +19,6 @@ import { applyPageAppearance } from './page-bootstrap';
 import { enhancePagination } from './pagination';
 import { positionNotification } from './notification';
 import { icon } from '../shared/app-ui';
-import { installAnalysisEntry } from './analysis';
 
 function toolButton(label:string,name:string,action:()=>unknown) {
   const node=button('',action);node.append(icon(name),el('span',label));return node;
@@ -98,7 +98,6 @@ export async function startPage(ctx?:ContentScriptContext, initialState?:AppStat
   const replies=enhanceReplies(state.settings.enabled?state.settings:{...state.settings,nested:'off',autoFold:false,preload:false});
   const options=()=>browser.runtime.sendMessage({type:'options:open'});
   const toolbox=el('div','','gzk-toolbox container-box');toolbox.append(el('div','GuoZaoKe Polish','gzk-brand'));
-  const analysisEntry = topic ? installAnalysisEntry(topic.url) : null;
   const themeButton=toolButton('切换主题','moon',async()=>{state=await saveSettings({autoTheme:false,theme:html.dataset.gzkTheme==='dark'?'light':'dark'});theme();});
   toolbox.append(themeButton,toolButton('控制选项','sliders',options),toolButton('稍后阅读','book',showReading));
   if(topic){
@@ -110,7 +109,26 @@ export async function startPage(ctx?:ContentScriptContext, initialState?:AppStat
     layoutButton.dataset.gzkLayout='true';toolbox.append(layoutButton);layout.update();
   }
   if(topic){const current=topic;toolbox.append(toolButton('热门回复','heart',()=>replies.hot()),toolButton('回复主题','reply',()=>{const input=document.querySelector<HTMLTextAreaElement>('textarea.J_replyContent');if(!input){toast('请先登录过早客后回复',true);return;}input.focus();input.scrollIntoView({behavior:'smooth',block:'center'});}),toolButton('保存主题','plus',()=>saveTopic(current)),toolButton('分享图片','image',()=>shareImage(current)));}
-  if (analysisEntry) toolbox.append(analysisEntry.entry);
+  if(topic){
+    const current=topic;const ratingButton=toolButton('扫描评分','star',async()=>{
+      ratingButton.disabled=true;
+      try{
+        const pageHtml=document.documentElement.outerHTML;
+        const match=current.url.match(/\/t\/(\d+)/);
+        if(!match)throw new Error('无法解析 topicId');
+        const topicId=match[1]!;
+        const result=await browser.runtime.sendMessage({type:'rating:trigger',topicId,topicUrl:current.url,pageHtml}) as {ok:boolean;data?:{handled:boolean;result?:{score:number;comment:string;provider:string};postedReply?:{posted:boolean;reason:string;responseStatus:number};error?:{code:string;message:string}};error?:string} | undefined;
+        if(!result?.ok)throw new Error(result?.error||'评分失败');
+        if(!result.data?.handled)throw new Error(result.data?.error?.message||'未找到可评分的楼层（先在回帖里 @ 助手账号）');
+        const score=result.data.result?.score;
+        const provider=result.data.result?.provider==='llm'?' LLM 评语':'本地评语';
+        const posted=result.data.postedReply?.posted===true?' 已发回帖。':result.data.postedReply?` 发回帖未成功（${result.data.postedReply.reason}）。`:' 未配置发回帖。';
+        toast(`评分 ${score}/10（${provider}）。${posted}`);
+      }catch(error){toast(error instanceof Error?error.message:'评分失败',true);}
+      finally{ratingButton.disabled=false;}
+    });
+    toolbox.append(ratingButton);
+  }
   toolbox.append(toolButton('回到顶部','top',()=>window.scrollTo({top:0,behavior:'smooth'})),toolButton('更多功能','more',()=>{
     const view=modal('更多功能',{compact:true});const actions=el('div','','actions');actions.append(button('解码页面 Base64',()=>{view.close();decodePage();}),button('控制选项',options));view.body.append(actions);
     view.body.append(el('p','自动签到暂不可用。','muted'));
@@ -145,13 +163,13 @@ export async function startPage(ctx?:ContentScriptContext, initialState?:AppStat
     if(msg.type==='reading'&&msg.url)void (async()=>{try{await saveTopic(topic&&topic.url===msg.url?topic:await fetchTopic(msg.url!));}catch(error){toast(error instanceof Error?error.message:'保存失败',true);}})();
   };
   browser.runtime.onMessage.addListener(message);
-  const update=async(next?:AppState)=>{const previous=state.settings;const received=next??await getState();if(disposed)return;state=received;theme();analysisEntry?.update(state.settings.enabled);pagination.update(state.settings.enabled);notification.update(state.settings.enabled);profileLayout.update(state.settings.enabled);memberCards.update();if(JSON.stringify(previous)!==JSON.stringify(state.settings))replies.update(state.settings.enabled?state.settings:{...state.settings,nested:'off',autoFold:false,preload:false});document.querySelectorAll<HTMLElement>('[data-gzk-preview]').forEach(e=>e.hidden=!state.settings.topicPreview);};
+  const update=async(next?:AppState)=>{const previous=state.settings;const received=next??await getState();if(disposed)return;state=received;theme();pagination.update(state.settings.enabled);notification.update(state.settings.enabled);profileLayout.update(state.settings.enabled);memberCards.update();if(JSON.stringify(previous)!==JSON.stringify(state.settings))replies.update(state.settings.enabled?state.settings:{...state.settings,nested:'off',autoFold:false,preload:false});document.querySelectorAll<HTMLElement>('[data-gzk-preview]').forEach(e=>e.hidden=!state.settings.topicPreview);};
   const stop=watchState(()=>{void update().catch(error=>toast(String(error),true));});
   system.addEventListener('change',theme);await update(initialState?state:undefined);
   if(topic&&state.reading.some(t=>t.id===topic!.id&&!t.read))await markRead(topic.id,true);
   ctx?.onInvalidated(()=>{
     if(disposed)return;disposed=true;
-    stop();pagination.destroy();notification.destroy();replies.destroy();profileLayout.destroy();memberCards.destroy();layout.destroy();toolsSize.disconnect();stopEditors?.();analysisEntry?.destroy();
+    stop();pagination.destroy();notification.destroy();replies.destroy();profileLayout.destroy();memberCards.destroy();layout.destroy();toolsSize.disconnect();stopEditors?.();
     html.style.removeProperty('--gzk-tools-height');stopImagePreview();system.removeEventListener('change',theme);narrow.removeEventListener('change',positionTools);browser.runtime.onMessage.removeListener(message);
     applyPageAppearance(html,{...state.settings,enabled:false},system.matches);
     for(const [link,original]of originals)for(const [name,value]of Object.entries(original)){if(value===null)link.removeAttribute(name);else link.setAttribute(name,value);}

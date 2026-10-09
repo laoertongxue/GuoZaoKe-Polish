@@ -98,7 +98,7 @@ it('只接受B站图片域名和路径，拒绝任意跳转或凭证地址',asyn
   }
 });
 it('拒绝非本站页面、子框架、未知图床及无效图片，且不访问认证信息',async()=>{
-  for(const sender of [{id:'test-extension',url:'https://evil.test/',frameId:0},{id:'test-extension',url:'https://www.guozaoke.com/t/1',frameId:1},{id:'test-extension',url:'chrome-extension://test-extension/analysis-view.html',frameId:0}])expect(await send(upload,sender)).toMatchObject({ok:false});
+  for(const sender of [{id:'test-extension',url:'https://evil.test/',frameId:0},{id:'test-extension',url:'https://www.guozaoke.com/t/1',frameId:1},{id:'test-extension',url:'chrome-extension://test-extension/some-other-page.html',frameId:0}])expect(await send(upload,sender)).toMatchObject({ok:false});
   for(const patch of [{provider:'unknown'},{base64:'not base64'},{base64:''},{base64:btoa('not an image')},{mime:'image/jpeg'},{base64:'A'.repeat(14_000_000)}])expect(await send({...upload,...patch})).toMatchObject({ok:false});
   expect(api.cookie).not.toHaveBeenCalled();expect(api.fetch).not.toHaveBeenCalled();
 });

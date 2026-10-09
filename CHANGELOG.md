@@ -1,5 +1,14 @@
 # 更新日志 / Changelog
 
+## 0.5.0 · 2026-10-09 · 删讨论分析 + 粘贴自动上传
+
+- **删除整套「讨论分析」**：移除 `src/analysis/*`、`entrypoints/analysis/` 与 `entrypoints/analysis-view/`、`src/features/analysis.ts`、`src/styles/analysis.css`、PDF.js 依赖、相关测试、文档、GitHub `sidePanel` 权限与 `analysis-view.html` 资源白名单；`chatCompletion` 与 `normalizeStoredModelConfig` 抽象迁出到 `src/rating/providers.ts` 供未来评分助手复用。
+- **图片上传改为自动**：编辑器内粘贴或拖放图片后，扩展直接调用所选图床上传（继续支持 B 站 / Imgur），不再打开上传对话框；占位文本在上传成功后替换为图片链接，失败时移除并 toast 错误。工具栏的"上传图片"按钮保留为手动入口。
+- 移除 0.4.2 / 0.4.3 引入的 `sidePanel` 权限；`cookies` 权限仅用于 B 站上传。
+- 隐私说明中删去模型服务、检索服务、Tavily、PDF 解析的描述；保留 B 站 / Imgur 图片上传条款。
+
+Removed the entire Discussion Analysis feature set (side panel, model and search config, PDF reading, frozen-input replays). The `chatCompletion` abstraction now lives in `src/rating/providers.ts` for future reuse. Pasting or dropping an image in the editor automatically uploads it to the selected host without any dialog; the upload button on the toolbar remains as a manual fallback. The `sidePanel` permission is dropped. The `cookies` permission is now used only for Bilibili uploads.
+
 ## 0.4.4 · 2026-09-24 · 本地修复版
 
 - DeepSeek 官方 Flash / V4 Pro 的自动输出上限改为 65,536 Token；按型号与官方地址识别，不把其他服务商同名模型误当成官方接口。

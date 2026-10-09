@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { imageDialog } from '../src/features/upload';
+import { autoUploadImage, imageDialog } from '../src/features/upload';
 const api = vi.hoisted(() => ({ get: vi.fn(), send: vi.fn() }));
 // Content scripts have storage/runtime, but no chrome.permissions API.
 vi.mock('wxt/browser', () => ({ browser: { storage: { local: { get: api.get } }, runtime: { sendMessage: api.send } } }));
@@ -27,6 +27,75 @@ it('后台拒绝授权时保留待上传文件且不改变草稿', async () => {
   await vi.waitFor(() => expect(document.querySelector('.gzk-overlay-host')!.shadowRoot!.textContent).toContain('请先在控制选项中授权 Imgur'));
   expect(insert).not.toHaveBeenCalled();
   expect(uploadButton().disabled).toBe(false);
+});
+
+function makeInput(): HTMLTextAreaElement {
+  const input = document.createElement('textarea');
+  document.body.appendChild(input);
+  return input;
+}
+const shadowText = () => document.querySelector('.gzk-overlay-host')!.shadowRoot!.textContent || '';
+
+it('autoUploadImage 在 textarea 中插入占位文本，成功后替换为图床链接', async () => {
+  api.send.mockResolvedValue({ ok: true, data: 'https://i.imgur.com/auto.png' });
+  const input = makeInput();
+  const pending = autoUploadImage(input, new File(['x'], 'auto.png', { type: 'image/png' }));
+  await vi.waitFor(() => expect(input.value).toContain('[图片上传中：auto.png…]'));
+  await pending;
+  expect(api.send).toHaveBeenCalledWith(expect.objectContaining({ type: 'image:upload', provider: 'imgur', mime: 'image/png' }));
+  expect(input.value).toBe('\nhttps://i.imgur.com/auto.png\n');
+  expect(input.value).not.toContain('图片上传中');
+});
+
+it('autoUploadImage 上传失败时移除占位文本并 toast 错误', async () => {
+  api.send.mockResolvedValue({ ok: false, error: '网络异常' });
+  const input = makeInput();
+  await autoUploadImage(input, new File(['x'], 'fail.png', { type: 'image/png' }));
+  await vi.waitFor(() => expect(shadowText()).toContain('网络异常'));
+  expect(input.value).toBe('');
+  expect(input.value).not.toContain('图片上传中');
+});
+
+it('autoUploadImage 拒绝超过 10 MB 或非图片类型，且不发送请求', async () => {
+  const big = new File([''], 'big.png', { type: 'image/png' });
+  Object.defineProperty(big, 'size', { value: 10 * 1024 * 1024 + 1, configurable: true });
+  const input = makeInput();
+  await autoUploadImage(input, big);
+  expect(api.send).not.toHaveBeenCalled();
+  expect(shadowText()).toContain('每张图片限 PNG/JPG/GIF/WebP');
+  const input2 = makeInput();
+  await autoUploadImage(input2, new File(['x'], 'doc.pdf', { type: 'application/pdf' }));
+  expect(api.send).not.toHaveBeenCalled();
+  expect(input2.value).toBe('');
+});
+
+it('autoUploadImage 保留用户已配置的图床偏好（哔哩哔哩）', async () => {
+  api.get.mockResolvedValue({ 'gzk:image-provider': 'bilibili' });
+  api.send.mockResolvedValue({ ok: true, data: 'https://i0.hdslb.com/bfs/upload.png' });
+  const input = makeInput();
+  await autoUploadImage(input, new File(['x'], 'auto.png', { type: 'image/png' }));
+  await vi.waitFor(() => expect(input.value).toContain('https://i0.hdslb.com/bfs/upload.png'));
+  expect(api.send).toHaveBeenCalledWith(expect.objectContaining({ provider: 'bilibili' }));
+});
+
+it('autoUploadImage 占位被用户删除后仍把链接追加到当前位置', async () => {
+  api.send.mockResolvedValue({ ok: true, data: 'https://i.imgur.com/auto.png' });
+  const input = makeInput();
+  const pending = autoUploadImage(input, new File(['x'], 'auto.png', { type: 'image/png' }));
+  await vi.waitFor(() => expect(input.value).toContain('[图片上传中：auto.png…]'));
+  input.value = ''; // user removed the placeholder before upload finished
+  await pending;
+  expect(input.value).toBe('\nhttps://i.imgur.com/auto.png\n');
+});
+
+it('autoUploadImage 保留插入位置与选区方向，丢失只在原占位替换时变更', async () => {
+  api.send.mockResolvedValue({ ok: true, data: 'https://i.imgur.com/auto.png' });
+  const input = makeInput(); input.value = 'hello '; input.setSelectionRange(6, 6, 'forward');
+  const pending = autoUploadImage(input, new File(['x'], 'auto.png', { type: 'image/png' }));
+  await vi.waitFor(() => expect(input.value).toContain('[图片上传中'));
+  input.setSelectionRange(0, 0, 'backward');
+  await pending;
+  expect(input.value).toBe('hello \nhttps://i.imgur.com/auto.png\n');
 });
 const root=()=>document.querySelector('.gzk-overlay-host')!.shadowRoot!;
 const biliUpload=()=>[...root().querySelectorAll('button')].find(b=>b.textContent==='上传到 B 站并插入')!;
