@@ -1,4 +1,13 @@
 import { el } from '../shared/ui';
+import { ORIGIN, safeLink } from '../site/urls';
+
+/** Same-site links stay as paths, as in the original markup. Anything that is not http(s) is dropped. */
+function safeProfileHref(value: string): string {
+  const href = safeLink(value);
+  if (!href) return '';
+  const url = new URL(href);
+  return url.origin === new URL(ORIGIN).origin ? `${url.pathname}${url.search}` : href;
+}
 
 // Retain native links, data and handlers while arranging the same fields as the
 // reference profile. Restore moved fields when the extension is disabled.
@@ -25,12 +34,17 @@ export function enhanceProfile(enabled: boolean, pathname = location.pathname) {
     const sidebarHeader = document.querySelector('.sidebar-right .usercard > .ui-header');
     const avatar = header?.querySelector<HTMLImageElement>('.avatar') || (sidebarHeader?.querySelector('.username')?.textContent?.trim() === username ? sidebarHeader.querySelector<HTMLImageElement>('.avatar') : null);
     if (avatar) { const copy = avatar.cloneNode() as HTMLImageElement; copy.alt = ''; navigation.append(copy); }
-    const base = home?.getAttribute('href') || `/u/${username}`;
+    // Every href comes from the host page and is written into our own anchors, so each one must pass safeLink (http/https only).
+    const base = safeProfileHref(home?.getAttribute('href') || '') || safeProfileHref(`/u/${encodeURIComponent(username)}`);
     const sources = [{ label: username, href: base }];
     for (const [status, label] of [['topic', '主题'], ['reply', '回复'], ['favorite', '收藏']]) {
       const link = document.querySelector<HTMLAnchorElement>(`.sidebar-right .usercard .status-${status} a[href]`);
-      if (profile && link) sources.push({ label: label!, href: link.getAttribute('href')! });
-      else if (!profile) sources.push({ label: label!, href: `${base}/${status === 'topic' ? 'topics' : status === 'reply' ? 'replies' : 'favorites'}` });
+      if (profile) {
+        const href = safeProfileHref(link?.getAttribute('href') || '');
+        if (href) sources.push({ label: label!, href });
+      } else {
+        sources.push({ label: label!, href: `${base}/${status === 'topic' ? 'topics' : status === 'reply' ? 'replies' : 'favorites'}` });
+      }
     }
     for (const source of sources) {
       const link = el('a', source.label);
