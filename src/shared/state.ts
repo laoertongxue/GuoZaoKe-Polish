@@ -30,6 +30,24 @@ export function validateBackup(value:unknown):AppState {
   if (new Set(reading.map(t=>t.id)).size!==reading.length) throw new Error('备份包含重复主题');
   return {settings:validateSettings(x.settings),tags:tagsOf(x.tags),reading};
 }
+/** Load-time tags: invalid users are dropped one by one instead of failing the whole load. */
+export function readableTags(value:unknown):Record<string,string[]> {
+  const out:Record<string,string[]>={};
+  if (!value||typeof value!=='object'||Array.isArray(value)) return out;
+  for (const [name,tags] of Object.entries(value as Record<string,unknown>)) {
+    try { Object.assign(out,tagsOf({[name]:tags})); } catch { /* skip this entry */ }
+  }
+  return out;
+}
+/** Load-time reading list: invalid or duplicate entries are dropped individually. */
+export function readableReading(value:unknown):ReadingItem[] {
+  if (!Array.isArray(value)) return [];
+  const out:ReadingItem[]=[], seen=new Set<string>();
+  for (const entry of value.slice(0,1000)) {
+    try { const item=readingOf(entry); if(!seen.has(item.id)){seen.add(item.id); out.push(item);} } catch { /* skip this entry */ }
+  }
+  return out;
+}
 export function applyAction(state:AppState,action:string,payload?:unknown):AppState {
   const next=structuredClone(state);
   switch (action) {

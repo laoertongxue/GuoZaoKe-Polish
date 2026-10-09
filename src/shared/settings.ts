@@ -39,3 +39,30 @@ export function validateSettings(value: unknown): Settings {
   }
   return out;
 }
+
+/**
+ * Load-time variant used when reading what is already stored. A value this build does not
+ * understand (for example a theme added by a newer version and synced here) falls back to its
+ * default instead of failing the whole load, which would also block every later write.
+ * Writes keep using the strict validateSettings.
+ */
+export function readSettingsLenient(value: unknown): Settings {
+  const out: Settings = { ...defaults };
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return out;
+  const incoming = value as Record<string, unknown>;
+  for (const key of Object.keys(incoming)) {
+    if (key === 'horizontal') {
+      if ('layout' in incoming) continue;
+    } else if (!(key in defaults)) {
+      continue;
+    }
+    try {
+      const single = validateSettings({ [key]: incoming[key] });
+      if (key === 'horizontal') out.layout = single.layout;
+      else (out as Record<string, unknown>)[key] = single[key as keyof Settings];
+    } catch {
+      // Keep the default for this key only.
+    }
+  }
+  return out;
+}
