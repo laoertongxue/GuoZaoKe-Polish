@@ -1,5 +1,16 @@
 # 更新日志 / Changelog
 
+## 未发布 · 评分助手与设置读取修复
+
+- **评分分数修正**：启发式总分不再饱和为 10/10，空白或纯链接回复得 2–3 分，正常回复约 6–8 分。中文无空格文本的重复度按二元组计算，不再恒为 0。
+- **回帖改为浏览器登录态**：去掉手动 Cookie 头和 `cookies` API 依赖（该头会被浏览器忽略，且原请求使用 `credentials:'omit'`，实际不携带任何登录态）。回帖前确认登录账号与助手账号一致，未登录、账号不一致或找不到站点回帖表单时不发送。
+- **自动回帖默认关闭**：「评分后发回帖」默认关闭；未确认发布的失败楼层不会被标记，可在之后重试。
+- **移除 LLM 评语的不可达路径**：评分只在本机计算，不再读取旧版 `gzk:analysis:configs:v1`，选项页不再显示"模型与 Key"说明。`src/rating/providers.ts` 与 `prompt.ts` 暂保留，未被评分路径引用。
+- **设置读取容错**：同步数据中本版本无法识别的值回退为默认值，不再导致所有读写失败；写入仍严格校验。
+- **个人页链接**：个人页导航的链接统一经过 `safeLink`，非 http(s) 地址不写入。
+- **分享图片**：私网地址判断与评分的地址边界共用同一份保留地址表；错误信息不再回显 HTTP 状态码与主机名。DNS 解析导致的内网访问仍无法在扩展内完全阻止，见隐私说明。
+- **隐私说明**：补充评分回帖的数据流，修正「不会自动发帖」与悬空引用。
+
 ## 0.5.0 · 2026-10-09 · 删讨论分析 + 粘贴自动上传
 
 - **删除整套「讨论分析」**：移除 `src/analysis/*`、`entrypoints/analysis/` 与 `entrypoints/analysis-view/`、`src/features/analysis.ts`、`src/styles/analysis.css`、PDF.js 依赖、相关测试、文档、GitHub `sidePanel` 权限与 `analysis-view.html` 资源白名单；`chatCompletion` 与 `normalizeStoredModelConfig` 抽象迁出到 `src/rating/providers.ts` 供未来评分助手复用。

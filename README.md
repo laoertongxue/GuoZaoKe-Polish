@@ -4,7 +4,7 @@
   <p>让过早客的浏览与阅读更从容。</p>
   <p>A more comfortable way to browse and read Guozaoke.</p>
   <p><strong>简体中文</strong> · <a href="README.en.md">English</a></p>
-  <p><a href="https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.4.3">下载安装包</a> · <a href="https://github.com/laoertongxue/GuoZaoKe-Polish/issues">反馈问题</a> · <a href="docs/privacy.md">隐私说明</a></p>
+  <p><a href="https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.0">下载安装包</a> · <a href="https://github.com/laoertongxue/GuoZaoKe-Polish/issues">反馈问题</a> · <a href="docs/privacy.md">隐私说明</a></p>
 </div>
 
 ---
@@ -33,7 +33,7 @@
 
 ## 安装与更新
 
-1. 打开 [v0.4.3 Releases](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.4.3)，下载 `GuoZaoKe-Polish-0.4.3-chrome.zip` 并解压。
+1. 打开 [v0.5.0 Releases](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.0)，下载 `GuoZaoKe-Polish-0.5.0-chrome.zip` 并解压。
 2. 在 Chrome 地址栏输入 `chrome://extensions/`，打开「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择解压后**直接包含 `manifest.json`** 的目录。
 4. 新开一个 [过早客](https://www.guozaoke.com/) 页面。点击扩展图标打开面板，通过「控制选项」调整设置。
@@ -51,7 +51,7 @@ npm ci
 npm run build
 ```
 
-在 Chrome 加载 `.output/chrome-mv3`。`npm run zip` 生成 `.output/guozaoke-polish-0.4.4-chrome.zip`，仅供试用验证。
+在 Chrome 加载 `.output/chrome-mv3`。`npm run zip` 生成 `.output/guozaoke-polish-0.5.0-chrome.zip`，仅供试用验证。
 
 ## 图片上传与分享
 
@@ -82,7 +82,7 @@ npm run build      # Chrome MV3 生产构建
 npm run zip        # 构建并打包
 ```
 
-0.4.3 发布验证见 [验证范围](docs/verification.md)，更新内容见 [更新日志](CHANGELOG.md)。GitHub Actions 在 push / pull request 时执行安装、类型检查、测试和打包。测试替身不等同于完整 Chrome 扩展、站点写操作或真实上传验收。
+0.5.0 发布验证见 [验证范围](docs/verification.md)，更新内容见 [更新日志](CHANGELOG.md)。GitHub Actions 在 push / pull request 时执行安装、类型检查、测试和打包。测试替身不等同于完整 Chrome 扩展、站点写操作或真实上传验收。
 
 `entrypoints/` 为扩展入口，`src/features/` 为页面增强，`src/site/` 为站点适配，`src/rating/` 为评分助手底层（仅 chatCompletion 抽象），`src/shared/` 为设置和组件，`src/styles/` 为样式，`tests/` 为回归与浏览器夹具。贡献方式见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
