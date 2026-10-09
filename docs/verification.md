@@ -7,7 +7,7 @@
 - 模拟 HTTP、模拟 Cookie 与模板化的过早客表单不代表真实过早客写操作；助手账号必须在与扩展同一浏览器窗口登录且未隐身。
 - ZIP：`GuoZaoKe-Polish-0.5.0-chrome.zip`，214953 字节、20 个条目，根 manifest 为 0.5.0，权限移除 `sidePanel`，`cookies` 仍为可选；归档完整性、排除测试/研究/环境文件及常见 Key 形态扫描通过。
 - SHA-256：`62396447f07ba1fdead43119cae6ac1e00b385d298fb010226486adaad3d7e9b`。
-- 此轮**未发布** GitHub Release，Chrome Web Store 仍未提交；真实图床与过早客写操作仍待新安装包在真实浏览器中验收。
+- GitHub Release v0.5.0 已发布（[v0.5.0](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.0)）：ZIP `GuoZaoKe-Polish-0.5.0-chrome.zip`、214953 字节、SHA-256 `62396447f07ba1fdead43119cae6ac1e00b385d298fb010226486adaad3d7e9b`、20 个条目。本次仍未提交 Chrome 应用商店。真实图床与过早客写操作仍待新安装包在真实浏览器中验收。
 
 ## 0.4.4 DeepSeek 输出额度修复（本地包，2026-09-24 再次打包核对）
 
