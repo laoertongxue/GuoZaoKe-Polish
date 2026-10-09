@@ -524,28 +524,23 @@ async function loadRating(): Promise<void> {
 function buildRating(): HTMLElement {
   const card = el('section', 'panel-card');
   const content = el('div', 'panel-content');
-  const hint = el('p', 'setting-description', '在帖子页工具栏点击「扫描评分」即可让评分助手根据 @助手账号 的触发，对回帖给出本地启发式分数和（可选）LLM 评语。需要 LLM 评语时，请在「模型与图片上传」里先配置模型与 Key。');
+  const hint = el('p', 'setting-description', '在帖子页工具栏点击「扫描评分」，即可根据 @助手账号 的回帖给出本地启发式评分。评分只在本机计算，不调用任何模型服务。');
   const fields = el('div', 'panel-form');
   const username = el('input', 'field-input'); username.id = 'gzk-rating-username'; username.placeholder = '例如 gzk-judge';
   const usernameLabel = el('label', 'setting-label', '助手账号名（不带 @）'); usernameLabel.htmlFor = username.id;
   const usernameHint = el('p', 'setting-description', '用户先在过早客注册一个"评分专用小号"，然后在同一浏览器登录它。回帖里 @ 此账号即触发评分。');
   const postReply = el('input'); postReply.type = 'checkbox'; postReply.id = 'gzk-rating-post-reply';
   const postReplyLabel = el('label', 'setting-label', '评分后用助手账号发回帖'); postReplyLabel.htmlFor = postReply.id;
-  const postReplyHint = el('p', 'setting-description', '关闭时仅在右下角提示评分结果，不发回帖。');
-  const modelSelect = el('select', 'field-input'); modelSelect.id = 'gzk-rating-model';
-  for (const [value, label] of [['auto', '使用启发式（无需 LLM）'] as const]) { const option = el('option', '', label); option.value = value; modelSelect.append(option); }
-  const modelHint = el('p', 'setting-description', 'LLM 评语需要先在「控制选项 → 模型与图片上传」中保存模型与 Key。当前仅展示本地启发式。');
+  const postReplyHint = el('p', 'setting-description', '开启后，每次点击「扫描评分」都会以当前浏览器登录的过早客账号公开发布一条回帖，默认关闭。发帖前会确认登录账号与助手账号一致，不一致则不发。');
   const maxReply = el('input', 'field-input'); maxReply.type = 'number'; maxReply.id = 'gzk-rating-max'; maxReply.min = '80'; maxReply.max = '2000'; maxReply.step = '1';
   const maxReplyLabel = el('label', 'setting-label', '评语最长字符数'); maxReplyLabel.htmlFor = maxReply.id;
   const maxReplyHint = el('p', 'setting-description', '建议 200–600；上限 2000。');
   const usernameWrap = el('div', 'field-input-wrap'); usernameWrap.append(username);
   const usernameRow = el('div', 'setting-row'); usernameRow.append(usernameLabel, usernameWrap);
   const postRow = el('div', 'setting-row'); const postWrap = el('div', 'switch'); postWrap.append(postReply); postRow.append(postReplyLabel, postWrap);
-  const modelLabel = el('label', 'setting-label', '评语生成'); const modelWrap = el('div', 'field-input-wrap'); modelWrap.append(modelSelect);
-  const modelRow = el('div', 'setting-row'); modelRow.append(modelLabel, modelWrap);
   const maxWrap = el('div', 'field-input-wrap'); maxWrap.append(maxReply);
   const maxRow = el('div', 'setting-row'); maxRow.append(maxReplyLabel, maxWrap);
-  fields.append(usernameRow, usernameHint, postRow, postReplyHint, modelRow, modelHint, maxRow, maxReplyHint, ratingStatus);
+  fields.append(usernameRow, usernameHint, postRow, postReplyHint, maxRow, maxReplyHint, ratingStatus);
   ratingStatus.setAttribute('role', 'status');
   const apply = button('保存配置', 'button primary', async () => {
     if (ratingSaving) return;
@@ -553,7 +548,6 @@ function buildRating(): HTMLElement {
     const next: RatingConfig = {
       assistantUsername: username.value.trim(),
       postReply: postReply.checked,
-      modelConfigId: null,
       maxReplyCharacters: Number(maxReply.value) || DEFAULT_RATING_CONFIG.maxReplyCharacters,
     };
     try {

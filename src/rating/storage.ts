@@ -7,12 +7,11 @@ export function normalizeRatingConfig(input: unknown): RatingConfig {
   if (!input || typeof input !== 'object') return { ...DEFAULT_RATING_CONFIG };
   const v = input as Record<string, unknown>;
   const assistantUsername = typeof v.assistantUsername === 'string' ? v.assistantUsername.trim().slice(0, 32) : '';
-  const postReply = v.postReply !== false;
-  const modelConfigId = typeof v.modelConfigId === 'string' && v.modelConfigId.trim() ? v.modelConfigId.trim().slice(0, 100) : null;
+  const postReply = v.postReply === true;
   let maxReplyCharacters = Number(v.maxReplyCharacters);
   if (!Number.isSafeInteger(maxReplyCharacters) || maxReplyCharacters < 80) maxReplyCharacters = 600;
   if (maxReplyCharacters > 2000) maxReplyCharacters = 2000;
-  return { assistantUsername, postReply, modelConfigId, maxReplyCharacters };
+  return { assistantUsername, postReply, maxReplyCharacters };
 }
 
 export interface RepliedSet {

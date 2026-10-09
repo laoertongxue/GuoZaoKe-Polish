@@ -15,18 +15,18 @@ export interface ReplyContext {
 export interface RatingConfig {
   /** Username that triggers a review when mentioned in a reply (no leading @). */
   assistantUsername: string;
-  /** Whether the assistant should post a reply on the user's behalf. */
+  /**
+   * Whether a scan should also post the review as a reply. The reply is published with
+   * whichever Guozaoke account is logged in in this browser, so it is opt-in.
+   */
   postReply: boolean;
-  /** Optional override for the LLM call; uses the first saved model config when empty. */
-  modelConfigId: string | null;
   /** Max characters the assistant allows itself in a single reply. */
   maxReplyCharacters: number;
 }
 
 export const DEFAULT_RATING_CONFIG: RatingConfig = {
   assistantUsername: '',
-  postReply: true,
-  modelConfigId: null,
+  postReply: false,
   maxReplyCharacters: 600,
 };
 
@@ -48,6 +48,5 @@ export interface HeuristicScore {
 export interface RatingResult {
   score: number;
   comment: string;
-  provider: 'heuristic' | 'llm';
-  model?: string;
+  provider: 'heuristic';
 }

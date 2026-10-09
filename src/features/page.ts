@@ -10,6 +10,7 @@ import { enhanceReplies } from './replies';
 import { previewTopic, saveTopic, showReading } from './reading';
 import { enhanceEditors, decodePage, showDecode } from './editor';
 import { shareImage } from './share';
+import { replyFailureMessage } from '../rating/reply';
 import { installImagePreview } from './image-preview';
 import { detectTrigger } from '../rating/trigger';
 import type { Settings } from '../shared/settings';
@@ -117,13 +118,12 @@ export async function startPage(ctx?:ContentScriptContext, initialState?:AppStat
         const match=current.url.match(/\/t\/(\d+)/);
         if(!match)throw new Error('无法解析 topicId');
         const topicId=match[1]!;
-        const result=await browser.runtime.sendMessage({type:'rating:trigger',topicId,topicUrl:current.url,pageHtml}) as {ok:boolean;data?:{handled:boolean;result?:{score:number;comment:string;provider:string};postedReply?:{posted:boolean;reason:string;responseStatus:number};error?:{code:string;message:string}};error?:string} | undefined;
+        const result=await browser.runtime.sendMessage({type:'rating:trigger',topicId,topicUrl:current.url,pageHtml}) as {ok:boolean;data?:{handled:boolean;result?:{score:number;comment:string;provider:string};postedReply?:{posted:boolean;reason:Parameters<typeof replyFailureMessage>[0];responseStatus:number};error?:{code:string;message:string}};error?:string} | undefined;
         if(!result?.ok)throw new Error(result?.error||'评分失败');
         if(!result.data?.handled)throw new Error(result.data?.error?.message||'未找到可评分的楼层（先在回帖里 @ 助手账号）');
         const score=result.data.result?.score;
-        const provider=result.data.result?.provider==='llm'?' LLM 评语':'本地评语';
-        const posted=result.data.postedReply?.posted===true?' 已发回帖。':result.data.postedReply?` 发回帖未成功（${result.data.postedReply.reason}）。`:' 未配置发回帖。';
-        toast(`评分 ${score}/10（${provider}）。${posted}`);
+        const posted=result.data.postedReply?.posted===true?' 已发回帖。':result.data.postedReply?` ${replyFailureMessage(result.data.postedReply.reason)}。`:' 未开启自动回帖，仅显示评分。';
+        toast(`评分 ${score}/10（本地启发式）。${posted}`);
       }catch(error){toast(error instanceof Error?error.message:'评分失败',true);}
       finally{ratingButton.disabled=false;}
     });

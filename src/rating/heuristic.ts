@@ -11,7 +11,7 @@ function clamp(value: number, min: number, max: number): number {
 
 function scoreUpvotes(value: number): number {
   if (value <= 0) return 0;
-  // 1 -> 3, 3 -> 5, 10 -> 7, 30 -> 8.5, 100 -> 9.5
+  // Logarithmic growth on a 0..10 axis: 1 -> 2, 3 -> ~2.95, 10 -> 4, 100 -> 6, 10000 -> 10 (capped).
   return clamp(2 + 2 * Math.log10(value), 0, 10);
 }
 
@@ -23,10 +23,21 @@ function scoreLength(value: number): number {
   return 2;
 }
 
+/**
+ * Lexical variety. Latin/digit words are tokens; CJK runs are split into overlapping
+ * bigrams, because Chinese text has no whitespace word boundaries.
+ */
 function scoreUniqueness(text: string): number {
-  const tokens = text.split(/\s+/u).filter(token => /[一-龥A-Za-z0-9]/u.test(token));
+  const tokens: string[] = [];
+  for (const run of text.toLowerCase().match(/[一-龥]+|[a-z0-9]+/gu) ?? []) {
+    if (/^[一-龥]/u.test(run) && run.length > 1) {
+      for (let i = 0; i < run.length - 1; i++) tokens.push(run.slice(i, i + 2));
+    } else {
+      tokens.push(run);
+    }
+  }
   if (tokens.length < 4) return 0;
-  const unique = new Set(tokens.map(token => token.toLowerCase()));
+  const unique = new Set(tokens);
   const ratio = unique.size / tokens.length;
   return clamp(ratio * 10, 0, 10);
 }
@@ -71,6 +82,7 @@ export function scoreHeuristic(reply: Pick<ReplyContext, 'text' | 'characterCoun
   };
   const weighted = factors.upvotes * WEIGHTS.upvotes + factors.length * WEIGHTS.length + factors.uniqueness * WEIGHTS.uniqueness + factors.density * WEIGHTS.density;
   const total = WEIGHTS.upvotes + WEIGHTS.length + WEIGHTS.uniqueness + WEIGHTS.density;
-  const score = Math.round(clamp((weighted / total) * 10, 0, 10));
+  // Each factor is already on 0..10 and the weights sum to `total`, so the weighted mean is on 0..10 as well.
+  const score = Math.round(clamp(weighted / total, 0, 10));
   return { score, factors, summary: buildSummary(factors, score) };
 }

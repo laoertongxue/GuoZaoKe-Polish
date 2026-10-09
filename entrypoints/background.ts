@@ -12,7 +12,6 @@ export default defineBackground(() => {
   void browser.storage.session?.setAccessLevel?.({ accessLevel: 'TRUSTED_CONTEXTS' });
   const rating = createRatingHandler({
     storage: { local: browser.storage.local },
-    cookies: browser.cookies,
   });
   let queue=Promise.resolve();
   const serial=<T>(run:()=>Promise<T>):Promise<T>=>{

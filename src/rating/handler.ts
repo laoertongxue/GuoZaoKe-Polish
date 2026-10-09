@@ -1,8 +1,5 @@
-import { chatCompletion, normalizeStoredModelConfig, ProviderError, type ModelConfig } from './providers';
 import { scoreHeuristic } from './heuristic';
-import { buildRatingMessages, parseRatingComment } from './prompt';
-import { postAssistantReply, type CookieSource, type PostReplyResult } from './reply';
-import { RatingError } from './errors';
+import { postAssistantReply, type PostReplyResult } from './reply';
 import { detectTrigger } from './trigger';
 import { emptyRepliedSet, hasReplied, markReplied, normalizeRatingConfig, RATING_CONFIG_KEY, RATING_REPLIED_KEY, type RepliedSet } from './storage';
 import type { HeuristicScore, RatingConfig, RatingResult, ReplyContext } from './types';
@@ -14,15 +11,10 @@ export interface RatingHandlerBrowser {
       set(values: Record<string, unknown>): Promise<void>;
     };
   };
-  cookies?: CookieSource['cookies'];
 }
 
 export interface RatingHandlerDeps {
   parseTopicReplies?: (html: string, topicUrl: string) => ReplyContext[];
-  resolveModel?: (configId: string | null) => Promise<ModelConfig | null>;
-  readModelKey?: (modelId: string) => Promise<string | null>;
-  /** Override the LLM transport. Defaults to globalThis.fetch. */
-  fetchImpl?: typeof fetch;
   postReply?: typeof postAssistantReply;
 }
 
@@ -43,6 +35,13 @@ export interface RatingPreview {
   replies: number;
   trigger?: { replyId: string; author: string; text: string; score: number; summary: string };
 }
+
+/**
+ * Failed posts that never reached the site's publish step. The floor stays unmarked, so a
+ * later scan (after logging in or fixing the assistant account) can try again.
+ * `marker_missing` is deliberately absent: the request was sent, so retrying could duplicate it.
+ */
+const RETRYABLE_FAILURES: ReadonlySet<PostReplyResult['reason']> = new Set(['not_logged_in', 'account_mismatch', 'form_not_found', 'server_rejected']);
 
 function defaultParseTopicReplies(html: string, topicUrl: string): ReplyContext[] {
   const startRegex = /<div[^>]+class="[^"]*\breply-item\b[^"]*"[^>]*>/gi;
@@ -75,27 +74,13 @@ function defaultParseTopicReplies(html: string, topicUrl: string): ReplyContext[
   return out;
 }
 
-async function defaultResolveModel(api: RatingHandlerBrowser, configId: string | null): Promise<ModelConfig | null> {
-  const raw = await api.storage.local.get('gzk:analysis:configs:v1');
-  const value = raw['gzk:analysis:configs:v1'];
-  if (!Array.isArray(value) || value.length === 0) return null;
-  if (configId) {
-    const found = (value as Array<unknown>).find(c => (c as { id?: string })?.id === configId);
-    if (found) return normalizeStoredModelConfig(found);
-  }
-  const first = (value as Array<unknown>)[0];
-  return first ? normalizeStoredModelConfig(first) : null;
-}
-
-function buildOutputComment(score: HeuristicScore, max: number): string {
+function buildComment(score: HeuristicScore, max: number): RatingResult {
   const line = `[GuoZaoKe 评分 · ${score.score}/10] ${score.summary}`;
-  return line.length > max ? line.slice(0, max) : line;
+  return { score: score.score, comment: line.length > max ? line.slice(0, max) : line, provider: 'heuristic' };
 }
 
 export function createRatingHandler(api: RatingHandlerBrowser, deps: RatingHandlerDeps = {}) {
   const parseTopicReplies = deps.parseTopicReplies ?? defaultParseTopicReplies;
-  const resolveModel = deps.resolveModel ?? ((id) => defaultResolveModel(api, id));
-  const readModelKey = deps.readModelKey ?? (async () => null);
   const postReplyImpl = deps.postReply ?? postAssistantReply;
 
   async function loadConfig(): Promise<RatingConfig> {
@@ -122,35 +107,6 @@ export function createRatingHandler(api: RatingHandlerBrowser, deps: RatingHandl
     await api.storage.local.set({ [RATING_REPLIED_KEY]: set });
   }
 
-  async function buildComment(reply: ReplyContext, score: HeuristicScore, config: RatingConfig): Promise<RatingResult> {
-    if (!config.modelConfigId) {
-      return { score: score.score, comment: buildOutputComment(score, config.maxReplyCharacters), provider: 'heuristic' };
-    }
-    const model = await resolveModel(config.modelConfigId);
-    if (!model) {
-      return { score: score.score, comment: buildOutputComment(score, config.maxReplyCharacters), provider: 'heuristic' };
-    }
-    const key = await readModelKey(model.id);
-    if (!key) {
-      return { score: score.score, comment: buildOutputComment(score, config.maxReplyCharacters), provider: 'heuristic' };
-    }
-    try {
-      const result = await chatCompletion(model, key, buildRatingMessages(reply, score), {
-        fetch: deps.fetchImpl,
-        validate: value => {
-          if (!value || typeof value !== 'object') return false;
-          return typeof (value as { comment?: unknown }).comment === 'string';
-        },
-      });
-      const comment = parseRatingComment(result.value, config.maxReplyCharacters);
-      const body = `[GuoZaoKe 评分 · ${score.score}/10] ${comment}`;
-      return { score: score.score, comment: body.length > config.maxReplyCharacters ? body.slice(0, config.maxReplyCharacters) : body, provider: 'llm', model: model.id };
-    } catch (error) {
-      if (error instanceof ProviderError) throw new RatingError('provider_error');
-      throw error;
-    }
-  }
-
   async function handleTrigger(request: TriggerRequest): Promise<RatingOutcome> {
     if (!/^\d+$/.test(request.topicId)) {
       return { handled: false, error: { code: 'reply_not_found', message: 'topicId 非法' } };
@@ -170,13 +126,13 @@ export function createRatingHandler(api: RatingHandlerBrowser, deps: RatingHandl
       if (hasReplied(replied, request.topicId, reply.replyId)) continue;
       if (reply.author.trim().toLowerCase() === assistantKey) continue;
       if (!detectTrigger(reply.text, config.assistantUsername)) continue;
-      const score = scoreHeuristic(reply);
-      const result = await buildComment(reply, score, config);
+      const result = buildComment(scoreHeuristic(reply), config.maxReplyCharacters);
       let postedReply: PostReplyResult | undefined;
-      if (config.postReply && api.cookies) {
-        postedReply = await postReplyImpl(request.topicId, result.comment, { cookies: api.cookies });
+      if (config.postReply) {
+        postedReply = await postReplyImpl(request.topicId, result.comment, config.assistantUsername);
       }
-      await saveReplied(markReplied(replied, request.topicId, reply.replyId));
+      const retryLater = postedReply !== undefined && !postedReply.posted && RETRYABLE_FAILURES.has(postedReply.reason);
+      if (!retryLater) await saveReplied(markReplied(replied, request.topicId, reply.replyId));
       return { handled: true, result, postedReply };
     }
     return { handled: false };
@@ -197,5 +153,5 @@ export function createRatingHandler(api: RatingHandlerBrowser, deps: RatingHandl
     return { replies: replies.length };
   }
 
-  return { loadConfig, loadReplied, saveReplied, handleTrigger, preview, buildComment, parseTopicReplies, scoreHeuristic, detectTrigger };
+  return { loadConfig, loadReplied, saveReplied, handleTrigger, preview };
 }
