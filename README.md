@@ -33,7 +33,13 @@
 
 ## 安装与更新
 
-1. 打开 [v0.5.0 Releases](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.0)，下载 `GuoZaoKe-Polish-0.5.0-chrome.zip` 并解压。
+1. 打开 [v0.5.0 Releases](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.0)，下载 `GuoZaoKe-Polish-0.5.0-chrome.zip` 并解压。0.5.0 包的 SHA-256 校验值：
+
+   ```
+   62396447f07ba1fdead43119cae6ac1e00b385d298fb010226486adaad3d7e9b  GuoZaoKe-Polish-0.5.0-chrome.zip
+   ```
+
+   校验命令：`shasum -a 256 GuoZaoKe-Polish-0.5.0-chrome.zip`（macOS / Linux）或 `Get-FileHash GuoZaoKe-Polish-0.5.0-chrome.zip -Algorithm SHA256`（Windows PowerShell）。
 2. 在 Chrome 地址栏输入 `chrome://extensions/`，打开「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择解压后**直接包含 `manifest.json`** 的目录。
 4. 新开一个 [过早客](https://www.guozaoke.com/) 页面。点击扩展图标打开面板，通过「控制选项」调整设置。

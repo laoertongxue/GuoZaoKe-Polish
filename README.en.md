@@ -32,7 +32,13 @@ Defaults use the light theme, same-tab navigation, vertical layout, and disabled
 
 ## Installation and updates
 
-1. Open the [v0.5.0 release](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.0), download `GuoZaoKe-Polish-0.5.0-chrome.zip`, and extract it.
+1. Open the [v0.5.0 release](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.0), download `GuoZaoKe-Polish-0.5.0-chrome.zip`, and extract it. The 0.5.0 SHA-256:
+
+   ```
+   62396447f07ba1fdead43119cae6ac1e00b385d298fb010226486adaad3d7e9b  GuoZaoKe-Polish-0.5.0-chrome.zip
+   ```
+
+   Verify with `shasum -a 256 GuoZaoKe-Polish-0.5.0-chrome.zip` (macOS / Linux) or `Get-FileHash GuoZaoKe-Polish-0.5.0-chrome.zip -Algorithm SHA256` (Windows PowerShell).
 2. Enter `chrome://extensions/` in Chrome and enable **Developer mode**.
 3. Select **Load unpacked** and choose the extracted folder that directly contains `manifest.json`.
 4. Open a new [Guozaoke](https://www.guozaoke.com/) page. Use the popup's settings entry to customize preferences.
