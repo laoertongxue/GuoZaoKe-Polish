@@ -11,7 +11,7 @@
 
 为 [过早客](https://www.guozaoke.com/) 开发的 Chrome 扩展，以 [V2EX Polish](https://github.com/coolpace/V2EX_Polish) 的阅读体验为参考，使用 **WXT、TypeScript 和原生 DOM/CSS 独立实现**。改善原有社区页面的排版、主题和交互，保留原站内容与操作入口。
 
-**0.5.0 重做图片上传与编辑器**：删除了 0.4.x 系列的「讨论分析」整套功能（不再发布 0.4.x 试用的分析侧栏、模型与检索、PDF 解析），把"图片粘贴/拖放"改为**全自动上传**到所选图床，**不弹任何对话框**。下载与更新方式见下方；GitHub 版本与 Chrome 应用商店分开发布，商店状态以商店页面为准。完整的实站兼容性与参考体验对齐范围见 [验证范围](docs/verification.md)。
+**0.5.1 修复 0.5.0 真实环境问题**：删除迁移遗留的选项页重复"评分助手"导航项，把评分助手的注册小号 → 登录 → `@触发` → 扫描 → 错误码对照 5 步直接放进选项页；B 站图床补发 Chrome `User-Agent`，缓解 2024 年升级后的反爬拦截，并区分 412 与其它失败的错误提示。请优先下载 0.5.1。**0.5.0** 删除了 0.4.x 系列的「讨论分析」整套功能，把"图片粘贴/拖放"改为**全自动上传**到所选图床，**不弹任何对话框**。下载与更新方式见下方；GitHub 版本与 Chrome 应用商店分开发布，商店状态以商店页面为准。完整的实站兼容性与参考体验对齐范围见 [验证范围](docs/verification.md)。
 
 ## 功能
 
@@ -33,13 +33,15 @@
 
 ## 安装与更新
 
-1. 打开 [v0.5.0 Releases](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.0)，下载 `GuoZaoKe-Polish-0.5.0-chrome.zip` 并解压。0.5.0 包的 SHA-256 校验值：
+1. 打开 [v0.5.1 Releases](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.1)，下载 `GuoZaoKe-Polish-0.5.1-chrome.zip` 并解压。0.5.1 包的 SHA-256 校验值：
 
    ```
-   62396447f07ba1fdead43119cae6ac1e00b385d298fb010226486adaad3d7e9b  GuoZaoKe-Polish-0.5.0-chrome.zip
+   5ae505d676aa3adc1b2bb2d743d4f0bbc59c56d8e91d5e933c2833fc8c8f722f  GuoZaoKe-Polish-0.5.1-chrome.zip
    ```
 
-   校验命令：`shasum -a 256 GuoZaoKe-Polish-0.5.0-chrome.zip`（macOS / Linux）或 `Get-FileHash GuoZaoKe-Polish-0.5.0-chrome.zip -Algorithm SHA256`（Windows PowerShell）。
+   校验命令：`shasum -a 256 GuoZaoKe-Polish-0.5.1-chrome.zip`（macOS / Linux）或 `Get-FileHash GuoZaoKe-Polish-0.5.1-chrome.zip -Algorithm SHA256`（Windows PowerShell）。
+
+   若已安装 0.5.0，可直接覆盖更新到 0.5.1；评分助手选项会保留本机存储的配置。
 2. 在 Chrome 地址栏输入 `chrome://extensions/`，打开「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择解压后**直接包含 `manifest.json`** 的目录。
 4. 新开一个 [过早客](https://www.guozaoke.com/) 页面。点击扩展图标打开面板，通过「控制选项」调整设置。
@@ -57,7 +59,7 @@ npm ci
 npm run build
 ```
 
-在 Chrome 加载 `.output/chrome-mv3`。`npm run zip` 生成 `.output/guozaoke-polish-0.5.0-chrome.zip`，仅供试用验证。
+在 Chrome 加载 `.output/chrome-mv3`。`npm run zip` 生成 `.output/guozaoke-polish-0.5.1-chrome.zip`，仅供试用验证。
 
 ## 图片上传与分享
 
@@ -88,7 +90,7 @@ npm run build      # Chrome MV3 生产构建
 npm run zip        # 构建并打包
 ```
 
-0.5.0 发布验证见 [验证范围](docs/verification.md)，更新内容见 [更新日志](CHANGELOG.md)。GitHub Actions 在 push / pull request 时执行安装、类型检查、测试和打包。测试替身不等同于完整 Chrome 扩展、站点写操作或真实上传验收。
+0.5.0 / 0.5.1 发布验证见 [验证范围](docs/verification.md)，更新内容见 [更新日志](CHANGELOG.md)。GitHub Actions 在 push / pull request 时执行安装、类型检查、测试和打包。测试替身不等同于完整 Chrome 扩展、站点写操作或真实上传验收。
 
 `entrypoints/` 为扩展入口，`src/features/` 为页面增强，`src/site/` 为站点适配，`src/rating/` 为评分助手底层（仅 chatCompletion 抽象），`src/shared/` 为设置和组件，`src/styles/` 为样式，`tests/` 为回归与浏览器夹具。贡献方式见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 

@@ -528,10 +528,10 @@ function buildRating(): HTMLElement {
   const fields = el('div', 'panel-form');
   const username = el('input', 'field-input'); username.id = 'gzk-rating-username'; username.placeholder = '例如 gzk-judge';
   const usernameLabel = el('label', 'setting-label', '助手账号名（不带 @）'); usernameLabel.htmlFor = username.id;
-  const usernameHint = el('p', 'setting-description', '用户先在过早客注册一个"评分专用小号"，然后在同一浏览器登录它。回帖里 @ 此账号即触发评分。');
+  const usernameHint = el('p', 'setting-description', '① 在过早客注册一个"评分专用小号"（用户名就是这里填的，例如 gzk-judge）。② 在同一浏览器的普通窗口（非隐身模式）登录它。③ 让用户在回帖里 @ 这个账号，例如 @gzk-judge 请评一下。');
   const postReply = el('input'); postReply.type = 'checkbox'; postReply.id = 'gzk-rating-post-reply';
   const postReplyLabel = el('label', 'setting-label', '评分后用助手账号发回帖'); postReplyLabel.htmlFor = postReply.id;
-  const postReplyHint = el('p', 'setting-description', '开启后，每次点击「扫描评分」都会以当前浏览器登录的过早客账号公开发布一条回帖，默认关闭。发帖前会确认登录账号与助手账号一致，不一致则不发。');
+  const postReplyHint = el('p', 'setting-description', '开启后，扫描评分时会以当前浏览器登录的过早客账号发出一条约 200 字的评分回帖。发帖前会核对登录账号与上面填写的助手账号是否一致，不一致则不发；失败会在帖子页右上角提示原因。');
   const maxReply = el('input', 'field-input'); maxReply.type = 'number'; maxReply.id = 'gzk-rating-max'; maxReply.min = '80'; maxReply.max = '2000'; maxReply.step = '1';
   const maxReplyLabel = el('label', 'setting-label', '评语最长字符数'); maxReplyLabel.htmlFor = maxReply.id;
   const maxReplyHint = el('p', 'setting-description', '建议 200–600；上限 2000。');
@@ -560,7 +560,19 @@ function buildRating(): HTMLElement {
       ratingSaving = false;
     }
   });
-  content.append(hint, fields, apply);
+  const helpSection = el('div', 'panel-content');
+  helpSection.append(el('h4', '', '使用步骤'));
+  const helpList = el('ol', 'numbered-list');
+  for (const step of [
+    '在本页填写助手账号名（与过早客用户名一致），保存配置。',
+    '在过早客注册同名小号；同一浏览器的普通窗口（非隐身模式）登录它。',
+    '打开任意帖子页，在右侧工具栏点击「扫描评分」。',
+    '页面里有 @助手账号 的回帖就会被打分；如开启了发回帖，会以助手账号公开发一条评分回帖。',
+    '未登录、账号不一致、站点未返回评分回帖等情况都会在右上角 toast 提示，可对照错误码排查。',
+  ]) helpList.append(el('li', '', step));
+  helpSection.append(helpList);
+  helpSection.append(el('p', 'setting-description', '评分算法是本地启发式（赞同 / 长度 / 独特词 / 密度），未调用任何模型；不读取、不上传任何回帖正文或 Cookie 到外部服务。'));
+  content.append(hint, fields, apply, helpSection);
   card.append(content);
   return card;
 }
@@ -646,10 +658,6 @@ async function initialize(): Promise<void> {
       panels.set(page.key, panel);
       content.append(panel);
     }
-    const analysisLink = el('a', 'nav-link');
-    analysisLink.href = '#rating';
-    analysisLink.append(icon('book'), el('span', '', '评分助手'));
-    nav.append(analysisLink);
     sidebar.append(brand, nav, el('p', 'sidebar-note', '设置自动保存。用户标签和稍后阅读保存在当前浏览器，可随时在「数据备份」中导出。'), el('p', 'sidebar-footer', `GuoZaoKe Polish ${browser.runtime.getManifest().version}`));
     root.append(sidebar, content);
     syncControls();

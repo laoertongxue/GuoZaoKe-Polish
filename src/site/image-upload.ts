@@ -51,6 +51,7 @@ export async function uploadImage(message: {provider?: unknown; base64?: unknown
     try { csrf = (await browser.cookies.get({url: BILIBILI_UPLOAD_URL, name: 'bili_jct'}))?.value; }
     catch { throw new Error('无法读取 B 站登录状态，请重新授权并登录 B 站'); }
     if (!csrf || !/^[a-f0-9]{32}$/i.test(csrf)) throw new Error('请先在当前浏览器登录 B 站，再重试上传');
+    headers = { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36' };
     body.append('file_up', new Blob([bytes], {type: message.mime as string}), `upload.${extensions[message.mime as string]}`);
     body.append('category', 'daily'); body.append('csrf', csrf);
     url = BILIBILI_UPLOAD_URL;
@@ -68,7 +69,10 @@ export async function uploadImage(message: {provider?: unknown; base64?: unknown
   try {
     response = await fetch(url, {method: 'POST', headers, body, credentials: provider === 'bilibili' ? 'include' : 'omit', redirect: 'error', referrerPolicy: 'no-referrer', signal: AbortSignal.timeout(60000)});
   } catch { throw new Error(`${name} 上传连接失败或超时。服务端可能已收到图片；请检查网络后再决定是否重试。`); }
-  if (!response.ok) throw new Error(`${name} 上传失败（HTTP ${response.status}），请检查登录状态或稍后重试`);
+  if (!response.ok) {
+    if (response.status === 412) throw new Error(`${name} 拒绝了请求（HTTP 412）。通常是 B 站反爬检查到当前浏览器缺少 Referer 或设备指纹；请确认已在本浏览器登录 B 站（cookie 名为 bili_jct），或在选项 → 图床配置停用 B 站、改用 Imgur。`);
+    throw new Error(`${name} 上传失败（HTTP ${response.status}），请检查登录状态或稍后重试`);
+  }
   let json;
   try { json = await response.json(); } catch { throw new Error(`${name} 返回了无法识别的响应，请稍后重试`); }
   if (provider === 'bilibili') {

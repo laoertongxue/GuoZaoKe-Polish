@@ -65,7 +65,7 @@ it('B站上传复用浏览器会话，只读取防伪标记，不保存凭证', 
   expect(api.cookie).toHaveBeenCalledExactlyOnceWith({url:'https://api.bilibili.com/x/dynamic/feed/draw/upload_bfs',name:'bili_jct'});
   expect(api.fetch).toHaveBeenCalledExactlyOnceWith('https://api.bilibili.com/x/dynamic/feed/draw/upload_bfs',expect.objectContaining({method:'POST',credentials:'include',redirect:'error',referrerPolicy:'no-referrer'}));
   const request=api.fetch.mock.calls[0]![1];
-  expect(request.headers).toBeUndefined();
+  expect(request.headers).toMatchObject({'User-Agent':expect.stringContaining('Chrome')});
   expect(request.body.get('file_up').type).toBe('image/png');
   expect(request.body.get('csrf')).toBe('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
   expect(request.body.get('category')).toBe('daily');

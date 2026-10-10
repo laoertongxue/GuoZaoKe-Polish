@@ -10,7 +10,7 @@
 
 A Chrome extension for [Guozaoke](https://www.guozaoke.com/), inspired by the reading experience of [V2EX Polish](https://github.com/coolpace/V2EX_Polish). Built independently with **WXT, TypeScript, and native DOM/CSS**, it improves the site's layout, themes, and interactions while preserving its content and native controls.
 
-**0.5.0 reworks the editor and removes discussion analysis**: the entire 0.4.x Discussion Analysis feature (side panel, model and search config, PDF reading, frozen-input replays) is dropped; pasted or dropped images now upload **automatically** to the selected host without opening any dialog. Download and update instructions are below. GitHub and Chrome Web Store releases are separate; consult the store page for its current version. See the [verification scope](docs/verification.md) for compatibility and reference-parity limits.
+**0.5.1 fixes real-environment issues from 0.5.0**: removes the duplicate "评分助手" nav link in the options page, surfaces a 5-step rating guide inline (register assistant account → log in → `@-mention` trigger → scan rating → read the error codes), and adds a Chrome `User-Agent` to Bilibili uploads so the 2024 anti-scraping upgrade is less likely to return HTTP 412. Prefer 0.5.1 when downloading. **0.5.0** dropped the entire 0.4.x Discussion Analysis feature set and made pasted or dropped images upload **automatically** to the selected host without opening any dialog. Download and update instructions are below. GitHub and Chrome Web Store releases are separate; consult the store page for its current version. See the [verification scope](docs/verification.md) for compatibility and reference-parity limits.
 
 ## Features
 
@@ -32,13 +32,15 @@ Defaults use the light theme, same-tab navigation, vertical layout, and disabled
 
 ## Installation and updates
 
-1. Open the [v0.5.0 release](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.0), download `GuoZaoKe-Polish-0.5.0-chrome.zip`, and extract it. The 0.5.0 SHA-256:
+1. Open the [v0.5.1 release](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.1), download `GuoZaoKe-Polish-0.5.1-chrome.zip`, and extract it. The 0.5.1 SHA-256:
 
    ```
-   62396447f07ba1fdead43119cae6ac1e00b385d298fb010226486adaad3d7e9b  GuoZaoKe-Polish-0.5.0-chrome.zip
+   5ae505d676aa3adc1b2bb2d743d4f0bbc59c56d8e91d5e933c2833fc8c8f722f  GuoZaoKe-Polish-0.5.1-chrome.zip
    ```
 
-   Verify with `shasum -a 256 GuoZaoKe-Polish-0.5.0-chrome.zip` (macOS / Linux) or `Get-FileHash GuoZaoKe-Polish-0.5.0-chrome.zip -Algorithm SHA256` (Windows PowerShell).
+   Verify with `shasum -a 256 GuoZaoKe-Polish-0.5.1-chrome.zip` (macOS / Linux) or `Get-FileHash GuoZaoKe-Polish-0.5.1-chrome.zip -Algorithm SHA256` (Windows PowerShell).
+
+   If 0.5.0 is already installed, overwrite it with 0.5.1 directly; the rating assistant's local configuration is preserved.
 2. Enter `chrome://extensions/` in Chrome and enable **Developer mode**.
 3. Select **Load unpacked** and choose the extracted folder that directly contains `manifest.json`.
 4. Open a new [Guozaoke](https://www.guozaoke.com/) page. Use the popup's settings entry to customize preferences.
@@ -56,7 +58,7 @@ npm ci
 npm run build
 ```
 
-Load `.output/chrome-mv3` in Chrome. The build creates `.output/guozaoke-polish-0.5.0-chrome.zip` with `npm run zip`, for trial validation only.
+Load `.output/chrome-mv3` in Chrome. The build creates `.output/guozaoke-polish-0.5.1-chrome.zip` with `npm run zip`, for trial validation only.
 
 ## Uploads and share images
 
@@ -88,7 +90,7 @@ npm run build      # Chrome MV3 production build
 npm run zip        # Build and package
 ```
 
-See the [verification scope](docs/verification.md) for 0.5.0 checks and the [changelog](CHANGELOG.md) for release notes. GitHub Actions runs installation, type checking, tests, and packaging on pushes and pull requests. Test doubles do not substitute for full extension, live-site write-operation, or real-upload verification.
+See the [verification scope](docs/verification.md) for 0.5.0 / 0.5.1 checks and the [changelog](CHANGELOG.md) for release notes. GitHub Actions runs installation, type checking, tests, and packaging on pushes and pull requests. Test doubles do not substitute for full extension, live-site write-operation, or real-upload verification.
 
 `entrypoints/` contains extension entries, `src/features/` page enhancements, `src/site/` site adapters, `src/rating/` the rating assistant transport (chat completion abstraction only), `src/shared/` settings and components, `src/styles/` styles, and `tests/` regression and browser fixtures. See [CONTRIBUTING.md](CONTRIBUTING.md).
 

@@ -1,5 +1,14 @@
 # 更新日志 / Changelog
 
+## 0.5.1 · 2026-10-12 · 0.5.0 真实环境修复
+
+- **修复选项页重复的"评分助手"导航项**：删除迁移遗留的旧 `analysisLink`（book 图标），左侧导航只保留 star 图标的真正入口。
+- **评分助手分步说明内置到选项页**：注册小号 → 普通窗口登录 → 在回帖中 `@助手账号名` → 工具栏点「扫描评分」→ 对照 toast 错误码排查，5 步直接显示在保存按钮下方。
+- **B 站图床附加 `User-Agent`**：补发公开的 Chrome `User-Agent` 头，缓解 2024 年升级后的反爬拦截。错误信息区分 412 与其它失败，提示改用 Imgur。
+- **验证文档同步**：增加「评分助手真实使用步骤」与「B 站图床 HTTP 412 说明」两段，附 5 类回帖失败原因对照表。
+
+Fixed the duplicate "评分助手" nav link in the options page caused by leftover analysis-link code, and surfaced a 5-step guide inline so users know how to register an assistant account, log in to it in the same browser window, mention it in a reply, and trigger the rating from the topic toolbar. Bilibili uploads now also send a public Chrome `User-Agent` to soften the HTTP 412 anti-scraping response; verification docs cover both the rating flow and the 412 fallback.
+
 ## 未发布 · 评分助手与设置读取修复
 
 - **评分分数修正**：启发式总分不再饱和为 10/10，空白或纯链接回复得 2–3 分，正常回复约 6–8 分。中文无空格文本的重复度按二元组计算，不再恒为 0。

@@ -137,6 +137,9 @@ h1, h2, h3, p { margin: 0; }
 .about-list > div { display: grid; grid-template-columns: 100px 1fr; gap: 10px; }
 .about-list dt { color: var(--muted); }
 .about-list dd { margin: 0; line-height: 1.8; }
+.numbered-list { margin: 6px 0 14px; padding-left: 22px; font-size: 12px; line-height: 1.9; color: var(--muted); }
+.numbered-list li { margin-bottom: 6px; }
+.numbered-list li:last-child { margin-bottom: 0; }
 .loading-page { max-width: 500px; margin: 100px auto; }
 
 .popup-page { width: 470px; min-height: 425px; max-height: 600px; overflow: hidden; background: var(--card); }
