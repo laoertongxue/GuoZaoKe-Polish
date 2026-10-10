@@ -6,7 +6,7 @@
 - 回归覆盖：选项页 nav 重复 bug 修复（删迁移遗留的 `analysisLink`，左侧导航仅保留 star 图标入口）；评分助手分步说明内置到选项页（注册 → 登录 → @ 触发 → 扫描 → 错误码对照）；B 站图床补发 Chrome `User-Agent`，412 错误信息区分反爬与其它失败；验证文档同步 5 类回帖失败原因对照表与 412 排查指引。
 - ZIP：`GuoZaoKe-Polish-0.5.1-chrome.zip`，213330 字节、20 个条目，根 manifest 为 0.5.1，权限与 0.5.0 相同；归档完整性、排除测试/研究/环境文件及常见 Key 形态扫描通过。
 - SHA-256：`5ae505d676aa3adc1b2bb2d743d4f0bbc59c56d8e91d5e933c2833fc8c8f722f`。
-- GitHub Release v0.5.1（[v0.5.1](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.1)）：ZIP `GuoZaoKe-Polish-0.5.1-chrome.zip`、213330 字节、SHA-256 `5ae505d676aa3adc1b2bb2d743d4f0bbc59c56d8e91d5e933c2833fc8c8f722f`、20 个条目。本次仍未提交 Chrome 应用商店。真实过早客 / B 站环境仍待新安装包在真实浏览器中验收。
+- GitHub Release v0.5.1 已发布（[v0.5.1](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.1)）：ZIP `GuoZaoKe-Polish-0.5.1-chrome.zip`、213330 字节、SHA-256 `5ae505d676aa3adc1b2bb2d743d4f0bbc59c56d8e91d5e933c2833fc8c8f722f`、20 个条目。本次仍未提交 Chrome 应用商店。真实过早客 / B 站环境仍待新安装包在真实浏览器中验收。
 
 ## 0.5.0 删除讨论分析 + 粘贴自动上传 + 评分助手（本地包，2026-10-09 重新打包）
 
