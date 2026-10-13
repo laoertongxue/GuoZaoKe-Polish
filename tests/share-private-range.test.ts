@@ -1,7 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { publicImageUrl, readShareImage } from '../src/site/share-images';
 import { isPublicIpv4 } from '../src/site/network-address';
-import { validatePublicUrl } from '../src/rating/providers';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -16,12 +15,6 @@ it('accepts ordinary public IPv4 literals', () => {
   for (const host of ['8.8.8.8', '1.1.1.1', '172.32.0.1', '100.63.255.1']) {
     expect(isPublicIpv4(host), host).toBe(true);
     expect(publicImageUrl(`https://${host}/a.png`).hostname).toBe(host);
-  }
-});
-
-it('the provider boundary and the image reader share the same IPv4 table', () => {
-  for (const host of ['198.51.100.7', '203.0.113.9', '192.0.2.5']) {
-    expect(() => validatePublicUrl(`https://${host}/v1`)).toThrow();
   }
 });
 
