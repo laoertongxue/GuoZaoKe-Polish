@@ -174,7 +174,7 @@ export async function startPage(ctx?:ContentScriptContext, initialState?:AppStat
     applyPageAppearance(html,{...state.settings,enabled:false},system.matches);
     for(const [link,original]of originals)for(const [name,value]of Object.entries(original)){if(value===null)link.removeAttribute(name);else link.setAttribute(name,value);}
     toolbox.remove();profileTagButton?.remove();
-    document.querySelectorAll('.gzk-site-footer,.gzk-topic-actions,.gzk-sidebar-preview,.gzk-tags').forEach(node=>node.remove());
+    document.querySelectorAll('.gzk-site-footer,.gzk-topic-actions,.gzk-sidebar-preview,.gzk-tags,.gzk-decoded').forEach(node=>node.remove());
     document.querySelectorAll('.gzk-overlay-host').forEach(host=>{host.shadowRoot?.querySelectorAll('dialog[open]').forEach(dialog=>(dialog as HTMLDialogElement).close());host.remove();});
     document.querySelectorAll('.gzk-mention').forEach(node=>node.classList.remove('gzk-mention'));
     delete html.dataset.gzkMounted;

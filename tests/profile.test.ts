@@ -59,3 +59,15 @@ it.each(['topics','replies','favorites'])('个人 %s 子页仍保留四个标签
   expect(document.querySelector('[aria-current="page"]')!.getAttribute('href')).toBe(`/u/demo/${page}`);
   expect(document.querySelector('.gzk-profile-nav img')).toBeNull();c.update(false);expect(document.querySelector<HTMLElement>('.gzk-profile-nav')!.hidden).toBe(true);c.destroy();expect(document.querySelector('.ui-header')!.textContent).toBe('过早客 › demo › 列表');
 });
+
+it('克隆的头像剔除 javascript: / data: 源，合法 https 源保留', () => {
+  const avatar = document.querySelector<HTMLImageElement>('.profile > .ui-header .avatar')!;
+  avatar.setAttribute('src', 'javascript:alert(1)');
+  enhanceProfile(true, '/u/demo');
+  const copy = document.querySelector<HTMLImageElement>('.gzk-profile-nav img')!;
+  expect(copy.getAttribute('src')).toBeNull();
+  avatar.setAttribute('src', 'https://static.guozoke.com/avatar.png');
+  document.querySelector('.gzk-profile-nav')!.remove();
+  enhanceProfile(true, '/u/demo');
+  expect(document.querySelector<HTMLImageElement>('.gzk-profile-nav img')!.getAttribute('src')).toBe('https://static.guozoke.com/avatar.png');
+});

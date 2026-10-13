@@ -33,7 +33,15 @@ export function enhanceProfile(enabled: boolean, pathname = location.pathname) {
     navigation.setAttribute('aria-label', '个人内容');
     const sidebarHeader = document.querySelector('.sidebar-right .usercard > .ui-header');
     const avatar = header?.querySelector<HTMLImageElement>('.avatar') || (sidebarHeader?.querySelector('.username')?.textContent?.trim() === username ? sidebarHeader.querySelector<HTMLImageElement>('.avatar') : null);
-    if (avatar) { const copy = avatar.cloneNode() as HTMLImageElement; copy.alt = ''; navigation.append(copy); }
+    if (avatar) {
+      const copy = avatar.cloneNode() as HTMLImageElement;
+      copy.alt = '';
+      // cloneNode copies host-page src/srcset verbatim; re-check before writing into our own nav.
+      const safeAvatar = safeLink(copy.getAttribute('src') || '');
+      if (safeAvatar) copy.setAttribute('src', safeAvatar); else copy.removeAttribute('src');
+      copy.removeAttribute('srcset');
+      navigation.append(copy);
+    }
     // Every href comes from the host page and is written into our own anchors, so each one must pass safeLink (http/https only).
     const base = safeProfileHref(home?.getAttribute('href') || '') || safeProfileHref(`/u/${encodeURIComponent(username)}`);
     const sources = [{ label: username, href: base }];

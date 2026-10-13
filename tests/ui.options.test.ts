@@ -130,7 +130,7 @@ describe('options page persistence', () => {
     await import('../entrypoints/options/main');await settle();
     expect(document.querySelector('input[name="SESSDATA"]')).toBeNull();
     findButton('启用 B 站上传').click();await settle();
-    expect(api.permissionsRequest).toHaveBeenCalledWith({permissions:['cookies'],origins:['https://api.bilibili.com/*']});
+    expect(api.permissionsRequest).toHaveBeenCalledWith({permissions:['cookies','declarativeNetRequest'],origins:['https://api.bilibili.com/*']});
     expect(api.storageSet).not.toHaveBeenCalled();
     findButton('启用 B 站上传').click();await settle();
     expect(api.storageSet).toHaveBeenCalledExactlyOnceWith({'gzk:image-provider':'bilibili'});
@@ -141,7 +141,7 @@ describe('options page persistence', () => {
     api.storageGet.mockResolvedValue({'gzk:imgur-client':'keep-client'});
     await import('../entrypoints/options/main');await settle();
     findButton('停用 B 站上传').click();await settle();
-    expect(api.permissionsRemove).toHaveBeenCalledWith({permissions:['cookies'],origins:['https://api.bilibili.com/*']});
+    expect(api.permissionsRemove).toHaveBeenCalledWith({permissions:['cookies','declarativeNetRequest'],origins:['https://api.bilibili.com/*']});
     expect(api.storageSet).toHaveBeenCalledWith({'gzk:image-provider':'imgur'});
     expect(document.querySelector<HTMLInputElement>('#imgur-client-id')!.value).toBe('keep-client');
   });

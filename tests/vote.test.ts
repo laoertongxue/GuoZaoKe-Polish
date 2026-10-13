@@ -15,3 +15,9 @@ it('拒绝无效ID与服务端失败，不能把已赞或登录失效当新增�
   expect(request).not.toHaveBeenCalled();
   await expect(voteReply('1560607')).rejects.toThrow('已经赞过');
 });
+it('网络异常与非 JSON 响应改为友好提示，不透出原始异常', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('Failed to fetch'); }));
+  await expect(voteReply('1')).rejects.toThrow('点赞请求未完成');
+  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, status: 200, json: async () => { throw new SyntaxError('Unexpected token < in JSON'); } })));
+  await expect(voteReply('1')).rejects.toThrow('可识别的结果');
+});

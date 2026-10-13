@@ -1,5 +1,23 @@
 # 更新日志 / Changelog
 
+## 0.5.2 · 2026-10-13 · 全量核查与实站修复
+
+- **真实站点回帖表单修复**：过早客回帖表单 `action=""`（提交回本页）此前被直接拒绝，导致自动回帖永远报「未找到站点回帖表单」。现按页面 URL 解析空 action，透传站点隐藏字段（`tid`、`_xsrf`）并只替换 `content`。
+- **评分分数修正**：启发式总分不再饱和为 10/10，空白或纯链接回复得 2–3 分，正常回复约 6–8 分。中文无空格文本的重复度按二元组计算，不再恒为 0。
+- **回帖改为浏览器登录态**：去掉手动 Cookie 头。回帖前确认登录账号与助手账号一致；未登录、账号不一致、表单缺失或站点拒绝时按可重试原因处理，`marker_missing` 不自动重试以免重复发帖。
+- **自动回帖默认关闭**；**移除不可达的 LLM 评语路径**（删除 `src/rating/providers.ts`、`prompt.ts`）。
+- **设置读取容错**：同步数据中本版本无法识别的值回退为默认值，不再导致所有读写失败。
+- **B 站上传改用 `declarativeNetRequest` 改写 `User-Agent` 与 `Referer`**：0.5.1 通过 `fetch` 附加 UA 头属于被浏览器丢弃的禁止头，实际无效。0.5.2 起启用 B 站上传会一并申请可选 `declarativeNetRequest` 权限，仅对 `api.bilibili.com` 上传请求改写上述头。**从 0.5.1 升级后需在图床配置中重新点一次「启用 B 站上传」完成授权。**
+- **上传占位唯一化**：同名文件（如连续截图）不再共用同一占位文本，失败只清除自己的占位。
+- **成员卡片悬停**：指针移入卡片内部（含「个人主页」链接）时不再误隐藏；同名快速重悬停取消待隐藏计时。
+- **回复增强降级**：缺少回复区标题时不再让整页增强（工具箱、页脚、编辑器等）全部失效。
+- **个人页头像消毒**：克隆站点头像时剔除非 http(s) 的 `src`，并丢弃 `srcset`。
+- **其它**：站点自带 CDN `static.guozoke.com` 加入站点主机权限（分享图不再为自家图片弹权限）；点赞原始网络/JSON 异常改为友好提示；选项页评分配置保存前归一化；阅读列表删除拒绝非法标识；分享页渲染与扩展失效清理补漏；后台消息响应与菜单初始化补异常处理。
+
+**升级提示**：若已安装 0.5.1 且使用 B 站图床，请重新启用一次以授予 `declarativeNetRequest`。评分助手与图床的本机配置会保留。
+
+Fixed the live-site reply form (`action=""`) so assistant replies can post again, corrected heuristic scores that used to saturate at 10/10, and switched Bilibili uploads from a no-op `fetch` User-Agent header to a session `declarativeNetRequest` rule that rewrites `User-Agent` and `Referer` for `api.bilibili.com` only (re-enable Bilibili hosting once after upgrading). Also includes same-name upload placeholder isolation, member-card hover fixes, safer reply-page degradation, avatar src sanitization, the site CDN host permission, friendlier vote errors, and hardened rating options / reading-list validation.
+
 ## 0.5.1 · 2026-10-12 · 0.5.0 真实环境修复
 
 - **修复选项页重复的"评分助手"导航项**：删除迁移遗留的旧 `analysisLink`（book 图标），左侧导航只保留 star 图标的真正入口。
@@ -7,18 +25,7 @@
 - **B 站图床附加 `User-Agent`**：补发公开的 Chrome `User-Agent` 头，缓解 2024 年升级后的反爬拦截。错误信息区分 412 与其它失败，提示改用 Imgur。
 - **验证文档同步**：增加「评分助手真实使用步骤」与「B 站图床 HTTP 412 说明」两段，附 5 类回帖失败原因对照表。
 
-Fixed the duplicate "评分助手" nav link in the options page caused by leftover analysis-link code, and surfaced a 5-step guide inline so users know how to register an assistant account, log in to it in the same browser window, mention it in a reply, and trigger the rating from the topic toolbar. Bilibili uploads now also send a public Chrome `User-Agent` to soften the HTTP 412 anti-scraping response; verification docs cover both the rating flow and the 412 fallback.
-
-## 未发布 · 评分助手与设置读取修复
-
-- **评分分数修正**：启发式总分不再饱和为 10/10，空白或纯链接回复得 2–3 分，正常回复约 6–8 分。中文无空格文本的重复度按二元组计算，不再恒为 0。
-- **回帖改为浏览器登录态**：去掉手动 Cookie 头和 `cookies` API 依赖（该头会被浏览器忽略，且原请求使用 `credentials:'omit'`，实际不携带任何登录态）。回帖前确认登录账号与助手账号一致，未登录、账号不一致或找不到站点回帖表单时不发送。
-- **自动回帖默认关闭**：「评分后发回帖」默认关闭；未确认发布的失败楼层不会被标记，可在之后重试。
-- **移除 LLM 评语的不可达路径**：评分只在本机计算，不再读取旧版 `gzk:analysis:configs:v1`，选项页不再显示"模型与 Key"说明。原先预留的 `src/rating/providers.ts` 与 `prompt.ts` 已删除，需要用时再从历史版本找回。
-- **设置读取容错**：同步数据中本版本无法识别的值回退为默认值，不再导致所有读写失败；写入仍严格校验。
-- **个人页链接**：个人页导航的链接统一经过 `safeLink`，非 http(s) 地址不写入。
-- **分享图片**：私网地址判断与评分的地址边界共用同一份保留地址表；错误信息不再回显 HTTP 状态码与主机名。DNS 解析导致的内网访问仍无法在扩展内完全阻止，见隐私说明。
-- **隐私说明**：补充评分回帖的数据流，修正「不会自动发帖」与悬空引用。
+Fixed the duplicate "评分助手" nav link in the options page caused by leftover analysis-link code, and surfaced a 5-step guide inline so users know how to register an assistant account, log in to it in the same browser window, mention it in a reply, and trigger the rating from the topic toolbar. Bilibili uploads in 0.5.1 attempted to send a Chrome `User-Agent` via `fetch` (ineffective; superseded by 0.5.2's `declarativeNetRequest` rewrite). Verification docs cover both the rating flow and the 412 fallback.
 
 ## 0.5.0 · 2026-10-09 · 删讨论分析 + 粘贴自动上传
 

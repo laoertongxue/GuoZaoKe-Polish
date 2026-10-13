@@ -26,3 +26,10 @@ it('同一主题去重并保留已读，标签和配置导入完整恢复', () =
   expect(validateBackup({version:1,...s})).toEqual(s);
   expect(applyAction(s,'reset').reading).toEqual(s.reading);
 });
+it('阅读列表删除拒绝非字符串标识，不静默丢弃', () => {
+  const t={id:'1',url:'https://www.guozaoke.com/t/1',title:'帖子',author:'a',avatar:'',node:'IT',replies:0,time:''};
+  const s=applyAction(initialState(),'reading:add',t);
+  expect(()=>applyAction(s,'reading:remove',undefined)).toThrow();
+  expect(()=>applyAction(s,'reading:remove',123)).toThrow();
+  expect(applyAction(s,'reading:remove','1').reading).toHaveLength(0);
+});

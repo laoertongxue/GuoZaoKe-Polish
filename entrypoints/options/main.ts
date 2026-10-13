@@ -202,7 +202,7 @@ function buildImageHosting(): HTMLElement {
     finally{enableBili.disabled=disableBili.disabled=false;}
   });
   const biliActions=el('div','action-row');biliActions.append(enableBili,disableBili,link('打开 B 站登录','https://www.bilibili.com/','button small'));
-  content.append(el('h3','','图床配置'),el('p','','上传前可选择 B 站或 Imgur，也可以直接插入已有图片链接。只上传你愿意公开的图片。'),el('h4','','B 站（试用）'),el('p','setting-description','无需填写 Key 或复制 Cookie。首次启用会申请 Cookie 与 api.bilibili.com 的访问权限，仅在主动上传时读取 B 站防伪标记并使用浏览器登录状态。扩展不保存登录凭证，不代发 B 站动态。图片外链可能受 B 站限制。'),biliActions,biliStatus,el('hr'));
+  content.append(el('h3','','图床配置'),el('p','','上传前可选择 B 站或 Imgur，也可以直接插入已有图片链接。只上传你愿意公开的图片。'),el('h4','','B 站（试用）'),el('p','setting-description','无需填写 Key 或复制 Cookie。首次启用会申请 Cookie、请求头改写与 api.bilibili.com 的访问权限，仅在主动上传时读取 B 站防伪标记并使用浏览器登录状态。扩展不保存登录凭证，不代发 B 站动态。图片外链可能受 B 站限制。'),biliActions,biliStatus,el('hr'));
   void browser.permissions.contains(BILIBILI_UPLOAD_PERMISSIONS).then(allowed=>{
     status(biliStatus,allowed?'已获得 B 站上传权限；登录状态将在上传时检查。':'尚未启用 B 站上传。');
   }).catch(()=>status(biliStatus,'无法读取授权状态，请重新启用。','error'));
@@ -545,11 +545,13 @@ function buildRating(): HTMLElement {
   const apply = button('保存配置', 'button primary', async () => {
     if (ratingSaving) return;
     ratingSaving = true;
-    const next: RatingConfig = {
+    const next = normalizeRatingConfig({
       assistantUsername: username.value.trim(),
       postReply: postReply.checked,
-      maxReplyCharacters: Number(maxReply.value) || DEFAULT_RATING_CONFIG.maxReplyCharacters,
-    };
+      maxReplyCharacters: Number(maxReply.value),
+    });
+    username.value = next.assistantUsername;
+    maxReply.value = String(next.maxReplyCharacters);
     try {
       await browser.storage.local.set({ [RATING_CONFIG_KEY]: next });
       ratingConfig = next;

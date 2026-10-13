@@ -71,9 +71,9 @@ export async function mountShareWorkspace(root: HTMLElement, topic: ShareTopic, 
   }
   async function render() {
     const current = ++revision; resetOutput(); busy(true);
-    card = createShareCard(topic, qrCheck.checked ? qr : undefined, subtleCheck.checked);
-    preview.replaceChildren(card); status.textContent = '正在读取卡片图片…';
     try {
+      card = createShareCard(topic, qrCheck.checked ? qr : undefined, subtleCheck.checked);
+      preview.replaceChildren(card); status.textContent = '正在读取卡片图片…';
       const prepared = await prepareShareImages(card, resources.readImage);
       if (disposed || current !== revision) return;
       card = prepared; preview.replaceChildren(card); status.textContent = '';

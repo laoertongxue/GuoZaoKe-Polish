@@ -54,7 +54,7 @@ export function applyAction(state:AppState,action:string,payload?:unknown):AppSt
     case 'settings': next.settings=validateSettings({...next.settings,...object(payload)}); break;
     case 'tags': {const x=object(payload); const name=String(x.username); const incoming=tagsOf({[name]:x.tags}); delete next.tags[name]; Object.assign(next.tags,incoming); break;}
     case 'reading:add': { const item=readingOf(payload); if (!next.reading.some(t=>t.id===item.id)) { if (next.reading.length>=1000) throw new Error('阅读列表已满，请先整理'); next.reading.unshift(item); } break; }
-    case 'reading:remove': next.reading=next.reading.filter(t=>t.id!==payload); break;
+    case 'reading:remove': { if (typeof payload !== 'string' || !payload) throw new Error('阅读条目标识无效'); next.reading=next.reading.filter(t=>t.id!==payload); break; }
     case 'reading:read': { const x=object(payload); if (typeof x.read!=='boolean') throw new Error('已读状态无效'); next.reading=next.reading.map(t=>t.id===x.id?{...t,read:x.read as boolean}:t); break; }
     case 'reset': next.settings={...defaults}; break;
     case 'import': return validateBackup(payload);

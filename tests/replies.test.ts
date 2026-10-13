@@ -23,9 +23,16 @@ function pageReply(id:string,floor:number) {
   return new DOMParser().parseFromString(`<div class="topic-reply">${source}</div>`,'text/html');
 }
 it.each(['?p=2','?page=2'])('与参考一致：当前不是第一页%s时不自动读取其他页', async query => {
-  vi.stubGlobal('location',new URL(`https://www.guozaoke.com/t/133068${query}`));addPages(1,3);
+  vi.stubGlobal('location',new URL(`https://www.guozoke.com/t/133068${query}`));addPages(1,3);
   const controller=enhanceReplies({...defaults,preload:true});await Promise.resolve();
   expect(fetchDocument).not.toHaveBeenCalled();controller.destroy();
+});
+it('缺少回复区标题时不抛错，也不安装任何增强', () => {
+  document.querySelector('.topic-reply > .ui-header')?.remove();
+  const controller=enhanceReplies({...defaults,preload:true});
+  expect(document.querySelector('.gzk-reply-tabs')).toBeNull();
+  expect(document.querySelectorAll('.gzk-badge')).toHaveLength(0);
+  controller.destroy();
 });
 it('已停用增强时即使保存了预加载选项也不发请求', async()=>{
   vi.stubGlobal('location',new URL('https://www.guozaoke.com/t/133068'));addPages(2);

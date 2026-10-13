@@ -6,12 +6,12 @@
 
 - 用户提供的 [PicGo 项目](https://github.com/glzjin/picgo-plugin-bilibili/blob/master/src/index.js) 使用 SESSDATA 和旧的 `api.vc.bilibili.com/api/v1/drawImage/upload`。2026-09-17 对旧地址的无凭证 GET 与不含图片的空表单 POST 均返回 HTTP 404，不继续使用该地址。
 - 较新的 [公开上传实现](https://github.com/chenluQwQ/bilibili-ai-bot/blob/main/dynamic.py) 使用 `https://api.bilibili.com/x/dynamic/feed/draw/upload_bfs`，字段为 `file_up`、`category=daily`、`csrf`，读取 `code` 与 `data.image_url`。本项目独立实现此协议，不调用发布动态接口，也不使用第三方中转服务。
-- [Chrome 会话说明](https://developer.chrome.com/docs/extensions/develop/concepts/storage-and-cookies) 说明扩展请求与主机权限、Cookie 的关系。请求使用 `credentials: include`；防伪标记通过可选 `cookies` 权限在后台按固定域名、固定名称读取。浏览器 Cookie 设置、站点风控、接口变化均可能影响上传。
+- [Chrome 会话说明](https://developer.chrome.com/docs/extensions/develop/concepts/storage-and-cookies) 说明扩展请求与主机权限、Cookie 的关系。请求使用 `credentials: include`；防伪标记通过可选 `cookies` 权限在后台按固定域名、固定名称读取。0.5.2 起另申请可选 `declarativeNetRequest`，仅在上传期间对 `api.bilibili.com` 改写公开的 `User-Agent` 与 `Referer`（`fetch` 直接设置 UA 头会被浏览器丢弃）。浏览器 Cookie 设置、站点风控、接口变化均可能影响上传。
 - 不接受手动填写 SESSDATA；需要用户自行在浏览器登录 B 站，使用浏览器已有会话。
 
 ## 使用方式
 
-1. 在控制选项 → 图床配置中点击「启用 B 站上传」，授予 Cookie 和 `https://api.bilibili.com/*` 的可选权限。
+1. 在控制选项 → 图床配置中点击「启用 B 站上传」，授予 Cookie、`declarativeNetRequest` 和 `https://api.bilibili.com/*` 的可选权限。从 0.5.1 及更早版本升级后需重新点一次以补齐新权限。
 2. 在同一普通浏览器中登录 B 站；回到过早客编辑器，选择、粘贴或拖放图片。
 3. 选择 B 站或 Imgur，主动点击上传后，成功链接插入当前草稿；不会发布帖子、回复或 B 站动态。
 4. 失败会保留未完成的图片，已成功部分不重复上传；不自动重试或切换图床。超时可能意味着服务端已收到图片，界面会说明。

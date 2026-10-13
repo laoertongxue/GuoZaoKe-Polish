@@ -1,13 +1,14 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { initialState } from '../src/shared/state';
-const api = vi.hoisted(() => ({ listener: vi.fn(), localGet: vi.fn(), localSet: vi.fn(), syncGet: vi.fn(), syncSet: vi.fn(), fetch: vi.fn(), tabsCreate:vi.fn(), contains:vi.fn(), cookie:vi.fn() }));
+const api = vi.hoisted(() => ({ listener: vi.fn(), localGet: vi.fn(), localSet: vi.fn(), syncGet: vi.fn(), syncSet: vi.fn(), fetch: vi.fn(), tabsCreate:vi.fn(), contains:vi.fn(), cookie:vi.fn(), updateSessionRules:vi.fn() }));
 vi.mock('wxt/utils/define-background', () => ({ defineBackground: (main: () => void) => main() }));
 vi.mock('wxt/browser', () => ({ browser: {
   runtime: { id: 'test-extension', getURL:(path:string)=>`chrome-extension://test-extension${path}`, onMessage: { addListener: api.listener }, onInstalled: { addListener: vi.fn() }, openOptionsPage: vi.fn() },
   tabs: {create:api.tabsCreate},
   permissions: {contains:api.contains}, cookies: {get:api.cookie},
+  declarativeNetRequest: {updateSessionRules:api.updateSessionRules},
   storage: { local: { get: api.localGet, set: api.localSet }, sync: { get: api.syncGet, set: api.syncSet } },
-  contextMenus: { onClicked: { addListener: vi.fn() } },
+  contextMenus: { onClicked: { addListener: vi.fn() }, removeAll: vi.fn(async()=>undefined), create: vi.fn() },
 } }));
 let local: Record<string, unknown>, sync: Record<string, unknown>;
 beforeEach(async () => {
@@ -18,6 +19,7 @@ beforeEach(async () => {
   api.syncSet.mockImplementation(async data => Object.assign(sync, structuredClone(data)));
   api.contains.mockResolvedValue(true);
   api.cookie.mockResolvedValue({value:'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'});
+  api.updateSessionRules.mockResolvedValue(undefined);
   vi.stubGlobal('fetch', api.fetch);
   await import('../entrypoints/background');
 });
@@ -61,8 +63,9 @@ const reply = (data:unknown,status=200)=>({ok:status===200,status,json:async()=>
 it('B站上传复用浏览器会话，只读取防伪标记，不保存凭证', async()=>{
   api.fetch.mockResolvedValue(reply({code:0,data:{image_url:'http://i0.hdslb.com/bfs/new_dyn/test.png'}}));
   expect(await send(upload)).toEqual({ok:true,data:'https://i0.hdslb.com/bfs/new_dyn/test.png'});
-  expect(api.contains).toHaveBeenCalledWith({permissions:['cookies'],origins:['https://api.bilibili.com/*']});
+  expect(api.contains).toHaveBeenCalledWith({permissions:['cookies','declarativeNetRequest'],origins:['https://api.bilibili.com/*']});
   expect(api.cookie).toHaveBeenCalledExactlyOnceWith({url:'https://api.bilibili.com/x/dynamic/feed/draw/upload_bfs',name:'bili_jct'});
+  expect(api.updateSessionRules).toHaveBeenCalled();
   expect(api.fetch).toHaveBeenCalledExactlyOnceWith('https://api.bilibili.com/x/dynamic/feed/draw/upload_bfs',expect.objectContaining({method:'POST',credentials:'include',redirect:'error',referrerPolicy:'no-referrer'}));
   const request=api.fetch.mock.calls[0]![1];
   expect(request.headers).toMatchObject({'User-Agent':expect.stringContaining('Chrome')});

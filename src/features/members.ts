@@ -29,7 +29,8 @@ export function installMemberCards() {
   const pointerOver=(event:Event)=>{
     if(!enabled())return;
     const a=(event.target as Element).closest<HTMLAnchorElement>('a[href*="/u/"]');if(!a)return;
-    const name=usernameOf(a);if(!name||name===active)return;clearTimeout(timer);
+    clearTimeout(timer);
+    const name=usernameOf(a);if(!name||name===active)return;
     timer=setTimeout(async()=>{
       if(!enabled())return;
       hide();active=name;const overlay=overlayHost();host=overlay.host;const card=el('div','','member-card');overlay.root.append(card);
@@ -41,7 +42,13 @@ export function installMemberCards() {
       catch(error){cache.delete(name);if(active===name&&enabled())info.textContent=error instanceof Error?error.message:'读取失败';}
     },350);
   };
-  const pointerOut=(event:Event)=>{if((event.target as Element).closest('a[href*="/u/"]')){clearTimeout(timer);timer=setTimeout(hide,300);}};
+  const pointerOut=(event:Event)=>{
+    if(!(event.target as Element).closest('a[href*="/u/"]'))return;
+    // Moving within the card (including its profile link) must not dismiss it under the cursor.
+    const related=(event as PointerEvent).relatedTarget as Node|null;
+    if(related&&host?.contains(related))return;
+    clearTimeout(timer);timer=setTimeout(hide,300);
+  };
   const keydown=(event:KeyboardEvent)=>{if(event.key==='Escape')hide();};
   document.addEventListener('pointerover',pointerOver);
   document.addEventListener('pointerout',pointerOut);

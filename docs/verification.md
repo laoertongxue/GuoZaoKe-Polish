@@ -1,5 +1,15 @@
 # 验证范围 / Verification scope
 
+## 0.5.2 全量核查与实站修复（本地包，2026-10-13）
+
+- 2026-10-13：34 个测试文件通过、243 项测试通过；类型检查与生产打包通过。
+- 回归覆盖：真实回帖表单 `action=""` 解析与隐藏字段透传；评分启发式分值分布；B 站上传 DNR 会话规则（UA/Referer）与可选权限集；同名上传占位隔离；成员卡片卡内悬停；回复区缺标题降级；个人页头像 `src` 消毒；`reading:remove` 校验；点赞网络/JSON 异常友好提示；选项页评分配置归一化。
+- 权限变化：`host_permissions` 增加 `https://static.guozoke.com/*`；`optional_permissions` 增加 `declarativeNetRequest`（仅与 Cookie、`api.bilibili.com` 一并由用户在启用 B 站上传时授予）。从 0.5.1 升级的 B 站用户需重新点一次「启用 B 站上传」。
+- 真实站点只读验收（0.5.2 前，账号 `tuzhishigou`）：`loggedInUsername` 从真实 HTML 正确解析；表单为 `action=""` + `tid` + `_xsrf` + `textarea.J_replyContent[name=content]`。**自动回帖 POST 返回 200 但内容未落库**——用浏览器原生表单提交同样被丢弃，判定为站点侧账号限制，非扩展代码问题；仍待第二个账号完成 trigger→扫描→回帖闭环。
+- ZIP：`GuoZaoKe-Polish-0.5.2-chrome.zip`，213833 字节、20 个条目，根 manifest 为 0.5.2；`host_permissions` 含 `static.guozoke.com`，`optional_permissions` 含 `declarativeNetRequest`；归档完整性、排除测试/研究/环境文件及常见 Key 形态扫描通过。
+- SHA-256：`bbe29b9f0054eaacbb232b4ba4ff8c5fefc1974aa33936d1b2b82811a7b50f9f`。
+- GitHub Release v0.5.2：见 [v0.5.2](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.2)。本次仍未提交 Chrome 应用商店。B 站真实上传与自动回帖闭环仍待真实浏览器/第二账号验收。
+
 ## 0.5.1 0.5.0 真实环境修复（本地包，2026-10-12 重新打包）
 
 - 2026-10-12：34 个测试文件通过、234 项测试通过；类型检查、生产打包和差异空白检查通过。
@@ -31,11 +41,12 @@
 
 ### B 站图床 HTTP 412 说明
 
-B 站 2024 年升级反爬策略后，`upload_bfs` 接口在没有浏览器 Referer、设备指纹头或登录态缺失时会返回 412 Precondition Failed。本扩展已在请求中补发 `User-Agent`，但浏览器扩展后台 fetch 仍无法像真实页面那样携带 `Referer` 和 `X-Bili-Device-Fingerprint`。遇到 412 时：
+B 站 2024 年升级反爬策略后，`upload_bfs` 接口在没有浏览器 Referer、设备指纹头或登录态缺失时会返回 412 Precondition Failed。0.5.1 曾尝试用 `fetch` 附加 `User-Agent`，但该头属于浏览器禁止头，会被静默丢弃。**0.5.2 起改为通过可选 `declarativeNetRequest` 会话规则，在上传期间对 `api.bilibili.com` 改写 `User-Agent` 与 `Referer`。** 仍无法伪造 `X-Bili-Device-Fingerprint` 等设备指纹。遇到 412 时：
 
 - 确认本浏览器普通窗口（非隐身）已登录 B 站；`bili_jct` Cookie 存在且未过期。
+- 从 0.5.1 升级后，在选项 → 图床配置中重新点击「启用 B 站上传」以授予 `declarativeNetRequest`。
 - 在选项 → 图床配置中点击「停用 B 站上传」后改用 Imgur；Imgur 不受 B 站风控影响。
-- 真实环境抓包以 DevTools Network 为准；若确认已登录但仍 412，多半是 B 站风控拦截，可稍后重试或换 Imgur。
+- 真实环境抓包以 DevTools Network 为准；若确认已登录且权限齐全但仍 412，多半是 B 站风控拦截，可稍后重试或换 Imgur。
 
 ## 0.4.4 DeepSeek 输出额度修复（本地包，2026-09-24 再次打包核对）
 

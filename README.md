@@ -4,14 +4,14 @@
   <p>让过早客的浏览与阅读更从容。</p>
   <p>A more comfortable way to browse and read Guozaoke.</p>
   <p><strong>简体中文</strong> · <a href="README.en.md">English</a></p>
-  <p><a href="https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.0">下载安装包</a> · <a href="https://github.com/laoertongxue/GuoZaoKe-Polish/issues">反馈问题</a> · <a href="docs/privacy.md">隐私说明</a></p>
+  <p><a href="https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.2">下载安装包</a> · <a href="https://github.com/laoertongxue/GuoZaoKe-Polish/issues">反馈问题</a> · <a href="docs/privacy.md">隐私说明</a></p>
 </div>
 
 ---
 
 为 [过早客](https://www.guozaoke.com/) 开发的 Chrome 扩展，以 [V2EX Polish](https://github.com/coolpace/V2EX_Polish) 的阅读体验为参考，使用 **WXT、TypeScript 和原生 DOM/CSS 独立实现**。改善原有社区页面的排版、主题和交互，保留原站内容与操作入口。
 
-**0.5.1 修复 0.5.0 真实环境问题**：删除迁移遗留的选项页重复"评分助手"导航项，把评分助手的注册小号 → 登录 → `@触发` → 扫描 → 错误码对照 5 步直接放进选项页；B 站图床补发 Chrome `User-Agent`，缓解 2024 年升级后的反爬拦截，并区分 412 与其它失败的错误提示。请优先下载 0.5.1。**0.5.0** 删除了 0.4.x 系列的「讨论分析」整套功能，把"图片粘贴/拖放"改为**全自动上传**到所选图床，**不弹任何对话框**。下载与更新方式见下方；GitHub 版本与 Chrome 应用商店分开发布，商店状态以商店页面为准。完整的实站兼容性与参考体验对齐范围见 [验证范围](docs/verification.md)。
+**0.5.2 全量核查修复**：修复真实站点回帖表单（`action=""`）导致自动回帖永远失败的问题；评分启发式不再全部顶到 10/10；B 站上传改用 `declarativeNetRequest` 真正改写 `User-Agent` / `Referer`（0.5.1 用 `fetch` 加 UA 头无效）；同名图片占位互不干扰；成员卡片悬停更稳；站点自家 CDN 加入主机权限。**从 0.5.1 升级使用 B 站图床的用户需在图床配置中重新点一次「启用 B 站上传」。** 请优先下载 0.5.2。**0.5.1** 修复 0.5.0 真实环境问题；**0.5.0** 删除了 0.4.x 系列的「讨论分析」整套功能，把"图片粘贴/拖放"改为**全自动上传**到所选图床，**不弹任何对话框**。下载与更新方式见下方；GitHub 版本与 Chrome 应用商店分开发布，商店状态以商店页面为准。完整的实站兼容性与参考体验对齐范围见 [验证范围](docs/verification.md)。
 
 ## 功能
 
@@ -33,15 +33,15 @@
 
 ## 安装与更新
 
-1. 打开 [v0.5.1 Releases](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.1)，下载 `GuoZaoKe-Polish-0.5.1-chrome.zip` 并解压。0.5.1 包的 SHA-256 校验值：
+1. 打开 [v0.5.2 Releases](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.2)，下载 `GuoZaoKe-Polish-0.5.2-chrome.zip` 并解压。0.5.2 包的 SHA-256 校验值：
 
    ```
-   5ae505d676aa3adc1b2bb2d743d4f0bbc59c56d8e91d5e933c2833fc8c8f722f  GuoZaoKe-Polish-0.5.1-chrome.zip
+   bbe29b9f0054eaacbb232b4ba4ff8c5fefc1974aa33936d1b2b82811a7b50f9f  GuoZaoKe-Polish-0.5.2-chrome.zip
    ```
 
-   校验命令：`shasum -a 256 GuoZaoKe-Polish-0.5.1-chrome.zip`（macOS / Linux）或 `Get-FileHash GuoZaoKe-Polish-0.5.1-chrome.zip -Algorithm SHA256`（Windows PowerShell）。
+   校验命令：`shasum -a 256 GuoZaoKe-Polish-0.5.2-chrome.zip`（macOS / Linux）或 `Get-FileHash GuoZaoKe-Polish-0.5.2-chrome.zip -Algorithm SHA256`（Windows PowerShell）。
 
-   若已安装 0.5.0，可直接覆盖更新到 0.5.1；评分助手选项会保留本机存储的配置。
+   若已安装 0.5.1，可直接覆盖更新到 0.5.2；评分助手与图床配置会保留本机存储。使用 B 站图床的用户需在图床配置中重新点一次「启用 B 站上传」以授予新增的可选 `declarativeNetRequest` 权限。
 2. 在 Chrome 地址栏输入 `chrome://extensions/`，打开「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择解压后**直接包含 `manifest.json`** 的目录。
 4. 新开一个 [过早客](https://www.guozaoke.com/) 页面。点击扩展图标打开面板，通过「控制选项」调整设置。
@@ -59,13 +59,13 @@ npm ci
 npm run build
 ```
 
-在 Chrome 加载 `.output/chrome-mv3`。`npm run zip` 生成 `.output/guozaoke-polish-0.5.1-chrome.zip`，仅供试用验证。
+在 Chrome 加载 `.output/chrome-mv3`。`npm run zip` 生成 `.output/guozaoke-polish-0.5.2-chrome.zip`，仅供试用验证。
 
 ## 图片上传与分享
 
 编辑器只修改草稿，不自动提交帖子或回复。插入已有图片链接无需配置图床。
 
-B 站图床为试用功能：在控制选项的图床配置中点击「启用 B 站上传」，授予 Cookie 与 `https://api.bilibili.com/*` 访问权限，并在同一普通浏览器窗口登录 B 站。上传时仅临时读取防伪标记，浏览器自动携带已有登录会话；不填写、不保存、不导出 SESSDATA，不代发动态。也可继续使用 Imgur 或直接插入图片链接。
+B 站图床为试用功能：在控制选项的图床配置中点击「启用 B 站上传」，授予 Cookie、请求头改写（`declarativeNetRequest`）与 `https://api.bilibili.com/*` 访问权限，并在同一普通浏览器窗口登录 B 站。上传时仅临时读取防伪标记，并对上传请求改写公开的 `User-Agent` 与 `Referer`；浏览器自动携带已有登录会话；不填写、不保存、不导出 SESSDATA，不代发动态。也可继续使用 Imgur 或直接插入图片链接。
 
 使用 Imgur 时，在控制选项填写自己的 [Imgur Client ID](https://api.imgur.com/oauth2/addclient)，点击「授权并保存」，再在图片对话框中明确点击上传。支持 PNG、JPEG、GIF、WebP，单张最多 10 MB；上传后生成公开图片链接。Client ID 仅保存在本机，不进入同步或 JSON 备份。
 
@@ -74,7 +74,7 @@ B 站图床为试用功能：在控制选项的图床配置中点击「启用 B 
 ## 隐私与权限
 
 - 没有分析统计 SDK、广告 SDK 或自建遥测服务器。
-- 必需权限为 `storage`、`contextMenus` 和过早客站点访问权限；B 站上传另需用户主动授予可选 `cookies` 权限。
+- 必需权限为 `storage`、`contextMenus` 和过早客站点访问权限（含 `www`、裸域与 `static` CDN）；B 站上传另需用户主动授予可选 `cookies`、`declarativeNetRequest` 与 `https://api.bilibili.com/*`。
 - 图片上传与分享图按操作申请精确域名的可选权限。
 - 设置与标签使用 Chrome 同步存储；稍后阅读和图床配置保存在本机。
 
@@ -90,9 +90,9 @@ npm run build      # Chrome MV3 生产构建
 npm run zip        # 构建并打包
 ```
 
-0.5.0 / 0.5.1 发布验证见 [验证范围](docs/verification.md)，更新内容见 [更新日志](CHANGELOG.md)。GitHub Actions 在 push / pull request 时执行安装、类型检查、测试和打包。测试替身不等同于完整 Chrome 扩展、站点写操作或真实上传验收。
+0.5.0 / 0.5.1 / 0.5.2 发布验证见 [验证范围](docs/verification.md)，更新内容见 [更新日志](CHANGELOG.md)。GitHub Actions 在 push / pull request 时执行安装、类型检查、测试和打包。测试替身不等同于完整 Chrome 扩展、站点写操作或真实上传验收。
 
-`entrypoints/` 为扩展入口，`src/features/` 为页面增强，`src/site/` 为站点适配，`src/rating/` 为评分助手底层（仅 chatCompletion 抽象），`src/shared/` 为设置和组件，`src/styles/` 为样式，`tests/` 为回归与浏览器夹具。贡献方式见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+`entrypoints/` 为扩展入口，`src/features/` 为页面增强，`src/site/` 为站点适配，`src/rating/` 为评分助手底层，`src/shared/` 为设置和组件，`src/styles/` 为样式，`tests/` 为回归与浏览器夹具。贡献方式见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 作者
 

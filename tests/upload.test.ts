@@ -40,7 +40,7 @@ it('autoUploadImage 在 textarea 中插入占位文本，成功后替换为图�
   api.send.mockResolvedValue({ ok: true, data: 'https://i.imgur.com/auto.png' });
   const input = makeInput();
   const pending = autoUploadImage(input, new File(['x'], 'auto.png', { type: 'image/png' }));
-  await vi.waitFor(() => expect(input.value).toContain('[图片上传中：auto.png…]'));
+  await vi.waitFor(() => expect(input.value).toMatch(/\[图片上传中：auto\.png…\]\d+/));
   await pending;
   expect(api.send).toHaveBeenCalledWith(expect.objectContaining({ type: 'image:upload', provider: 'imgur', mime: 'image/png' }));
   expect(input.value).toBe('\nhttps://i.imgur.com/auto.png\n');
@@ -82,17 +82,29 @@ it('autoUploadImage 占位被用户删除后仍把链接追加到当前位置', 
   api.send.mockResolvedValue({ ok: true, data: 'https://i.imgur.com/auto.png' });
   const input = makeInput();
   const pending = autoUploadImage(input, new File(['x'], 'auto.png', { type: 'image/png' }));
-  await vi.waitFor(() => expect(input.value).toContain('[图片上传中：auto.png…]'));
+  await vi.waitFor(() => expect(input.value).toMatch(/图片上传中/));
   input.value = ''; // user removed the placeholder before upload finished
   await pending;
   expect(input.value).toBe('\nhttps://i.imgur.com/auto.png\n');
+});
+
+it('同名文件各自持有独立占位，失败只移除自己的占位', async () => {
+  api.send
+    .mockResolvedValueOnce({ ok: true, data: 'https://i.imgur.com/one.png' })
+    .mockResolvedValueOnce({ ok: false, error: '网络异常' });
+  const input = makeInput();
+  const first = autoUploadImage(input, new File(['x'], 'shot.png', { type: 'image/png' }));
+  const second = autoUploadImage(input, new File(['y'], 'shot.png', { type: 'image/png' }));
+  await Promise.all([first, second]);
+  expect(input.value).toContain('https://i.imgur.com/one.png');
+  expect(input.value).not.toContain('图片上传中');
 });
 
 it('autoUploadImage 保留插入位置与选区方向，丢失只在原占位替换时变更', async () => {
   api.send.mockResolvedValue({ ok: true, data: 'https://i.imgur.com/auto.png' });
   const input = makeInput(); input.value = 'hello '; input.setSelectionRange(6, 6, 'forward');
   const pending = autoUploadImage(input, new File(['x'], 'auto.png', { type: 'image/png' }));
-  await vi.waitFor(() => expect(input.value).toContain('[图片上传中'));
+  await vi.waitFor(() => expect(input.value).toContain('图片上传中'));
   input.setSelectionRange(0, 0, 'backward');
   await pending;
   expect(input.value).toBe('hello \nhttps://i.imgur.com/auto.png\n');

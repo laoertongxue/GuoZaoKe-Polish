@@ -9,7 +9,7 @@ import { createRatingHandler } from '../src/rating/handler';
 
 export default defineBackground(() => {
   // Keep sensitive storage inaccessible to content scripts, with no persistent fallback.
-  void browser.storage.session?.setAccessLevel?.({ accessLevel: 'TRUSTED_CONTEXTS' });
+  void browser.storage.session?.setAccessLevel?.({ accessLevel: 'TRUSTED_CONTEXTS' })?.catch?.(() => undefined);
   const rating = createRatingHandler({
     storage: { local: browser.storage.local },
   });
@@ -63,28 +63,28 @@ export default defineBackground(() => {
         if (typeof message.topicId !== 'string' || typeof message.topicUrl !== 'string' || typeof message.pageHtml !== 'string') throw new Error('评分请求缺少必要字段');
         return rating.handleTrigger({ topicId: message.topicId, topicUrl: message.topicUrl, pageHtml: message.pageHtml });
       }
-      if (message?.type==='rating:preview') {
-        if (typeof message.topicId !== 'string' || typeof message.topicUrl !== 'string' || typeof message.pageHtml !== 'string') throw new Error('评分请求缺少必要字段');
-        return rating.preview({ topicId: message.topicId, topicUrl: message.topicUrl, pageHtml: message.pageHtml });
-      }
       if (message?.type==='options:open') {
         if(message.page==='tags') await browser.tabs.create({url:`${browser.runtime.getURL('/options.html')}#tags`});
         else if(message.page==='images') await browser.tabs.create({url:`${browser.runtime.getURL('/options.html')}#image-hosting`});
-        else if(message.page==='rating') await browser.tabs.create({url:`${browser.runtime.getURL('/options.html')}#rating`});
         else await browser.runtime.openOptionsPage();
         return true;
       }
       throw new Error('未知请求');
     };
-    run().then(data=>sendResponse({ok:true,data}),error=>sendResponse({ok:false,error:error instanceof Error?error.message:'操作失败'}));
+    run().then(
+      data=>{ try { sendResponse({ok:true,data}); } catch { /* page went away */ } },
+      error=>{ try { sendResponse({ok:false,error:error instanceof Error?error.message:'操作失败'}); } catch { /* page went away */ } },
+    );
     return true;
   });
   browser.runtime.onInstalled.addListener(async()=>{
-    await browser.contextMenus.removeAll();
-    const patterns=['https://www.guozaoke.com/*','https://guozaoke.com/*'];
-    browser.contextMenus.create({id:'gzk-decode',title:'GuoZaoKe Polish：解码 Base64',contexts:['selection'],documentUrlPatterns:patterns});
-    browser.contextMenus.create({id:'gzk-reading',title:'加入稍后阅读',contexts:['page','link'],documentUrlPatterns:patterns});
-    browser.contextMenus.create({id:'gzk-options',title:'GuoZaoKe Polish 控制选项',contexts:['page'],documentUrlPatterns:patterns});
+    try {
+      await browser.contextMenus.removeAll();
+      const patterns=['https://www.guozoke.com/*','https://guozoke.com/*'];
+      browser.contextMenus.create({id:'gzk-decode',title:'GuoZaoKe Polish：解码 Base64',contexts:['selection'],documentUrlPatterns:patterns});
+      browser.contextMenus.create({id:'gzk-reading',title:'加入稍后阅读',contexts:['page','link'],documentUrlPatterns:patterns});
+      browser.contextMenus.create({id:'gzk-options',title:'GuoZaoKe Polish 控制选项',contexts:['page'],documentUrlPatterns:patterns});
+    } catch (error) { console.warn('GuoZaoKe Polish 初始化菜单失败：', error); }
   });
   browser.contextMenus.onClicked.addListener(async(info,tab)=>{
     try {

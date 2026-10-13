@@ -10,7 +10,8 @@ import { readableUrl } from '../site/urls';
 
 export function enhanceReplies(initial:Settings) {
   const container=document.querySelector<HTMLElement>('.topic-reply > .ui-content');
-  if(!container)return {update:(_s:Settings)=>{},hot:()=>{},destroy:()=>{}};
+  const header=document.querySelector('.topic-reply > .ui-header');
+  if(!container||!header)return {update:(_s:Settings)=>{},hot:()=>{},destroy:()=>{}};
   let rows=parseReplies(document),settings=initial,mode:'all'|'hot'='all',loading=false,loaded=false,disposed=false,preloadRevision=0;
   const nativeRows=[...rows];
   const originalRows=new Map(nativeRows.map(row=>{
@@ -45,7 +46,6 @@ export function enhanceReplies(initial:Settings) {
     for(const [link,title]of originalPagination){link.classList.remove('gzk-preloaded-page');restoreAttribute(link,'title',title);}
     originalPagination.clear();
   }
-  const header=document.querySelector('.topic-reply > .ui-header')!;
   const tabs=el('div','','gzk-reply-tabs');const allButton=button('全部回复',()=>{mode='all';render();});const hotButton=button('热门回复',()=>{mode='hot';render();});
   const nesting=el('select');nesting.setAttribute('aria-label','楼中楼展现形式');for(const [value,label]of [['indent','逐层缩进'],['align','靠左对齐'],['off','原始楼层']]){const option=el('option',label);option.value=value!;nesting.append(option);}
   nesting.value=settings.nested;nesting.addEventListener('change',()=>{void (async()=>{try{const saved=await saveSettings({nested:nesting.value as Settings['nested']});settings=saved.settings;render();}catch(error){nesting.value=settings.nested;toast(error instanceof Error?error.message:'保存失败',true);}})();});
@@ -111,33 +111,37 @@ export function enhanceReplies(initial:Settings) {
   }
   async function preload() {
     const pageNumber=(url:string)=>{const query=new URL(url).searchParams;return Number(query.get('p')||query.get('page')||1);};
-    if(loading||loaded||disposed||!settings.enabled||!settings.preload||pageNumber(location.href)!==1)return;
-    const pages=replyPages(document,location.href).filter(page=>pageNumber(page)>1).slice(0,2);if(!pages.length){loaded=true;return;}
-    const revision=preloadRevision,current=()=>!disposed&&settings.enabled&&settings.preload&&revision===preloadRevision;
-    loading=true;feedback.textContent='正在预加载其他页回复…';
     try {
-      const batch:Array<{row:Reply;page:string}>=[],seen=new Set(rows.map(r=>r.id));
-      for(const page of pages) {
-        const doc=await fetchDocument(page);if(!current())return;
-        const incoming=parseReplies(doc);
-        if(!incoming.length)throw new Error('目标分页未找到回复');
-        for(const row of incoming)if(!seen.has(row.id)){batch.push({row,page});seen.add(row.id);}
-      }
-      // Commit the whole batch only after every page succeeds and the setting is still active.
-      for(const {row,page} of batch){
-          // Rebuild only the new reply shell. Never import scripts/inline handlers from fetched HTML.
-          const shell=el('div','','reply-item'),main=el('div','','main'),meta=el('div','','meta');const link=el('a',row.author,'reply-username');link.href=`/u/${encodeURIComponent(row.author)}`;const floor=el('span',`#${row.floor}`,'floor');meta.append(link,floor);
-          const time=row.element.querySelector(':scope > .main > .meta .time')?.textContent;if(time)meta.append(el('span',time,'time'));
-          const vote=button(`赞 ${row.likes}`,async()=>{vote.disabled=true;try{await voteReply(row.id);vote.dataset.count=String(row.likes+1);vote.textContent=`已赞 ${row.likes+1}`;}catch(error){vote.disabled=false;throw error;}},'gzk-button J_replyVote');vote.dataset.count=String(row.likes);meta.append(vote);
-          if(row.avatar){const avatarLink=el('a');avatarLink.href=link.href;const image=el('img','','avatar');image.src=row.avatar;image.alt=row.author;image.loading='lazy';avatarLink.append(image);shell.append(avatarLink);}
-          const content=el('span','','content');richHtml(content,row.html,page);main.append(meta,content);shell.append(main);row.element=shell;rows.push(row);
-      }
-      document.querySelectorAll<HTMLAnchorElement>('.pagination a[href]').forEach(link=>{
-        try{if(pages.includes(readableUrl(new URL(link.getAttribute('href')!,location.href).href))){if(!originalPagination.has(link))originalPagination.set(link,link.getAttribute('title'));link.classList.add('gzk-preloaded-page');link.title=[link.title,'回复已合并到本页'].filter(Boolean).join(' · ');}}catch{/* Ignore unrelated pagination links. */}
-      });
-      rows.sort((a,b)=>a.floor-b.floor);loaded=true;render();toast(`已合并其他 ${pages.length} 页回复；更多回复可使用原站翻页查看`);
-    } catch(error) {if(current())feedback.replaceChildren(el('span',error instanceof Error?error.message:'预加载失败'),button('重试',preload));}
-    finally{loading=false;if(!disposed&&revision!==preloadRevision)void preload();}
+      if(loading||loaded||disposed||!settings.enabled||!settings.preload||pageNumber(location.href)!==1)return;
+      const pages=replyPages(document,location.href).filter(page=>pageNumber(page)>1).slice(0,2);if(!pages.length){loaded=true;return;}
+      const revision=preloadRevision,current=()=>!disposed&&settings.enabled&&settings.preload&&revision===preloadRevision;
+      loading=true;feedback.textContent='正在预加载其他页回复…';
+      try {
+        const batch:Array<{row:Reply;page:string}>=[],seen=new Set(rows.map(r=>r.id));
+        for(const page of pages) {
+          const doc=await fetchDocument(page);if(!current())return;
+          const incoming=parseReplies(doc);
+          if(!incoming.length)throw new Error('目标分页未找到回复');
+          for(const row of incoming)if(!seen.has(row.id)){batch.push({row,page});seen.add(row.id);}
+        }
+        // Commit the whole batch only after every page succeeds and the setting is still active.
+        for(const {row,page} of batch){
+            // Rebuild only the new reply shell. Never import scripts/inline handlers from fetched HTML.
+            const shell=el('div','','reply-item'),main=el('div','','main'),meta=el('div','','meta');const link=el('a',row.author,'reply-username');link.href=`/u/${encodeURIComponent(row.author)}`;const floor=el('span',`#${row.floor}`,'floor');meta.append(link,floor);
+            const time=row.element.querySelector(':scope > .main > .meta .time')?.textContent;if(time)meta.append(el('span',time,'time'));
+            const vote=button(`赞 ${row.likes}`,async()=>{vote.disabled=true;try{await voteReply(row.id);vote.dataset.count=String(row.likes+1);vote.textContent=`已赞 ${row.likes+1}`;}catch(error){vote.disabled=false;throw error;}},'gzk-button J_replyVote');vote.dataset.count=String(row.likes);meta.append(vote);
+            if(row.avatar){const avatarLink=el('a');avatarLink.href=link.href;const image=el('img','','avatar');image.src=row.avatar;image.alt=row.author;image.loading='lazy';avatarLink.append(image);shell.append(avatarLink);}
+            const content=el('span','','content');richHtml(content,row.html,page);main.append(meta,content);shell.append(main);row.element=shell;rows.push(row);
+        }
+        document.querySelectorAll<HTMLAnchorElement>('.pagination a[href]').forEach(link=>{
+          try{if(pages.includes(readableUrl(new URL(link.getAttribute('href')!,location.href).href))){if(!originalPagination.has(link))originalPagination.set(link,link.getAttribute('title'));link.classList.add('gzk-preloaded-page');link.title=[link.title,'回复已合并到本页'].filter(Boolean).join(' · ');}}catch{/* Ignore unrelated pagination links. */}
+        });
+        rows.sort((a,b)=>a.floor-b.floor);loaded=true;render();toast(`已合并其他 ${pages.length} 页回复；更多回复可使用原站翻页查看`);
+      } catch(error) {if(current())feedback.replaceChildren(el('span',error instanceof Error?error.message:'预加载失败'),button('重试',preload));}
+      finally{loading=false;if(!disposed&&revision!==preloadRevision)void preload();}
+    } catch {
+      if(!disposed&&settings.enabled)feedback.replaceChildren(el('span','预加载失败'),button('重试',preload));
+    }
   }
   render();void preload();
   const votes=new MutationObserver(records=>{if(records.some(record=>record.attributeName==='data-count')){for(const row of rows){const count=Number(row.element.querySelector<HTMLElement>(':scope > .main > .meta .J_replyVote')?.dataset.count);if(Number.isFinite(count))row.likes=count;}if(mode==='hot')render();else hotButton.textContent=`热门回复 · ${rows.filter(r=>r.likes>0).length}`;}});

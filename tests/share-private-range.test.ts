@@ -18,6 +18,14 @@ it('accepts ordinary public IPv4 literals', () => {
   }
 });
 
+it('rejects every address inside 192.0.0.0/24, not only the low octets', () => {
+  for (const host of ['192.0.0.0', '192.0.0.1', '192.0.0.8', '192.0.0.170', '192.0.0.255']) {
+    expect(isPublicIpv4(host), host).toBe(false);
+    expect(() => publicImageUrl(`https://${host}/a.png`), host).toThrow();
+  }
+  expect(isPublicIpv4('192.0.1.1')).toBe(true);
+});
+
 it('network failures and HTTP errors do not reveal the status code or host to the caller', async () => {
   vi.stubGlobal('fetch', vi.fn(async () => new Response('secret internal body', { status: 503 })));
   let message = '';

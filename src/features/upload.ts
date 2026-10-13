@@ -34,6 +34,13 @@ function replacePlaceholder(input:HTMLTextAreaElement, placeholder:string, repla
   return true;
 }
 
+/** Unique token so two same-named files never share a placeholder in the draft. */
+let placeholderSeq = 0;
+function nextPlaceholder(name: string): string {
+  placeholderSeq = (placeholderSeq % 9000) + 1;
+  return `[图片上传中：${name}…]${placeholderSeq}`;
+}
+
 function removePlaceholder(input:HTMLTextAreaElement, placeholder:string): boolean {
   const value = input.value;
   const index = value.indexOf(placeholder);
@@ -54,7 +61,7 @@ export async function autoUploadImage(input:HTMLTextAreaElement, file:File): Pro
     toast('每张图片限 PNG/JPG/GIF/WebP 且不超过 10 MB');
     return;
   }
-  const placeholder = `[图片上传中：${file.name}…]`;
+  const placeholder = nextPlaceholder(file.name);
   const start = input.selectionStart;
   input.setRangeText(`\n${placeholder}\n`, start, input.selectionEnd, 'end');
   input.dispatchEvent(new Event('input', { bubbles: true }));
