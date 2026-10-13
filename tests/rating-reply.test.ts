@@ -3,18 +3,21 @@ import { findReplyForm, loggedInUsername, postAssistantReply, replyFailureMessag
 
 const NAVBAR_LOGGED_IN = '<ul class="nav navbar-nav navbar-right"><li><a href="/u/gzk-judge">gzk-judge</a></li></ul>';
 const NAVBAR_LOGGED_OUT = '<ul class="nav navbar-nav navbar-right"><li><a href="/login">登录</a></li><li><a href="/register">注册</a></li></ul>';
-const REPLY_FORM = '<form action="/reply/create" method="post">'
+const REPLY_FORM = '<form class="mt10" action="" method="post">'
+  + '<input type="hidden" name="tid" value="42" />'
   + '<input type="hidden" name="_xsrf" value="tok-1" />'
-  + '<input type="hidden" name="topic_id" value="42" />'
-  + '<textarea class="J_replyContent" name="content"></textarea></form>';
+  + '<textarea class="content J_replyContent" name="content"></textarea></form>';
 
 function topicPage(navbar: string, form = REPLY_FORM): string {
   return `<html><body><nav>${navbar}</nav><div class="topic-detail"><a href="/u/alice">alice</a></div>${form}</body></html>`;
 }
 
 function fetchWith(pages: { topic: string; topicStatus?: number; post?: string; postStatus?: number }) {
-  return vi.fn(async (url: string | URL | Request) => {
+  return vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
     const u = typeof url === 'string' ? url : url.toString();
+    if ((init?.method ?? 'GET').toUpperCase() === 'POST') {
+      return new Response(pages.post ?? '<html>[GuoZaoKe 评分 · 7/10] 不错</html>', { status: pages.postStatus ?? 200 });
+    }
     if (u.endsWith('/t/42')) return new Response(pages.topic, { status: pages.topicStatus ?? 200 });
     return new Response(pages.post ?? '<html>[GuoZaoKe 评分 · 7/10] 不错</html>', { status: pages.postStatus ?? 200 });
   });
@@ -30,15 +33,25 @@ describe('loggedInUsername', () => {
 
 describe('findReplyForm', () => {
   it('collects the hidden fields of the form that contains the reply textarea', () => {
-    const form = findReplyForm(topicPage(NAVBAR_LOGGED_IN), 'https://www.guozaoke.com');
-    expect(form?.action).toBe('https://www.guozaoke.com/reply/create');
-    expect(form?.hidden).toEqual([['_xsrf', 'tok-1'], ['topic_id', '42']]);
+    const form = findReplyForm(topicPage(NAVBAR_LOGGED_IN), 'https://www.guozaoke.com', 'https://www.guozaoke.com/t/42');
+    expect(form?.action).toBe('https://www.guozaoke.com/t/42');
+    expect(form?.hidden).toEqual([['tid', '42'], ['_xsrf', 'tok-1']]);
+  });
+
+  it('resolves the site\'s real empty action="" back to the topic page it was rendered on', () => {
+    const form = findReplyForm(topicPage(NAVBAR_LOGGED_IN), 'https://www.guozaoke.com', 'https://www.guozaoke.com/t/42');
+    expect(form?.action).toBe('https://www.guozaoke.com/t/42');
+    expect(form?.hidden).toEqual([['tid', '42'], ['_xsrf', 'tok-1']]);
+  });
+
+  it('refuses an empty action when the caller cannot say which page the form came from', () => {
+    expect(findReplyForm(topicPage(NAVBAR_LOGGED_IN), 'https://www.guozaoke.com')).toBeNull();
   });
 
   it('ignores other forms such as search, and refuses a cross-origin action', () => {
     const search = '<form action="https://evil.example/collect" method="get"><input type="hidden" name="csrf" value="x"></form>';
     expect(findReplyForm(topicPage(NAVBAR_LOGGED_IN, search), 'https://www.guozaoke.com')).toBeNull();
-    const crossOrigin = REPLY_FORM.replace('/reply/create', 'https://evil.example/reply');
+    const crossOrigin = REPLY_FORM.replace('action=""', 'action="https://evil.example/reply"');
     expect(findReplyForm(topicPage(NAVBAR_LOGGED_IN, crossOrigin), 'https://www.guozaoke.com')).toBeNull();
   });
 
@@ -89,13 +102,13 @@ describe('postAssistantReply', () => {
     expect(pageUrl).toBe('https://www.guozaoke.com/t/42');
     expect(pageInit.credentials).toBe('include');
     const [postUrl, postInit] = fetchImpl.mock.calls[1] as unknown as [string, RequestInit];
-    expect(postUrl).toBe('https://www.guozaoke.com/reply/create');
+    expect(postUrl).toBe('https://www.guozaoke.com/t/42');
     expect(postInit.credentials).toBe('include');
     expect(postInit.method).toBe('POST');
     expect(new Headers(postInit.headers).has('cookie')).toBe(false);
     const body = new URLSearchParams(String(postInit.body));
     expect(body.get('_xsrf')).toBe('tok-1');
-    expect(body.get('topic_id')).toBe('42');
+    expect(body.get('tid')).toBe('42');
     expect(body.get('content')).toBe('[GuoZaoKe 评分 · 7/10] 不错');
   });
 

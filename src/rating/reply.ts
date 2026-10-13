@@ -55,17 +55,21 @@ function tagAttributes(tag: string): Record<string, string> {
 /**
  * The site's own reply form: the <form> that contains the reply textarea.
  * Returns its action (resolved and same-origin checked) and its hidden fields.
+ * `pageUrl` resolves the site's real-world empty `action=""`, which means "post back to this page".
  */
-export function findReplyForm(html: string, origin: string): { action: string; hidden: Array<[string, string]> } | null {
+export function findReplyForm(html: string, origin: string, pageUrl?: string): { action: string; hidden: Array<[string, string]> } | null {
   for (const m of html.matchAll(/<form\b([^>]*)>([\s\S]*?)<\/form>/gi)) {
     const formTag = m[1] ?? '';
     const body = m[2] ?? '';
     const isReplyForm = /<textarea\b[^>]*(?:J_replyContent|name=["']content["'])/i.test(body);
     if (!isReplyForm) continue;
     const rawAction = tagAttributes(`<form ${formTag}`).action;
-    if (!rawAction) return null;
+    if (rawAction === undefined) return null;
+    // The site renders `action=""` ("post back to this page"). Without a page URL we
+    // cannot tell which page that is, so refuse rather than post to the site root.
+    if (!rawAction && !pageUrl) return null;
     let action: string;
-    try { action = new URL(rawAction, origin).toString(); } catch { return null; }
+    try { action = new URL(rawAction || pageUrl || '', origin).toString(); } catch { return null; }
     if (new URL(action).origin !== origin) return null;
     const hidden: Array<[string, string]> = [];
     for (const input of body.matchAll(/<input\b[^>]*>/gi)) {
@@ -110,15 +114,16 @@ export async function postAssistantReply(
   if (loggedIn.toLowerCase() !== expectedUsername.trim().toLowerCase()) {
     return { posted: false, reason: 'account_mismatch', responseStatus: pageRes.status };
   }
-  const form = findReplyForm(html, origin);
+  const form = findReplyForm(html, origin, topicUrl);
   if (!form) return { posted: false, reason: 'form_not_found', responseStatus: pageRes.status };
 
+  // Reuse the site's own hidden fields verbatim (its real form uses `tid` + `_xsrf`);
+  // only `content` is replaced with the assistant's comment.
   const formBody = new URLSearchParams();
   for (const [name, value] of form.hidden) {
-    if (name === 'content' || name === 'topic_id') continue;
+    if (name === 'content') continue;
     formBody.append(name, value);
   }
-  formBody.set('topic_id', topicId);
   formBody.set('content', content);
   const postRes = await fetchImpl(form.action, {
     method: 'POST',
