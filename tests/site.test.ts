@@ -28,3 +28,19 @@ describe('脱敏页面结构适配', () => {
     expect(readableUrl('/t/123?p=2')).toBe('https://www.guozaoke.com/t/123?p=2');
   });
 });
+
+it('信用等级不混入作者名，保留新版原生回复编号', () => {
+  const doc = fixture('topic');
+  doc.querySelector('.topic-detail .meta .username')!.insertAdjacentHTML('beforeend','<a href="/points/levels" class="gzk-credit-level">Lv.3</a>');
+  expect(parseTopic(doc, '/t/133068').author).toBe('ipvantowuhan');
+  const row=doc.querySelector<HTMLElement>('.reply-item')!;row.id='r1560607';
+  expect(parseReplies(doc)[0]).toMatchObject({id:'1560607',floor:1,element:row});
+  const home=fixture('home');
+  home.querySelector('.topic-item .meta .username')!.insertAdjacentHTML('beforeend','<a href="/points/levels">Lv.3</a>');
+  expect(parseTopics(home)[0]?.author).toBe('guozaoke');
+});
+
+it('没有点赞链接的新版回复仍从原生 r 锚点读取身份',()=>{
+  const doc=fixture('topic'),row=doc.querySelector<HTMLElement>('.reply-item')!;row.id='r1560607';row.querySelector('.J_replyVote')!.remove();
+  expect(parseReplies(doc)[0]?.id).toBe('1560607');
+});

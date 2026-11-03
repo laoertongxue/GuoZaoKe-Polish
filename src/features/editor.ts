@@ -26,16 +26,20 @@ export function enhanceEditors() {
   const enabled=()=>active&&!document.documentElement.classList.contains('gzk-disabled');
   document.querySelectorAll<HTMLTextAreaElement>('textarea.J_replyContent, textarea[name="content"], textarea[name="text"]').forEach(input=>{
     if(input.dataset.gzkEditor)return;input.dataset.gzkEditor='true';
+    const nativeUpload=Boolean(document.querySelector('script[src*="/static/js/image-host-"]'));
+    const nativePreview=input.id==='contentArea'&&Boolean(document.getElementById('previewDiv'));
     const toolbar=el('div','','gzk-editor-toolbar');const preview=el('div','','gzk-editor-preview');preview.hidden=true;preview.setAttribute('aria-label','回复内容预览');
     const insert=(value:string,focus=true)=>{if(!enabled())return;input.setRangeText(value,input.selectionStart,input.selectionEnd,'end');input.dispatchEvent(new Event('input',{bubbles:true}));if(focus)input.focus();};
     const update=()=>{if(enabled()&&!preview.hidden)renderEditorPreview(preview,input.value);};
     const previewButton=button('预览',()=>{preview.hidden=!preview.hidden;previewButton.textContent=preview.hidden?'预览':'收起预览';previewButton.setAttribute('aria-pressed',String(!preview.hidden));update();});
-    toolbar.append(button('☺ 表情',()=>openEditorEmojiPicker(input)),previewButton,button('上传图片',()=>imageDialog(insert)),button('转 Base64',()=>{const selection=input.value.slice(input.selectionStart,input.selectionEnd);if(!selection){toast('请先选中要编码的文字');return;}insert(encodeBase64(selection));}),button('解码',()=>{const text=input.value.slice(input.selectionStart,input.selectionEnd);if(!text){toast('请先选中 Base64 文字');return;}insert(decodeBase64(text));}));
-    input.before(toolbar);input.after(preview);input.addEventListener('input',update);
+    toolbar.append(button('☺ 表情',()=>openEditorEmojiPicker(input)));
+    if(!nativePreview)toolbar.append(previewButton);
+    toolbar.append(button(nativeUpload?'插件图床':'上传图片',()=>imageDialog(insert)),button('转 Base64',()=>{const selection=input.value.slice(input.selectionStart,input.selectionEnd);if(!selection){toast('请先选中要编码的文字');return;}insert(encodeBase64(selection));}),button('解码',()=>{const text=input.value.slice(input.selectionStart,input.selectionEnd);if(!text){toast('请先选中 Base64 文字');return;}insert(decodeBase64(text));}));
+    input.before(toolbar);if(!nativePreview)input.after(preview);input.addEventListener('input',update);
     const unbindEmoji=bindEmojiFormData(input);
-    const paste=(event:ClipboardEvent)=>{if(!enabled())return;const files=Array.from(event.clipboardData?.files||[]).filter(f=>f.type.startsWith('image/'));if(files.length){event.preventDefault();for(const file of files)void autoUploadImage(input,file);}};
+    const paste=(event:ClipboardEvent)=>{if(!enabled()||nativeUpload)return;const files=Array.from(event.clipboardData?.files||[]).filter(f=>f.type.startsWith('image/'));if(files.length){event.preventDefault();for(const file of files)void autoUploadImage(input,file);}};
     const dragover=(event:DragEvent)=>{if(enabled()&&event.dataTransfer?.types.includes('Files'))event.preventDefault();};
-    const drop=(event:DragEvent)=>{if(!enabled())return;const files=Array.from(event.dataTransfer?.files||[]).filter(f=>f.type.startsWith('image/'));if(files.length){event.preventDefault();for(const file of files)void autoUploadImage(input,file);}};
+    const drop=(event:DragEvent)=>{if(!enabled()||nativeUpload)return;const files=Array.from(event.dataTransfer?.files||[]).filter(f=>f.type.startsWith('image/'));if(files.length){event.preventDefault();for(const file of files)void autoUploadImage(input,file);}};
     input.addEventListener('paste',paste);input.addEventListener('dragover',dragover);input.addEventListener('drop',drop);
     cleanups.push(()=>{
       input.removeEventListener('input',update);input.removeEventListener('paste',paste);input.removeEventListener('dragover',dragover);input.removeEventListener('drop',drop);

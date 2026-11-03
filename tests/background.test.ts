@@ -63,7 +63,7 @@ const reply = (data:unknown,status=200)=>({ok:status===200,status,json:async()=>
 it('B站上传复用浏览器会话，只读取防伪标记，不保存凭证', async()=>{
   api.fetch.mockResolvedValue(reply({code:0,data:{image_url:'http://i0.hdslb.com/bfs/new_dyn/test.png'}}));
   expect(await send(upload)).toEqual({ok:true,data:'https://i0.hdslb.com/bfs/new_dyn/test.png'});
-  expect(api.contains).toHaveBeenCalledWith({permissions:['cookies','declarativeNetRequest'],origins:['https://api.bilibili.com/*']});
+  expect(api.contains).toHaveBeenCalledWith({permissions:['cookies'],origins:['https://api.bilibili.com/*']});
   expect(api.cookie).toHaveBeenCalledExactlyOnceWith({url:'https://api.bilibili.com/x/dynamic/feed/draw/upload_bfs',name:'bili_jct'});
   expect(api.updateSessionRules).toHaveBeenCalled();
   expect(api.fetch).toHaveBeenCalledExactlyOnceWith('https://api.bilibili.com/x/dynamic/feed/draw/upload_bfs',expect.objectContaining({method:'POST',credentials:'include',redirect:'error',referrerPolicy:'no-referrer'}));

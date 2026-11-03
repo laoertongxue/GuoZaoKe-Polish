@@ -34,7 +34,7 @@ export function installMemberCards() {
     timer=setTimeout(async()=>{
       if(!enabled())return;
       hide();active=name;const overlay=overlayHost();host=overlay.host;const card=el('div','','member-card');overlay.root.append(card);
-      const rect=a.getBoundingClientRect();card.style.left=`${Math.max(12,Math.min(rect.left,window.innerWidth-312))}px`;card.style.top=`${Math.max(12,Math.min(rect.bottom+8,window.innerHeight-330))}px`;
+      const rect=a.getBoundingClientRect();card.style.left=`${Math.max(12,Math.min(rect.left,window.innerWidth-312))}px`;card.style.top=`${Math.max(12,Math.min(rect.bottom+8,window.innerHeight-330))}px`;card.style.maxHeight=`calc(100dvh - ${card.style.top} - 12px)`;
       const title=el('h3',name),info=el('p','正在读取用户信息…','muted');card.append(title,info);
       const actions=el('div','','actions');const link=el('a','个人主页 ↗');link.href=`${ORIGIN}/u/${encodeURIComponent(name)}`;link.target='_blank';link.rel='noopener';actions.append(button('设置标签',()=>{hide();return editTags(name);}),link);card.append(actions);
       card.addEventListener('pointerenter',()=>clearTimeout(timer));card.addEventListener('pointerleave',()=>{timer=setTimeout(hide,200);});
@@ -54,8 +54,9 @@ export function installMemberCards() {
   document.addEventListener('pointerout',pointerOut);
   document.addEventListener('keydown',keydown);
   window.addEventListener('scroll',hide,{passive:true});
+  window.addEventListener('resize',hide);
   return {
     update(){if(!enabled())hide();},
-    destroy(){disposed=true;hide();document.removeEventListener('pointerover',pointerOver);document.removeEventListener('pointerout',pointerOut);document.removeEventListener('keydown',keydown);window.removeEventListener('scroll',hide);},
+    destroy(){disposed=true;hide();document.removeEventListener('pointerover',pointerOver);document.removeEventListener('pointerout',pointerOut);document.removeEventListener('keydown',keydown);window.removeEventListener('scroll',hide);window.removeEventListener('resize',hide);},
   };
 }

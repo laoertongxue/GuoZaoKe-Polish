@@ -75,3 +75,10 @@ it('同一用户名反复悬停不会在 300ms 内被隐藏计时器清掉', asy
   await vi.advanceTimersByTimeAsync(400);
   expect(document.querySelector('.gzk-overlay-host')).not.toBeNull();
 });
+
+it('视口改变时关闭旧位置的用户卡片，避免卡片超出新视口',async()=>{
+  vi.mocked(fetchMember).mockResolvedValue({username:'demo',avatar:'',description:'长资料'.repeat(200),url:'https://www.guozaoke.com/u/demo'});
+  cards=installMemberCards();document.querySelector('a')!.dispatchEvent(new Event('pointerover',{bubbles:true}));
+  await vi.advanceTimersByTimeAsync(350);expect(document.querySelector('.gzk-overlay-host')).not.toBeNull();
+  window.dispatchEvent(new Event('resize'));expect(document.querySelector('.gzk-overlay-host')).toBeNull();
+});

@@ -50,10 +50,10 @@ export function enhanceReplies(initial:Settings) {
   const nesting=el('select');nesting.setAttribute('aria-label','楼中楼展现形式');for(const [value,label]of [['indent','逐层缩进'],['align','靠左对齐'],['off','原始楼层']]){const option=el('option',label);option.value=value!;nesting.append(option);}
   nesting.value=settings.nested;nesting.addEventListener('change',()=>{void (async()=>{try{const saved=await saveSettings({nested:nesting.value as Settings['nested']});settings=saved.settings;render();}catch(error){nesting.value=settings.nested;toast(error instanceof Error?error.message:'保存失败',true);}})();});
   tabs.append(allButton,hotButton,nesting);header.append(tabs);const feedback=el('div','','gzk-reply-status');header.append(feedback);
-  const author=document.querySelector('.topic-detail .meta .username')?.textContent?.trim();
+  const author=document.querySelector('.topic-detail .meta .username a[href^="/u/"]')?.textContent?.trim() || document.querySelector('.topic-detail .meta .username')?.textContent?.trim();
   const current=document.querySelector('.navbar-right a[href^="/u/"]')?.getAttribute('href')?.split('/')[2];
   function decorate(row:Reply) {
-    row.element.id=`gzk-reply-${row.floor}`;row.element.dataset.gzkReply=row.id;
+    if(!row.element.id)row.element.id=`gzk-reply-${row.floor}`;row.element.dataset.gzkReply=row.id;
     const meta=row.element.querySelector(':scope > .main > .meta');
     if(meta&&!meta.querySelector('.gzk-reply-action')) {
       const user=meta.querySelector('.reply-username');
@@ -128,8 +128,15 @@ export function enhanceReplies(initial:Settings) {
         for(const {row,page} of batch){
             // Rebuild only the new reply shell. Never import scripts/inline handlers from fetched HTML.
             const shell=el('div','','reply-item'),main=el('div','','main'),meta=el('div','','meta');const link=el('a',row.author,'reply-username');link.href=`/u/${encodeURIComponent(row.author)}`;const floor=el('span',`#${row.floor}`,'floor');meta.append(link,floor);
-            const time=row.element.querySelector(':scope > .main > .meta .time')?.textContent;if(time)meta.append(el('span',time,'time'));
-            const vote=button(`赞 ${row.likes}`,async()=>{vote.disabled=true;try{await voteReply(row.id);vote.dataset.count=String(row.likes+1);vote.textContent=`已赞 ${row.likes+1}`;}catch(error){vote.disabled=false;throw error;}},'gzk-button J_replyVote');vote.dataset.count=String(row.likes);meta.append(vote);
+            if(row.element.id===`r${row.id}`)shell.id=row.element.id;
+            row.element.querySelectorAll(':scope > .main > .meta .time').forEach(time=>meta.append(el('span',time.textContent||'','time')));
+            const nativeVote=row.element.querySelector<HTMLElement>('.J_replyVote');
+            if(nativeVote){
+              const voted=nativeVote.dataset.voted==='1';
+              const vote=button('',async()=>{vote.disabled=true;try{const result=await voteReply(row.id,vote.dataset.voted!=='1');paintVote(result.voted,result.count);}finally{vote.disabled=false;}},'gzk-button J_replyVote');
+              function paintVote(voted:boolean,count:number){vote.dataset.voted=voted?'1':'0';vote.dataset.count=String(count);vote.textContent=`${voted?'已赞':'赞'} ${count}`;vote.setAttribute('aria-pressed',String(voted));vote.title=voted?'取消点赞':'点赞';}
+              paintVote(voted,row.likes);meta.append(vote);
+            }
             if(row.avatar){const avatarLink=el('a');avatarLink.href=link.href;const image=el('img','','avatar');image.src=row.avatar;image.alt=row.author;image.loading='lazy';avatarLink.append(image);shell.append(avatarLink);}
             const content=el('span','','content');richHtml(content,row.html,page);main.append(meta,content);shell.append(main);row.element=shell;rows.push(row);
         }
@@ -147,7 +154,7 @@ export function enhanceReplies(initial:Settings) {
   const votes=new MutationObserver(records=>{if(records.some(record=>record.attributeName==='data-count')){for(const row of rows){const count=Number(row.element.querySelector<HTMLElement>(':scope > .main > .meta .J_replyVote')?.dataset.count);if(Number.isFinite(count))row.likes=count;}if(mode==='hot')render();else hotButton.textContent=`热门回复 · ${rows.filter(r=>r.likes>0).length}`;}});
   votes.observe(container,{attributes:true,subtree:true,attributeFilter:['data-count']});
   const jump=location.hash.match(/^#(?:reply|gzk-reply-)(\d+)$/)?.[1];
-  if(jump)setTimeout(()=>document.getElementById(`gzk-reply-${jump}`)?.scrollIntoView({block:'center'}),100);
+  if(jump)setTimeout(()=>rows.find(row=>row.floor===Number(jump))?.element.scrollIntoView({block:'center'}),100);
   if(new URL(location.href).searchParams.has('p'))document.querySelector('.topic-reply')?.scrollIntoView();
   return {update(s:Settings){if(disposed)return;if(settings.enabled!==s.enabled||settings.preload!==s.preload)preloadRevision++;settings=s;render();void preload();},hot(){if(disposed)return;mode='hot';render();header.scrollIntoView({behavior:'smooth',block:'start'});},destroy(){disposed=true;preloadRevision++;votes.disconnect();restoreNativeReplies();tabs.remove();feedback.remove();}};
 }

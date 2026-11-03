@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { bootstrapPage } from '../src/features/page-bootstrap';
+import { applyPageAppearance, bootstrapPage } from '../src/features/page-bootstrap';
 import { initialState } from '../src/shared/state';
 const cleanups:(()=>void)[]=[];
 beforeEach(()=>{
@@ -37,4 +37,43 @@ it('已停用增强时读取完成就显示原站，不等待功能挂载',async
   const state=initialState();state.settings.enabled=false;
   const boot=bootstrapPage(async()=>state,()=>new Promise(()=>{}));cleanups.push(boot.destroy);await Promise.resolve();
   expect(document.documentElement.hasAttribute('data-gzk-booting')).toBe(false);expect(document.documentElement.hasAttribute('data-gzk-theme')).toBe(false);
+});
+
+it('插件主题与原站开关同步，停用恢复原站主题与内联颜色且不改原站存储',()=>{
+  const html=document.createElement('html');html.dataset.theme='dark';html.style.backgroundColor='rgb(32, 47, 61)';html.style.colorScheme='dark';
+  html.innerHTML='<head><meta id="gzk-theme-color"></head><body><button data-gzk-theme-toggle aria-checked="true"></button><div id="gzk-night-notice"></div></body>';
+  const settings={...initialState().settings,autoTheme:false,theme:'light' as const};
+  const storage={getItem:()=> 'dark',setItem:vi.fn()};vi.stubGlobal('localStorage',storage);
+  const before={cookie:document.cookie,storage:storage.getItem()};
+  applyPageAppearance(html,settings,false);
+  expect(html.dataset.theme).toBe('light');expect(html.dataset.gzkTheme).toBe('light');
+  expect(html.style.backgroundColor).toBe('var(--gzp-bg)');
+  expect(html.querySelector('button')!.getAttribute('aria-checked')).toBe('false');
+  applyPageAppearance(html,{...settings,theme:'dawn'},false);expect(html.dataset.theme).toBe('light');
+  applyPageAppearance(html,{...settings,theme:'dark'},false);expect(html.dataset.theme).toBe('dark');
+  applyPageAppearance(html,{...settings,enabled:false},false);
+  expect(html.dataset.theme).toBe('dark');expect(html.style.backgroundColor).toBe('rgb(32, 47, 61)');expect(html.style.colorScheme).toBe('dark');
+  expect(html.hasAttribute('data-gzk-theme')).toBe(false);
+  expect({cookie:document.cookie,storage:storage.getItem()}).toEqual(before);expect(storage.setItem).not.toHaveBeenCalled();
+});
+
+it('原站启动脚本恢复夜间偏好后，停用插件应还原该偏好而不是 HTML 默认值',async()=>{
+  const html=document.documentElement;html.dataset.theme='light';html.style.backgroundColor='';html.style.colorScheme='';
+  vi.spyOn(document,'readyState','get').mockReturnValue('loading');
+  const state=initialState();state.settings.autoTheme=false;state.settings.theme='light';
+  const boot=bootstrapPage(async()=>state,async s=>{applyPageAppearance(html,s.settings,false);});cleanups.push(boot.destroy);
+  await Promise.resolve();
+  html.dataset.theme='dark';html.style.backgroundColor='rgb(32, 47, 61)';html.style.colorScheme='dark';
+  document.dispatchEvent(new Event('DOMContentLoaded'));await boot.ready;
+  applyPageAppearance(html,{...state.settings,enabled:false},false);
+  expect(html.dataset.theme).toBe('dark');expect(html.style.colorScheme).toBe('dark');
+  delete html.dataset.theme;html.style.backgroundColor='';html.style.colorScheme='';
+});
+
+it('挂载失败撤销已应用的插件主题和广告标记，恢复原站界面',async()=>{
+  const html=document.documentElement;html.dataset.theme='dark';
+  const boot=bootstrapPage(async()=>initialState(),async s=>{applyPageAppearance(html,s.settings,false);throw Error('mount failed');});
+  await expect(boot.ready).rejects.toThrow('mount failed');
+  expect(html.hasAttribute('data-gzk-theme')).toBe(false);expect(html.classList.contains('gzk-hide-ads')).toBe(false);expect(html.dataset.theme).toBe('dark');
+  delete html.dataset.theme;
 });

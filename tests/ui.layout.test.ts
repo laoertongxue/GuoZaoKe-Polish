@@ -214,3 +214,30 @@ it('扩展失效后撤销页面增强，可重新挂载且不覆盖原生草稿'
   await startPage({onInvalidated:(fn:()=>void)=>cleanup.push(fn)} as unknown as Parameters<typeof startPage>[0],state);
   expect(document.querySelectorAll('.gzk-toolbox')).toHaveLength(1);expect(document.querySelectorAll('.gzk-site-footer')).toHaveLength(1);
 });
+
+it('原站跨标签主题事件不能覆盖插件颜色，停用时保留原站最新偏好',async()=>{
+  document.documentElement.dataset.theme='light';
+  let state:AppState={settings:{...defaults,autoTheme:false,theme:'light'},tags:{},reading:[]};
+  let changed=()=>{};api.getState.mockImplementation(async()=>structuredClone(state));
+  api.watchState.mockImplementation(fn=>{changed=fn;return()=>{};});
+  await startPage({onInvalidated:(stop:()=>void)=>cleanup.push(stop)} as unknown as Parameters<typeof startPage>[0]);
+  const html=document.documentElement;
+  html.dataset.theme='dark';html.style.backgroundColor='rgb(32, 47, 61)';html.style.colorScheme='dark';
+  await vi.waitFor(()=>expect(html.dataset.theme).toBe('light'));
+  expect(html.style.backgroundColor).toBe('var(--gzp-bg)');
+  state.settings.enabled=false;changed();
+  await vi.waitFor(()=>expect(html.hasAttribute('data-gzk-theme')).toBe(false));
+  expect(html.dataset.theme).toBe('dark');expect(html.style.backgroundColor).toBe('rgb(32, 47, 61)');
+});
+
+it('挂载末尾的已读保存失败也清理控件与主题监听，原站按钮恢复可用',async()=>{
+  const state:AppState={settings:{...defaults},tags:{},reading:[{id:'1',url:'https://www.guozaoke.com/t/1',title:'主题',author:'',avatar:'',node:'',replies:0,time:'',addedAt:1,read:false}]};
+  api.watchState.mockReturnValue(()=>{});api.markRead.mockRejectedValueOnce(Error('storage failed'));
+  const native=document.createElement('button');native.setAttribute('data-gzk-theme-toggle','');document.body.append(native);
+  const nativeClick=vi.fn();document.addEventListener('click',nativeClick);
+  try{
+    await expect(startPage({onInvalidated:(stop:()=>void)=>cleanup.push(stop)} as unknown as Parameters<typeof startPage>[0],state)).rejects.toThrow('storage failed');
+    expect(document.querySelector('.gzk-toolbox')).toBeNull();expect(document.documentElement.dataset.gzkMounted).toBeUndefined();
+    native.click();expect(nativeClick).toHaveBeenCalledOnce();expect(api.saveSettings).not.toHaveBeenCalled();
+  }finally{document.removeEventListener('click',nativeClick);}
+});

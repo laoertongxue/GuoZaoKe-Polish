@@ -18,7 +18,10 @@ export function enhanceProfile(enabled: boolean, pathname = location.pathname) {
   const route = pathname.match(/^\/u\/([\w-]+)(?:\/(topics|replies|favorites))?\/?$/);
   const username = header?.querySelector('.username')?.textContent?.trim() || route?.[1];
   const fields = Array.from(content?.querySelectorAll<HTMLDListElement>(':scope > dl') ?? []);
-  const signature = fields.find(field => field.querySelector('dt')?.textContent?.trim() === '签名');
+  const signatureField = fields.find(field => field.querySelector('dt')?.textContent?.trim() === '签名');
+  const nativeSignature = header?.querySelector('.gzk-card-signature') ? signatureField : undefined;
+  const signature = nativeSignature ? undefined : signatureField;
+  nativeSignature?.classList.add('gzk-profile-duplicate-signature');
   const identity = fields.find(field => field.querySelector('dt')?.textContent?.trim() === 'ID' && field.querySelector('dd')?.textContent?.trim() === username);
   const placeholder = signature ? document.createComment('gzk-profile-signature') : undefined;
   if (signature && placeholder) signature.before(placeholder);
@@ -80,6 +83,7 @@ export function enhanceProfile(enabled: boolean, pathname = location.pathname) {
       update(false);
       placeholder?.remove(); navigation?.remove();
       signature?.classList.remove('gzk-profile-signature');
+      nativeSignature?.classList.remove('gzk-profile-duplicate-signature');
       identity?.classList.remove('gzk-profile-identity');
       listHeader?.classList.remove('gzk-profile-list-header');
       listHeader?.parentElement?.classList.remove('gzk-profile-list');

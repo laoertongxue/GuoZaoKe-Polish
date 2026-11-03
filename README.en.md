@@ -3,14 +3,14 @@
   <h1>GuoZaoKe Polish</h1>
   <p>A more comfortable way to browse and read Guozaoke.</p>
   <p><a href="README.md">简体中文</a> · <strong>English</strong></p>
-  <p><a href="https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.2">Download</a> · <a href="https://github.com/laoertongxue/GuoZaoKe-Polish/issues">Report an issue</a> · <a href="docs/privacy.en.md">Privacy</a></p>
+  <p><a href="https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.7">Download</a> · <a href="https://github.com/laoertongxue/GuoZaoKe-Polish/issues">Report an issue</a> · <a href="docs/privacy.en.md">Privacy</a></p>
 </div>
 
 ---
 
 A Chrome extension for [Guozaoke](https://www.guozaoke.com/), inspired by the reading experience of [V2EX Polish](https://github.com/coolpace/V2EX_Polish). Built independently with **WXT, TypeScript, and native DOM/CSS**, it improves the site's layout, themes, and interactions while preserving its content and native controls.
 
-**0.5.2 full-audit fixes**: repairs the live-site reply form (`action=""`) that made assistant replies always fail, stops heuristic scores from saturating at 10/10, and switches Bilibili uploads to a session `declarativeNetRequest` rule that actually rewrites `User-Agent` / `Referer` (0.5.1's `fetch` UA header was silently dropped). Same-name paste uploads no longer collide, member cards stay visible while hovered, and the site's own CDN host is included. **If you use Bilibili hosting, re-enable it once in image-hosting settings after upgrading from 0.5.1.** Prefer 0.5.2 when downloading. **0.5.1** fixed real-environment issues from 0.5.0; **0.5.0** removed the entire 0.4.x Discussion Analysis feature set and made pasted or dropped images upload **automatically** to the selected host without opening any dialog. Download and update instructions are below. GitHub and Chrome Web Store releases are separate; consult the store page for its current version. See the [verification scope](docs/verification.md) for compatibility and reference-parity limits.
+**0.5.7 live-site preview focus fix (2026-11-03)**: restores keyboard focus after closing topic previews and retains the previous Chrome loading-warning fix. It replaces the unsupported optional DNR declaration with `declarativeNetRequestWithHostAccess`; Bilibili Cookie and host access remain opt-in. Includes the 0.5.5 UI fixes and follows the previous live-site compatibility checks with two UI review rounds. Fixes mobile search and settings navigation, long names/cards/toasts, short-window tools and wide tables; preserves native mobile recent browsing and improves contrast and keyboard focus across all three themes. Existing settings and local data are retained. Use the 0.5.7 GitHub download above. This release has not been submitted to the Chrome Web Store. See the [changelog](CHANGELOG.md) and [verification scope](docs/verification.md).
 
 ## Features
 
@@ -24,7 +24,7 @@ A Chrome extension for [Guozaoke](https://www.guozaoke.com/), inspired by the re
 | Members | Profile cards, personal tags, and persistent profile/topics/replies/favorites navigation. |
 | Editor | 31 popular image emoji, Unicode emoji, kaomoji, Markdown preview, Base64 tools, and image selection/paste/drop. |
 | Discussion analysis | The 0.4.x Discussion Analysis feature set is removed in 0.5.0. |
-| Uploads (experimental) | Bilibili browser-session uploads, existing Imgur configuration, and image URLs; explicit authorization and upload, retained failure queues, and no automatic provider fallback. |
+| Uploads (experimental) | Native paste/drop uploads take precedence when available; Bilibili, Imgur, and image URL insertion remain manual extension actions, with retained failure queues and no automatic provider fallback. |
 | Images and sharing | Full-screen image preview and zoom; local rich-text share images, QR codes, and multi-image output for long posts. |
 | Data | Settings sync, tag management, JSON backup/import, and context-menu shortcuts. |
 
@@ -32,15 +32,17 @@ Defaults use the light theme, same-tab navigation, vertical layout, and disabled
 
 ## Installation and updates
 
-1. Open the [v0.5.2 release](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.2), download `GuoZaoKe-Polish-0.5.2-chrome.zip`, and extract it. The 0.5.2 SHA-256:
+**Current source version 0.5.7:** run `npm ci && npm run zip`, extract `.output/guozaoke-polish-0.5.7-chrome.zip`, and load the directory containing `manifest.json` in Chrome extensions. To update an existing installation, replace its files, reload the extension, then refresh forum pages after saving drafts. You can also use the GitHub Release package below.
+
+1. Open the [v0.5.7 release](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.7), download `GuoZaoKe-Polish-0.5.7-chrome.zip`, and extract it. The 0.5.7 SHA-256:
 
    ```
-   bbe29b9f0054eaacbb232b4ba4ff8c5fefc1974aa33936d1b2b82811a7b50f9f  GuoZaoKe-Polish-0.5.2-chrome.zip
+   410344fd23c98d7e66841d900b2c2a0a3b59c9d677166f4aaf0efab10f3c53f8  GuoZaoKe-Polish-0.5.7-chrome.zip
    ```
 
-   Verify with `shasum -a 256 GuoZaoKe-Polish-0.5.2-chrome.zip` (macOS / Linux) or `Get-FileHash GuoZaoKe-Polish-0.5.2-chrome.zip -Algorithm SHA256` (Windows PowerShell).
+   Verify with `shasum -a 256 GuoZaoKe-Polish-0.5.7-chrome.zip` (macOS / Linux) or `Get-FileHash GuoZaoKe-Polish-0.5.7-chrome.zip -Algorithm SHA256` (Windows PowerShell).
 
-   If 0.5.1 is already installed, overwrite it with 0.5.2 directly; rating and image-hosting settings are preserved. Bilibili users must click **Enable Bilibili upload** once more to grant the new optional `declarativeNetRequest` permission.
+   Existing installations can be overwritten with 0.5.7; rating and image-hosting settings are preserved. Bilibili users must click **Enable Bilibili upload** once more to grant the optional Cookie and Bilibili host permissions.
 2. Enter `chrome://extensions/` in Chrome and enable **Developer mode**.
 3. Select **Load unpacked** and choose the extracted folder that directly contains `manifest.json`.
 4. Open a new [Guozaoke](https://www.guozaoke.com/) page. Use the popup's settings entry to customize preferences.
@@ -58,13 +60,13 @@ npm ci
 npm run build
 ```
 
-Load `.output/chrome-mv3` in Chrome. The build creates `.output/guozaoke-polish-0.5.2-chrome.zip` with `npm run zip`, for trial validation only.
+Load `.output/chrome-mv3` in Chrome. The build creates `.output/guozaoke-polish-0.5.7-chrome.zip` with `npm run zip`.
 
 ## Uploads and share images
 
 Editor actions change drafts only; the extension does not automatically publish posts or replies. Existing image URLs can be inserted without an upload provider.
 
-Bilibili uploads are experimental. Enable them in image-hosting settings, grant the optional Cookie, request-header rewrite (`declarativeNetRequest`), and `https://api.bilibili.com/*` permissions, and sign in to Bilibili in the same regular browser. The background reads only the CSRF cookie temporarily and rewrites a public `User-Agent` / `Referer` on the upload request; the browser attaches its existing session. No manual SESSDATA entry, credential storage/export, or dynamic-post publishing is provided. Imgur and existing image URLs remain supported.
+Bilibili uploads are experimental. Enable them in image-hosting settings, grant the optional Cookie and `https://api.bilibili.com/*` permissions; request-header rewriting uses the built-in `declarativeNetRequestWithHostAccess` capability, and sign in to Bilibili in the same regular browser. The background reads only the CSRF cookie temporarily and rewrites a public `User-Agent` / `Referer` on the upload request; the browser attaches its existing session. No manual SESSDATA entry, credential storage/export, or dynamic-post publishing is provided. Imgur and existing image URLs remain supported.
 
 For Imgur uploads, configure your own [Imgur Client ID](https://api.imgur.com/oauth2/addclient), explicitly grant access, and confirm the upload in the image dialog. PNG, JPEG, GIF, and WebP are supported up to 10 MB per file. Uploaded images receive public URLs. The Client ID stays local and is excluded from sync and JSON backups.
 
@@ -73,7 +75,7 @@ Share images and QR codes are generated locally. Public content images are fetch
 ## Privacy and permissions
 
 - No analytics SDK, advertising SDK, or project-operated telemetry server.
-- Required permissions: `storage`, `contextMenus`, and Guozaoke site access (www, apex, and the static CDN). Bilibili uploads additionally require explicit optional `cookies`, `declarativeNetRequest`, and `https://api.bilibili.com/*` authorization.
+- Required permissions: `storage`, `contextMenus`, `declarativeNetRequestWithHostAccess`, and Guozaoke site access (www, apex, and the static CDN). Bilibili uploads additionally require explicit optional `cookies` and `https://api.bilibili.com/*` authorization.
 - Uploads and share images request optional access to specific origins for each operation.
 - Settings and tags use Chrome sync storage; read-later entries and upload configuration stay local.
 
@@ -89,7 +91,7 @@ npm run build      # Chrome MV3 production build
 npm run zip        # Build and package
 ```
 
-See the [verification scope](docs/verification.md) for 0.5.0 / 0.5.1 / 0.5.2 checks and the [changelog](CHANGELOG.md) for release notes. GitHub Actions runs installation, type checking, tests, and packaging on pushes and pull requests. Test doubles do not substitute for full extension, live-site write-operation, or real-upload verification.
+See the [verification scope](docs/verification.md) for 0.5.7 and historical checks and the [changelog](CHANGELOG.md) for release notes. GitHub Actions runs installation, type checking, tests, and packaging on pushes and pull requests. Test doubles do not substitute for full extension, live-site write-operation, or real-upload verification.
 
 `entrypoints/` contains extension entries, `src/features/` page enhancements, `src/site/` site adapters, `src/rating/` the rating assistant, `src/shared/` settings and components, `src/styles/` styles, and `tests/` regression and browser fixtures. See [CONTRIBUTING.md](CONTRIBUTING.md).
 

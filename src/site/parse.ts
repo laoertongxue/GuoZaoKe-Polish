@@ -2,13 +2,14 @@ import type { Account, MemberInfo, Reply, Topic, TopicDetail, Notice } from '../
 import { ORIGIN, safeLink, topicUrl, readableUrl } from './urls';
 const txt = (root: ParentNode, selector: string) => root.querySelector(selector)?.textContent?.trim() || '';
 const avatar = (root: ParentNode) => safeLink(root.querySelector('img.avatar')?.getAttribute('src') || '');
+const username = (root: ParentNode) => txt(root, '.meta .username a[href^="/u/"]') || txt(root, '.meta .username');
 export function parseTopics(doc: Document): Topic[] {
   return [...doc.querySelectorAll('.topic-item')].flatMap(el => {
     const link = el.querySelector<HTMLAnchorElement>('.title a[href]');
     if (!link) return [];
     try {
       const url = topicUrl(link.getAttribute('href')!);
-      return [{id: url.split('/').pop()!, url, title: link.textContent?.trim() || '', author:txt(el,'.meta .username'), avatar:avatar(el),node:txt(el,'.node'),replies:Number(txt(el,'.count')) || 0,time:txt(el,'.last-touched')}];
+      return [{id: url.split('/').pop()!, url, title: link.textContent?.trim() || '', author:username(el), avatar:avatar(el),node:txt(el,'.node'),replies:Number(txt(el,'.count')) || 0,time:txt(el,'.last-touched')}];
     } catch { return []; }
   });
 }
@@ -23,7 +24,7 @@ export function parseTopic(doc: Document, value: string): TopicDetail {
   const root = doc.querySelector('.topic-detail');
   if (!root) throw new Error(doc.querySelector('form[action="/login"]') ? '请先登录过早客后重试' : '未找到主题正文，页面可能已删除或需要登录');
   const url=topicUrl(value), content=root.querySelector(':scope > .ui-content');
-  return { id:url.split('/').pop()!, url, title:txt(root,'.title'), author:txt(root,'.meta .username'), avatar:avatar(root),node:txt(root,'.node'), replies:Number(txt(doc,'.topic-reply > .ui-header').match(/(\d+)\s*条回复/)?.[1])||0,time:txt(root,'.created-time'),html:content?.innerHTML||'',text:content?.textContent?.trim()||'' };
+  return { id:url.split('/').pop()!, url, title:txt(root,'.title'), author:username(root), avatar:avatar(root),node:txt(root,'.node'), replies:Number(txt(doc,'.topic-reply > .ui-header').match(/(\d+)\s*条回复/)?.[1])||0,time:txt(root,'.created-time'),html:content?.innerHTML||'',text:content?.textContent?.trim()||'' };
 }
 export function parseReplies(doc: Document): Reply[] {
   return [...doc.querySelectorAll<HTMLElement>('.topic-reply .reply-item')].flatMap((el,index) => {
@@ -35,7 +36,7 @@ export function parseReplies(doc: Document): Reply[] {
     if (!content || !author) return [];
     const text=content.textContent?.trim()||'';
     const mentions=[...new Set([...content.querySelectorAll('a[href*="/u/"]')].filter(a=>a.textContent?.trim().startsWith('@')).map(a=>(a.getAttribute('href')||'').split('/u/')[1]?.split(/[?#/]/)[0]||'').filter(Boolean))];
-    return [{id:vote?.getAttribute('href')?.match(/reply_id=(\d+)/)?.[1]||`floor-${floor}`,floor,author,avatar:avatar(el),html:content.innerHTML,text,likes:Number(vote?.dataset.count)||0,mentions,references:[...text.matchAll(/(?:^|[\s，,])#(\d+)\b/g)].map(m=>Number(m[1])),element:el}];
+    return [{id:vote?.getAttribute('href')?.match(/reply_id=(\d+)/)?.[1]||el.id.match(/^r(\d+)$/)?.[1]||`floor-${floor}`,floor,author,avatar:avatar(el),html:content.innerHTML,text,likes:Number(vote?.dataset.count)||0,mentions,references:[...text.matchAll(/(?:^|[\s，,])#(\d+)\b/g)].map(m=>Number(m[1])),element:el}];
   });
 }
 export function parseMember(doc: Document, username: string): MemberInfo {

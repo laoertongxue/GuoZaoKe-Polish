@@ -71,3 +71,15 @@ it('克隆的头像剔除 javascript: / data: 源，合法 https 源保留', () 
   enhanceProfile(true, '/u/demo');
   expect(document.querySelector<HTMLImageElement>('.gzk-profile-nav img')!.getAttribute('src')).toBe('https://static.guozoke.com/avatar.png');
 });
+
+it('新版个人卡片保留原生身份、信用等级、关注和签名，停用可恢复资料字段',()=>{
+  const header=document.querySelector('.profile>.ui-header')!;
+  header.innerHTML='<a class="gzk-profile-avatar" href="/u/demo"><img class="avatar"></a><div class="gzk-profile-main"><div class="gzk-profile-identity"><div class="username">demo</div><a href="/points/levels">Lv.3</a></div><p class="gzk-card-signature">原生签名</p><span class="gzk-profile-follow"><a href="/f/user/demo">关注</a></span></div><div class="user-number">第1号成员</div>';
+  const before=header.innerHTML;
+  const controller=enhanceProfile(true,'/u/demo');
+  expect(header.innerHTML).toBe(before);
+  expect(document.querySelector('#signature')!.parentElement).toBe(document.querySelector('.profile>.ui-content'));
+  expect(document.querySelector('#signature')!.classList.contains('gzk-profile-duplicate-signature')).toBe(true);
+  controller.destroy();expect(header.innerHTML).toBe(before);
+  expect(document.querySelector('#signature')!.className).toBe('');
+});

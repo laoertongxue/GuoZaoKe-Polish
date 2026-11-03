@@ -5,7 +5,7 @@ import { enhanceReplies } from '../src/features/replies';
 import { fetchDocument } from '../src/site/client';
 import { voteReply } from '../src/site/vote';
 vi.mock('../src/site/client', () => ({ fetchDocument: vi.fn() }));
-vi.mock('../src/site/vote', () => ({ voteReply: vi.fn(async () => {}) }));
+vi.mock('../src/site/vote', () => ({ voteReply: vi.fn(async () => ({voted:true,count:6})) }));
 vi.mock('../src/shared/store', () => ({ saveSettings: vi.fn(async (settings) => ({ settings: { ...defaults, ...settings } })) }));
 
 beforeEach(() => {
@@ -131,7 +131,7 @@ it('停用增强恢复原回复锚点、原站回复可见性和楼层行为，�
   floor.onclick = nativeClick;
   const controller = enhanceReplies({ ...defaults, preload: false });
   expect(reply.hidden).toBe(true);
-  expect(row.id).toBe('gzk-reply-1');
+  expect(row.id).toBe('native-reply-anchor');
   controller.update({ ...defaults, enabled: false, preload: false });
   expect(row.id).toBe('native-reply-anchor');
   expect(reply.hidden).toBe(false);
@@ -142,7 +142,7 @@ it('停用增强恢复原回复锚点、原站回复可见性和楼层行为，�
   expect(row.querySelector('.gzk-folded')).toBeNull();
   expect(document.querySelectorAll('.gzk-nested')).toHaveLength(0);
   controller.update({ ...defaults, preload: false });
-  expect(row.id).toBe('gzk-reply-1');
+  expect(row.id).toBe('native-reply-anchor');
   expect(reply.hidden).toBe(true);
   expect(document.querySelectorAll('.gzk-nested').length).toBeGreaterThan(0);
   controller.destroy();
@@ -196,9 +196,14 @@ it('预加载去重并为新回复保留头像和用户主动点赞能力', asyn
   expect(row.querySelector('.avatar')).not.toBeNull();
   const vote = row.querySelector<HTMLButtonElement>('.J_replyVote')!;
   vote.click();
-  await vi.waitFor(() => expect(voteReply).toHaveBeenCalledWith('900079'));
+  await vi.waitFor(() => expect(voteReply).toHaveBeenCalledWith('900079',true));
   expect(vote.dataset.count).toBe('6');
-  expect(vote.disabled).toBe(true);
+  expect(vote.disabled).toBe(false);
+  vi.mocked(voteReply).mockResolvedValueOnce({voted:false,count:4});
+  vote.click();
+  await vi.waitFor(()=>expect(vote.dataset.count).toBe('4'));
+  expect(voteReply).toHaveBeenLastCalledWith('900079',false);
+  expect(vote.getAttribute('aria-pressed')).toBe('false');
   controller.destroy();
 });
 
@@ -215,4 +220,18 @@ it('只将引用插入原草稿，保留表单字段且不提交', async () => {
   await vi.waitFor(() => expect(input.value).toBe('原草稿@tommmmm #1 '));
   expect(form.querySelector<HTMLInputElement>('[name="csrf"]')!.value).toBe('keep');
   expect(submitted).not.toHaveBeenCalled();
+});
+
+it('合并新版回复保留 r 编号、所有原站元数据和缺失点赞入口的限制',async()=>{
+  vi.stubGlobal('location',new URL('https://www.guozaoke.com/t/133068'));addPages(2);
+  const doc=pageReply('900079',79),incoming=doc.querySelector<HTMLElement>('.reply-item')!;incoming.id='r900079';
+  incoming.querySelector('.meta')!.insertAdjacentHTML('afterbegin','<span class="time">楼主</span>');
+  incoming.querySelector('.J_replyVote')!.remove();
+  vi.mocked(fetchDocument).mockResolvedValue(doc);
+  const controller=enhanceReplies({...defaults,preload:true});
+  await vi.waitFor(()=>expect(document.querySelector('[data-gzk-reply="900079"]')).not.toBeNull());
+  const row=document.querySelector('[data-gzk-reply="900079"]')!;
+  expect(row.id).toBe('r900079');
+  expect([...row.querySelectorAll('.meta .time')].map(x=>x.textContent)).toEqual(['楼主',incoming.querySelectorAll('.meta .time')[1]!.textContent,'湖北省']);
+  expect(row.querySelector('.J_replyVote')).toBeNull();controller.destroy();
 });

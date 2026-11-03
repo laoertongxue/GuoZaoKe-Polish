@@ -77,15 +77,14 @@ it('粘贴与拖放图片直接走自动上传，不弹任何上传窗口', () =
   cleanup();
 });
 
-it('工具栏仍可手动打开图片上传窗口', () => {
+it('工具栏仍可手动打开图片上传窗口', async () => {
   const input = document.querySelector('textarea')!;
   const cleanup = enhanceEditors();
   const toolbarButtons = [...document.querySelectorAll<HTMLButtonElement>('.gzk-editor-toolbar button')];
   expect(toolbarButtons.map(b => b.textContent)).toContain('上传图片');
   const uploadButton = toolbarButtons.find(button => button.textContent === '上传图片')!;
-  uploadButton.addEventListener('click', () => { (imageDialog as any)(); });
   uploadButton.click();
-  expect(imageDialog).toHaveBeenCalledOnce();
+  await vi.waitFor(()=>expect(imageDialog).toHaveBeenCalledOnce());
   expect(autoUploadImage).not.toHaveBeenCalled();
   cleanup();
 });
@@ -101,4 +100,29 @@ it('粘贴多张图片时按粘贴顺序串行触发自动上传', () => {
   input.dispatchEvent(event);
   expect(autoUploadImage).toHaveBeenCalledTimes(2);
   expect(vi.mocked(autoUploadImage).mock.calls.map(([, file]) => (file as File).name)).toEqual(['a.png', 'b.png']);
+});
+
+it('原站图片组件存在时粘贴和拖放只交给原站，保留手动插件图床', () => {
+  const loader=document.createElement('script');loader.src='/static/js/image-host-loader-20261102.js?v=1';document.body.append(loader);
+  const input=document.querySelector('textarea')!;
+  const nativePaste=vi.fn(),nativeDrop=vi.fn();
+  document.addEventListener('paste',nativePaste);document.addEventListener('drop',nativeDrop);
+  const cleanup=enhanceEditors();
+  expect(pasteImage(input).defaultPrevented).toBe(false);
+  expect(dropImage(input).defaultPrevented).toBe(false);
+  expect(autoUploadImage).not.toHaveBeenCalled();
+  expect(nativePaste).toHaveBeenCalledOnce();expect(nativeDrop).toHaveBeenCalledOnce();
+  expect(document.querySelector('.gzk-editor-toolbar')!.textContent).toContain('插件图床');
+  cleanup();document.removeEventListener('paste',nativePaste);document.removeEventListener('drop',nativeDrop);
+});
+
+it('原站实时预览编辑器保留原预览和播放器，不增加第二个预览', () => {
+  const input=document.querySelector('textarea')!;input.id='contentArea';
+  input.insertAdjacentHTML('afterend','<div id="previewDiv"><iframe title="原站视频"></iframe></div>');
+  const preview=document.getElementById('previewDiv')!;
+  const cleanup=enhanceEditors();
+  expect(document.querySelector('.gzk-editor-preview')).toBeNull();
+  expect([...document.querySelectorAll('.gzk-editor-toolbar button')].some(x=>x.textContent==='预览')).toBe(false);
+  expect(document.getElementById('previewDiv')).toBe(preview);
+  cleanup();expect(preview.querySelector('iframe')).not.toBeNull();
 });

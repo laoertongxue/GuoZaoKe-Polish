@@ -1,5 +1,48 @@
 # 更新日志 / Changelog
 
+## 0.5.7 · 2026-11-03 · 论坛兼容、UI 修复与实站验收（GitHub Release）
+
+- 本次公开发布包含此前仅本地构建的 0.5.3–0.5.6 改动：新版主题/编辑器/点赞/个人资料兼容、域名修正、两轮功能审查、两轮 UI 审查与 Chrome 权限声明修复。
+- 下载与验收附件：[v0.5.7](https://github.com/laoertongxue/GuoZaoKe-Polish/releases/tag/v0.5.7)。Chrome 商店未提交，真实写入/上传及辅助技术验收边界保持不变。
+
+- 在已安装 0.5.6 的真实过早客页面复现：关闭主题预览后，键盘焦点落回 BODY，无法接着使用原预览按钮。
+- 将悬停显示控件的 `visibility:hidden` 改为透明隐藏与指针事件控制，使共享弹窗清理函数能够重新聚焦按钮；聚焦时按钮立即可见。修复同时覆盖主题列表和热议侧栏入口。
+- 本地真实浏览器回归覆盖三种主题 × 桌面/窄屏，6 项均恢复到可见的「预览」按钮。用户重载后，列表与侧栏的 6 组实站焦点复验也全部通过；实际页面的主题、布局和弹窗检查范围见 [验证范围](docs/verification.md)。
+
+## 0.5.6 · 2026-11-03 · Chrome 加载警告修复（本地构建）
+
+- 用户实际加载 0.5.5 后，Chrome 报告 `declarativeNetRequest` 不能列为可选权限并将其忽略。此前归档检查未发现这项浏览器兼容问题。
+- 改用必需的 `declarativeNetRequestWithHostAccess`；B 站 Cookie 与主机权限仍在启用上传时请求、停用时撤销。同步修改上传端授权检查、设置页说明、测试及权限文档；删除掩盖类型错误的 `as never[]`。
+- 增加 manifest 权限回归测试。实站界面验收与修复包重新加载的进度分别记录于 [验证范围](docs/verification.md)。
+
+## 0.5.5 · 2026-11-03 · UI、布局、样式两轮专项审查（本地构建）
+
+- **第一轮**：兼容原生桌面/移动搜索入口，去掉重复图标；窄屏设置导航允许整项换行；长作者名不再撑宽主题页；长资料卡在视口内滚动，窗口改变时关闭旧位置卡片；保留原生移动端「最近浏览」。
+- **第二轮**：提高三种主题的主要按钮、导航、已读链接、开关及错误文字对比度；恢复编辑器和标签输入框的键盘焦点边框；长错误提示换行并限制高度；短窗口工具箱限制高度；宽表格只在表格内部横向滚动，避免撑宽正文或将弹窗关闭按钮挪出屏幕。
+- 116 个浏览器组合检查无失败，34 个测试文件、260 项测试、类型检查及生产打包通过。无新增依赖、权限或数据迁移。回放条件、前后测量与安装后验收限制见 [验证范围](docs/verification.md)。
+
+Two focused UI review rounds fix narrow-screen navigation and search, long names/cards/toasts, native recent browsing visibility, short-window tools, table overflow, keyboard focus, and contrast across all three themes. Local build only.
+
+## 0.5.4 · 2026-11-03 · 实时实站核查与两轮对抗审查（本地构建）
+
+- 实时检查 17 条路由（18 份页面结构记录）与 20 个站点自有脚本/样式版本；覆盖登录态、搜索结果、独立图片上传、隐私/图床设置、积分商城及个人内容子页，不以公告作为检查范围。
+- **第一轮**：延后原站主题接管，避免抢在原站启动脚本前保存错误偏好；挂载失败撤销插件外观；原站跨标签主题事件后重应用插件外观，停用时恢复原站最新偏好；删除上传按钮测试额外绑定的假点击处理，改为验证真实按钮。
+- **第二轮**：合并回复保留原生 `r…` 锚点和全部原站时间类元数据；无点赞链接时从锚点识别回复，并保持该回复没有点赞控件；隐藏账户覆盖新身份区、签名/年代和早点卡片；初始化末尾的存储失败会清理已安装控件、观察器与事件。
+- 34 个测试文件、259 项测试、类型检查及生产打包通过。实时结构、原站脚本本地回放与未完成的安装后写操作验收分别记录在 [验证范围](docs/verification.md)。
+
+Checks current authenticated pages and first-party assets beyond the announcements. Two review rounds fix native theme lifecycle races and cleanup, preserve merged reply IDs/metadata/control availability, extend account-card masking, and replace a false-positive upload-button test.
+
+## 0.5.3 · 2026-11-03 · 论坛新版兼容（本地构建）
+
+- **原站主题联动**：原站夜间开关与插件主题同步；停用插件时恢复原站主题和内联颜色，不改写原站主题 Cookie / localStorage。插件颜色变量改用独立前缀，避免原站新增的同名变量互相覆盖。
+- **新版编辑器共存**：检测到原站图片上传组件后，图片粘贴/拖放交给原站，避免两次上传；工具栏仍可手动选择「插件图床」。已有原站实时预览时不再添加第二个预览。
+- **新版点赞协议**：分页合并的回复使用带 `_xsrf` 的 POST，支持点赞与取消点赞，按钮和热评采用服务端返回的状态、赞数，不自行加一或永久禁用按钮。
+- **主题与个人资料**：作者名排除信用等级；保留原站回复 `r…` 锚点；新版个人卡片的身份、签名、关注按钮保持原结构；补齐信用等级、标签和原生图片面板的主题颜色。
+- **修正站点域名**：主机权限、作者头像资源与右键菜单由误拼的 `guozoke.com` 改为实际 `guozaoke.com`，含 `www`、裸域和 `static` CDN。
+- 设置与本机数据格式不变。此版本尚未发布 GitHub Release 或 Chrome 应用商店；验证边界见 [验证范围](docs/verification.md)。
+
+Compatibility update for the forum's October–November changes: native theme controls, upload/preview coexistence, XSRF-protected vote toggles with authoritative counts, credit badges, profile cards, native reply anchors, and corrected site host permissions. Local build only.
+
 ## 0.5.2 · 2026-10-13 · 全量核查与实站修复
 
 - **真实站点回帖表单修复**：过早客回帖表单 `action=""`（提交回本页）此前被直接拒绝，导致自动回帖永远报「未找到站点回帖表单」。现按页面 URL 解析空 action，透传站点隐藏字段（`tid`、`_xsrf`）并只替换 `content`。

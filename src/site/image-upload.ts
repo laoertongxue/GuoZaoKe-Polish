@@ -1,7 +1,7 @@
 import { browser } from 'wxt/browser';
 
 export const BILIBILI_UPLOAD_URL = 'https://api.bilibili.com/x/dynamic/feed/draw/upload_bfs';
-export const BILIBILI_UPLOAD_PERMISSIONS = { permissions: ['cookies', 'declarativeNetRequest'] as ['cookies', 'declarativeNetRequest'], origins: ['https://api.bilibili.com/*'] };
+export const BILIBILI_UPLOAD_PERMISSIONS = { permissions: ['cookies'] as ['cookies'], origins: ['https://api.bilibili.com/*'] };
 const BILI_RULE_ID = 1;
 const BILI_UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 const maxBytes = 10 * 1024 * 1024;
@@ -94,7 +94,7 @@ export async function uploadImage(message: {provider?: unknown; base64?: unknown
     response = await fetch(url, {method: 'POST', headers, body, credentials: provider === 'bilibili' ? 'include' : 'omit', redirect: 'error', referrerPolicy: 'no-referrer', signal: AbortSignal.timeout(60000)});
   } catch { throw new Error(`${name} 上传连接失败或超时。服务端可能已收到图片；请检查网络后再决定是否重试。`); }
   if (!response.ok) {
-    if (response.status === 412) throw new Error(`${name} 拒绝了请求（HTTP 412）。通常是 B 站反爬校验未通过（登录态、防伪标记或请求头）；请确认已在本浏览器登录 B 站（cookie 名为 bili_jct），重新在图床配置中启用 B 站上传以刷新请求头权限，或停用 B 站改用 Imgur。`);
+    if (response.status === 412) throw new Error(`${name} 拒绝了请求（HTTP 412）。通常是 B 站反爬校验未通过（登录态、防伪标记或请求头）；请确认已在本浏览器登录 B 站（cookie 名为 bili_jct），重新在图床配置中启用 B 站上传以刷新上传权限，或停用 B 站改用 Imgur。`);
     throw new Error(`${name} 上传失败（HTTP ${response.status}），请检查登录状态或稍后重试`);
   }
   let json;

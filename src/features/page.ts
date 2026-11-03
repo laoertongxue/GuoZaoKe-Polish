@@ -16,7 +16,7 @@ import { detectTrigger } from '../rating/trigger';
 import type { Settings } from '../shared/settings';
 import { createSiteFooter } from './site-footer';
 import { enhanceProfile } from './profile';
-import { applyPageAppearance } from './page-bootstrap';
+import { applyPageAppearance, watchNativeTheme } from './page-bootstrap';
 import { enhancePagination } from './pagination';
 import { positionNotification } from './notification';
 import { icon } from '../shared/app-ui';
@@ -94,12 +94,20 @@ export async function startPage(ctx?:ContentScriptContext, initialState?:AppStat
   let topic:ReturnType<typeof parseTopic>|undefined;
   if(document.querySelector('.topic-detail'))topic=parseTopic(document,location.href);
   theme();
+  const stopNativeTheme=watchNativeTheme(html,theme);
   const pagination=enhancePagination(state.settings.enabled);
   const notification=positionNotification(state.settings.enabled);
   const replies=enhanceReplies(state.settings.enabled?state.settings:{...state.settings,nested:'off',autoFold:false,preload:false});
   const options=()=>browser.runtime.sendMessage({type:'options:open'});
   const toolbox=el('div','','gzk-toolbox container-box');toolbox.append(el('div','GuoZaoKe Polish','gzk-brand'));
-  const themeButton=toolButton('切换主题','moon',async()=>{state=await saveSettings({autoTheme:false,theme:html.dataset.gzkTheme==='dark'?'light':'dark'});theme();});
+  const toggleTheme=async()=>{state=await saveSettings({autoTheme:false,theme:html.dataset.gzkTheme==='dark'?'light':'dark'});theme();};
+  const nativeThemeClick=(event:MouseEvent)=>{
+    if(!state.settings.enabled||!(event.target instanceof Element)||!event.target.closest('[data-gzk-theme-toggle]'))return;
+    event.preventDefault();event.stopImmediatePropagation();
+    void toggleTheme().catch(error=>toast(error instanceof Error?error.message:'保存主题失败',true));
+  };
+  document.addEventListener('click',nativeThemeClick,true);
+  const themeButton=toolButton('切换主题','moon',toggleTheme);
   toolbox.append(themeButton,toolButton('控制选项','sliders',options),toolButton('稍后阅读','book',showReading));
   if(topic){
     layoutButton=toolButton('切换横向','horizontal',async()=>{
@@ -165,11 +173,11 @@ export async function startPage(ctx?:ContentScriptContext, initialState?:AppStat
   browser.runtime.onMessage.addListener(message);
   const update=async(next?:AppState)=>{const previous=state.settings;const received=next??await getState();if(disposed)return;state=received;theme();pagination.update(state.settings.enabled);notification.update(state.settings.enabled);profileLayout.update(state.settings.enabled);memberCards.update();if(JSON.stringify(previous)!==JSON.stringify(state.settings))replies.update(state.settings.enabled?state.settings:{...state.settings,nested:'off',autoFold:false,preload:false});document.querySelectorAll<HTMLElement>('[data-gzk-preview]').forEach(e=>e.hidden=!state.settings.topicPreview);};
   const stop=watchState(()=>{void update().catch(error=>toast(String(error),true));});
-  system.addEventListener('change',theme);await update(initialState?state:undefined);
-  if(topic&&state.reading.some(t=>t.id===topic!.id&&!t.read))await markRead(topic.id,true);
-  ctx?.onInvalidated(()=>{
+  system.addEventListener('change',theme);
+  const destroy=()=>{
     if(disposed)return;disposed=true;
-    stop();pagination.destroy();notification.destroy();replies.destroy();profileLayout.destroy();memberCards.destroy();layout.destroy();toolsSize.disconnect();stopEditors?.();
+    stop();stopNativeTheme();pagination.destroy();notification.destroy();replies.destroy();profileLayout.destroy();memberCards.destroy();layout.destroy();toolsSize.disconnect();stopEditors?.();
+    document.removeEventListener('click',nativeThemeClick,true);
     html.style.removeProperty('--gzk-tools-height');stopImagePreview();system.removeEventListener('change',theme);narrow.removeEventListener('change',positionTools);browser.runtime.onMessage.removeListener(message);
     applyPageAppearance(html,{...state.settings,enabled:false},system.matches);
     for(const [link,original]of originals)for(const [name,value]of Object.entries(original)){if(value===null)link.removeAttribute(name);else link.setAttribute(name,value);}
@@ -178,5 +186,10 @@ export async function startPage(ctx?:ContentScriptContext, initialState?:AppStat
     document.querySelectorAll('.gzk-overlay-host').forEach(host=>{host.shadowRoot?.querySelectorAll('dialog[open]').forEach(dialog=>(dialog as HTMLDialogElement).close());host.remove();});
     document.querySelectorAll('.gzk-mention').forEach(node=>node.classList.remove('gzk-mention'));
     delete html.dataset.gzkMounted;
-  });
+  };
+  ctx?.onInvalidated(destroy);
+  try{
+    await update(initialState?state:undefined);
+    if(!disposed&&topic&&state.reading.some(t=>t.id===topic!.id&&!t.read))await markRead(topic.id,true);
+  }catch(error){destroy();throw error;}
 }

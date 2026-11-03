@@ -80,7 +80,7 @@ export default defineBackground(() => {
   browser.runtime.onInstalled.addListener(async()=>{
     try {
       await browser.contextMenus.removeAll();
-      const patterns=['https://www.guozoke.com/*','https://guozoke.com/*'];
+      const patterns=['https://www.guozaoke.com/*','https://guozaoke.com/*'];
       browser.contextMenus.create({id:'gzk-decode',title:'GuoZaoKe Polish：解码 Base64',contexts:['selection'],documentUrlPatterns:patterns});
       browser.contextMenus.create({id:'gzk-reading',title:'加入稍后阅读',contexts:['page','link'],documentUrlPatterns:patterns});
       browser.contextMenus.create({id:'gzk-options',title:'GuoZaoKe Polish 控制选项',contexts:['page'],documentUrlPatterns:patterns});

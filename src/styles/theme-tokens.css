@@ -1,27 +1,27 @@
 /* Shared semantic colors, measured against the reference's three themes. */
 :root {
-  --gzk-bg:#f2f3f5; --gzk-panel:#fff; --gzk-text:#1e293b;
-  --gzk-muted:#64748b; --gzk-secondary:#475569; --gzk-soft:#f1f5f9;
-  --gzk-line:#e2e8f0; --gzk-input:#f7f9fb; --gzk-input-border:#cbd5e1;
-  --gzk-button-bg:#f1f5f9; --gzk-button-hover:#e2e8f0; --gzk-button-text:#64748b;
-  --gzk-accent:#059669; --gzk-accent-fill:#10b981; --gzk-accent-soft:#ecfdf5;
-  --gzk-visited:#94a3b8; --gzk-mask:rgb(0 0 0 / 25%); --gzk-focus:rgb(135 206 250 / 25%); --gzk-input-focus-border:#94a3b8;
-  --gzk-shadow:0 3px 5px rgb(0 0 0 / 4%);
+  --gzp-bg:#f2f3f5; --gzp-panel:#fff; --gzp-text:#1e293b;
+  --gzp-muted:#57677d; --gzp-secondary:#475569; --gzp-soft:#f1f5f9;
+  --gzp-line:#e2e8f0; --gzp-input:#f7f9fb; --gzp-input-border:#cbd5e1;
+  --gzp-button-bg:#f1f5f9; --gzp-button-hover:#e2e8f0; --gzp-button-text:#64748b;
+  --gzp-accent:#047857; --gzp-accent-fill:#10b981; --gzp-accent-soft:#ecfdf5;
+  --gzp-visited:#57677d; --gzp-mask:rgb(0 0 0 / 25%); --gzp-focus:rgb(135 206 250 / 25%); --gzp-input-focus-border:#94a3b8;
+  --gzp-shadow:0 3px 5px rgb(0 0 0 / 4%); --gzp-danger:#b91c1c;
 }
 :root:is([data-gzk-theme=dark],[data-theme=dark]) {
-  --gzk-bg:#1c2128; --gzk-panel:#22272e; --gzk-text:#adbac7;
-  --gzk-muted:#9ca3af; --gzk-secondary:#9ca3af; --gzk-soft:#2d333b;
-  --gzk-line:#444c56; --gzk-input:#1c2128; --gzk-input-border:#444c56;
-  --gzk-button-bg:#373e47; --gzk-button-hover:#444c56; --gzk-button-text:#adbac7;
-  --gzk-accent:#6ee7b7; --gzk-accent-fill:#34d399; --gzk-accent-soft:#064e3b;
-  --gzk-visited:#6b7280; --gzk-mask:rgb(99 110 123 / 40%); --gzk-focus:#374151; --gzk-input-focus-border:#444c56;
-  --gzk-shadow:0 0 0 1px #444c56;
+  --gzp-bg:#1c2128; --gzp-panel:#22272e; --gzp-text:#adbac7;
+  --gzp-muted:#9ca3af; --gzp-secondary:#9ca3af; --gzp-soft:#2d333b;
+  --gzp-line:#444c56; --gzp-input:#1c2128; --gzp-input-border:#444c56;
+  --gzp-button-bg:#373e47; --gzp-button-hover:#444c56; --gzp-button-text:#adbac7;
+  --gzp-accent:#6ee7b7; --gzp-accent-fill:#34d399; --gzp-accent-soft:#064e3b;
+  --gzp-visited:#9ca3af; --gzp-mask:rgb(99 110 123 / 40%); --gzp-focus:#374151; --gzp-input-focus-border:#444c56;
+  --gzp-shadow:0 0 0 1px #444c56; --gzp-danger:#fca5a5;
 }
 :root:is([data-gzk-theme=dawn],[data-theme=dawn]) {
-  --gzk-bg:hsl(32 57% 95%); --gzk-panel:hsl(35 100% 98%); --gzk-text:hsl(248 19% 40%);
-  --gzk-muted:hsl(248 12% 52%); --gzk-secondary:hsl(248 12% 52%); --gzk-soft:hsl(33 43% 91% / 60%);
-  --gzk-line:hsl(257 9% 61% / 20%); --gzk-input:hsl(33 43% 91% / 40%); --gzk-input-border:hsl(257 9% 61% / 40%);
-  --gzk-button-bg:hsl(248 19% 40% / 10%); --gzk-button-hover:hsl(248 19% 40% / 15%); --gzk-button-text:hsl(248 19% 40%);
-  --gzk-accent:hsl(189 30% 48% / 80%); --gzk-accent-fill:hsl(189 30% 48%); --gzk-accent-soft:hsl(189 30% 48% / 10%);
-  --gzk-visited:hsl(248 12% 52%); --gzk-focus:hsl(189 30% 48% / 20%); --gzk-input-focus-border:hsl(257 9% 61% / 40%);
+  --gzp-bg:hsl(32 57% 95%); --gzp-panel:hsl(35 100% 98%); --gzp-text:hsl(248 19% 40%);
+  --gzp-muted:hsl(248 12% 44%); --gzp-secondary:hsl(248 12% 52%); --gzp-soft:hsl(33 43% 91% / 60%);
+  --gzp-line:hsl(257 9% 61% / 20%); --gzp-input:hsl(33 43% 91% / 40%); --gzp-input-border:hsl(257 9% 61% / 40%);
+  --gzp-button-bg:hsl(248 19% 40% / 10%); --gzp-button-hover:hsl(248 19% 40% / 15%); --gzp-button-text:hsl(248 19% 40%);
+  --gzp-accent:#365f67; --gzp-accent-fill:hsl(189 30% 48%); --gzp-accent-soft:hsl(189 30% 48% / 10%);
+  --gzp-danger:#9f2347; --gzp-visited:hsl(248 12% 44%); --gzp-focus:hsl(189 30% 48% / 20%); --gzp-input-focus-border:hsl(257 9% 61% / 40%);
 }
